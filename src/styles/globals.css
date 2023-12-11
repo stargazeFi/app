@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+#__next {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Ubuntu', sans-serif;
+  background-color: #060606;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.gradient-border {
+  border-width: 2px;
+  border-style: solid;
+  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 1 0;
+}
