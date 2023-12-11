@@ -1,3 +1,5 @@
+import { nextui } from '@nextui-org/react'
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -11,6 +13,6 @@ module.exports = {
       body: ['Sapce Mono', 'monospace']
     }
   },
-  plugins: [],
+  plugins: [nextui()],
   darkMode: 'class'
 }

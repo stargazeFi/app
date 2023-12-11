@@ -2,22 +2,21 @@ import { ReactNode, useMemo } from 'react'
 import { goerli, mainnet } from '@starknet-react/chains'
 import { argent, braavos, Connector, jsonRpcProvider, StarknetConfig } from '@starknet-react/core'
 import { constants } from 'starknet'
-import { ArgentMobileConnector } from 'starknetkit/dist/connectors'
-import { WebWalletConnector } from 'starknetkit/dist/connectors'
+// @ts-expect-error valid path
+import { ArgentMobileConnector } from 'starknetkit/argentMobile'
 
 export default function StarknetConfigWithConnectors({ children }: { children: ReactNode }) {
   const { chains, provider, connectors } = useMemo(
     () => ({
       connectors: [
+        braavos(),
         argent(),
         new ArgentMobileConnector({
           dappName: 'Stargaze App',
           description: 'Web application for interacting with Stargaze protocol',
-          url: window.location.origin,
+          url: process.env.NODE_ENV === 'production' ? 'https://app.stargaze.finance' : 'https://test.stargaze.finance',
           chainId: constants.NetworkName.SN_MAIN
-        }),
-        braavos(),
-        new WebWalletConnector({ url: 'https://web.argent.xyz' })
+        })
       ] as Connector[],
       provider: jsonRpcProvider({
         rpc: (chain) => {

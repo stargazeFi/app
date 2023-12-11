@@ -26,8 +26,20 @@ body {
   overflow-x: hidden;
 }
 
-.gradient-border {
+.gradient-border-h {
   border-width: 2px;
   border-style: solid;
   border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 1 0;
+}
+
+.gradient-border-b {
+  border-width: 2px;
+  border-style: solid;
+  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 0 0 1;
+}
+
+.gradient-border-t {
+  border-width: 2px;
+  border-style: solid;
+  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 1 0 0;
 }

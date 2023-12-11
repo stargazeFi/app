@@ -12,7 +12,7 @@ export default function Home() {
           }}
         />
         <Container className=''>
-          <div className='h-[1000px] w-full' />
+          <div className='h-[1200px]' />
         </Container>
       </div>
     </>
