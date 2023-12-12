@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   Button,
   Image,
@@ -9,7 +10,8 @@ import {
   ModalHeader,
   useDisclosure
 } from '@nextui-org/react'
-import { useAccount, useConnect } from '@starknet-react/core'
+import { useAccount, useConnect, useDisconnect } from '@starknet-react/core'
+import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
 import { MainText } from '@/components/Text'
 import { PRIVATE_POLICY_URL, TERMS_OF_USE_URL, shortenAddress } from '@/misc'
 
@@ -31,9 +33,20 @@ const CONNECTOR_METADATA: {
 }
 
 export default function WalletModal() {
-  const { isConnected, address } = useAccount()
+  const { isConnected, address, connector } = useAccount()
   const { connect, connectors } = useConnect()
+  const { disconnect } = useDisconnect()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
+
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (copied) {
+      setTimeout(() => {
+        setCopied(false)
+      }, 1500)
+    }
+  }, [copied])
 
   return (
     <>
@@ -54,37 +67,101 @@ export default function WalletModal() {
         }}
       >
         <ModalContent>
-          {() => (
+          {(onClose) => (
             <>
               <ModalHeader className='flex flex-col gap-1'>
                 <MainText heading size='2xl'>
-                  {isConnected ? 'Wallet' : 'Connect your wallet'}
+                  {isConnected ? 'Your account' : 'Connect your wallet'}
                 </MainText>
               </ModalHeader>
               <ModalBody>
-                {connectors.map((connector, index) => (
-                  <Button
-                    key={index}
-                    radius='sm'
-                    isDisabled={!connector.available()}
-                    variant='bordered'
-                    onClick={() => connect({ connector })}
-                    className='border border-gray-800 p-8'
-                    startContent={
-                      <Image
-                        src={CONNECTOR_METADATA[connector.id].logo}
-                        width={20}
-                        height={20}
-                        alt={CONNECTOR_METADATA[connector.id].name}
-                        className='mr-2'
-                      />
-                    }
-                  >
-                    <MainText className='text-white' size='md'>
-                      Connect with {CONNECTOR_METADATA[connector.id].name}
+                {isConnected ? (
+                  <div className='flex flex-col items-center'>
+                    <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
+                    <div className='flex w-[85%] flex-col'>
+                      <div className='mb-2 flex justify-between'>
+                        <MainText heading size='sm'>
+                          Connected with {connector!.name}
+                        </MainText>
+                        <button
+                          className='ml-6 flex cursor-pointer items-center justify-center'
+                          onClick={() => {
+                            disconnect()
+                            onClose()
+                          }}
+                        >
+                          <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                            <Logout fontSize='inherit' color='error' />
+                          </div>
+                          <MainText size='sm' heading className='text-red-600'>
+                            Disconnect
+                          </MainText>
+                        </button>
+                      </div>
+                      <Link href={`https://starkscan.co/search/${address}`} target='_blank' rel='noopener noreferrer'>
+                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                          <Launch fontSize='inherit' className='text-gray-200' />
+                        </div>
+                        <MainText heading size='sm' className='self-start'>
+                          View on StarkScan
+                        </MainText>
+                      </Link>
+                      <Link
+                        className='cursor-default'
+                        onClick={() => {
+                          if (!copied) {
+                            navigator.clipboard.writeText(address as string)
+                            setCopied(true)
+                          }
+                        }}
+                      >
+                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                          {copied ? (
+                            <Done fontSize='inherit' className='text-gray-200' />
+                          ) : (
+                            <ContentPaste fontSize='inherit' className='text-gray-200' />
+                          )}
+                        </div>
+                        <MainText heading size='sm' className='self-start'>
+                          {copied ? 'Copied!' : 'Copy address to clipboard'}
+                        </MainText>
+                      </Link>
+                    </div>
+                    <MainText heading size='2xl' className='mb-2 mt-6'>
+                      Recent transactions
                     </MainText>
-                  </Button>
-                ))}
+                    <span className='font-body text-xs text-amber-50 text-opacity-50'>
+                      Transactions you send from the app will appear here.
+                    </span>
+                  </div>
+                ) : (
+                  connectors.map((connector, index) => (
+                    <Button
+                      key={index}
+                      radius='sm'
+                      isDisabled={!connector.available()}
+                      variant='bordered'
+                      onClick={() => {
+                        connect({ connector })
+                        onClose()
+                      }}
+                      className='border border-gray-800 p-8'
+                      startContent={
+                        <Image
+                          src={CONNECTOR_METADATA[connector.id].logo}
+                          width={20}
+                          height={20}
+                          alt={CONNECTOR_METADATA[connector.id].name}
+                          className='mr-2'
+                        />
+                      }
+                    >
+                      <MainText className='text-white' size='md'>
+                        Connect with {CONNECTOR_METADATA[connector.id].name}
+                      </MainText>
+                    </Button>
+                  ))
+                )}
               </ModalBody>
               {!isConnected && (
                 <ModalFooter>
