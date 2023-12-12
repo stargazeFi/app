@@ -3,13 +3,7 @@ module.exports = {
     browser: true,
     es2021: true
   },
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'plugin:tailwindcss/recommended',
-    'next',
-    'next/core-web-vitals',
-    'prettier'
-  ],
+  extends: ['plugin:@typescript-eslint/recommended', 'plugin:tailwindcss/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
@@ -23,21 +17,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     'react/react-in-jsx-scope': 'off',
-    'react/jsx-filename-extension': [
-      1,
-      {
-        extensions: ['.ts', '.tsx', '.js', '.jsx']
-      }
-    ],
     'react/jsx-props-no-spreading': 'off',
-    'jsx-a11y/anchor-is-valid': [
-      'error',
-      {
-        components: ['Link'],
-        specialLink: ['hrefLeft', 'hrefRight'],
-        aspects: ['invalidHref', 'preferButton']
-      }
-    ],
     'no-nested-ternary': 'off',
     'import/prefer-default-export': 'off'
   }

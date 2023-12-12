@@ -1,6 +1,4 @@
-import React from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
+import { Image, Link } from '@nextui-org/react'
 import Container from '@/components/Container'
 import WalletModal from '@/components/WalletModal'
 

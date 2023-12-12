@@ -1,9 +1,16 @@
-import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
+import {
+  Button,
+  Image,
+  Link,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure
+} from '@nextui-org/react'
 import { useAccount, useConnect } from '@starknet-react/core'
 import { MainText } from '@/components/Text'
-import Image from 'next/image'
-import React from 'react'
-import Link from 'next/link'
 import { PRIVATE_POLICY_URL, TERMS_OF_USE_URL, shortenAddress } from '@/misc'
 
 const CONNECTOR_METADATA: {
@@ -24,8 +31,8 @@ const CONNECTOR_METADATA: {
 }
 
 export default function WalletModal() {
-  const { isConnected, address, connector } = useAccount()
-  const { connect, connectors, isPending } = useConnect()
+  const { isConnected, address } = useAccount()
+  const { connect, connectors } = useConnect()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
 
   return (
@@ -47,7 +54,7 @@ export default function WalletModal() {
         }}
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className='flex flex-col gap-1'>
                 <MainText heading size='2xl'>
