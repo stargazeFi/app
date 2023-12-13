@@ -62,7 +62,7 @@ export default function WalletModal() {
         onOpenChange={onOpenChange}
         classNames={{
           body: 'py-6',
-          base: 'border border-gray-800 bg-transparent dark:bg-[#19172c] text-[#a8b0d3]',
+          base: 'border border-gray-800 bg-black/75 text-[#a8b0d3]',
           header: 'gradient-border-b',
           footer: 'gradient-border-t'
         }}
