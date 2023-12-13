@@ -12,8 +12,9 @@ import {
 } from '@nextui-org/react'
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
+import { Box } from '@/components/Layout'
 import { MainText } from '@/components/Text'
-import { PRIVATE_POLICY_URL, TERMS_OF_USE_URL, shortenAddress } from '@/misc'
+import { shortenAddress } from '@/misc/format'
 
 const CONNECTOR_METADATA: {
   [id: string]: { name: string; logo: string }
@@ -76,7 +77,7 @@ export default function WalletModal() {
               </ModalHeader>
               <ModalBody>
                 {isConnected ? (
-                  <div className='flex flex-col items-center'>
+                  <Box>
                     <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
                     <div className='flex w-[85%] flex-col'>
                       <div className='mb-2 flex justify-between'>
@@ -133,7 +134,7 @@ export default function WalletModal() {
                     <span className='font-body text-xs text-amber-50 text-opacity-50'>
                       Transactions you send from the app will appear here.
                     </span>
-                  </div>
+                  </Box>
                 ) : (
                   connectors.map((connector, index) => (
                     <Button
@@ -147,13 +148,14 @@ export default function WalletModal() {
                       }}
                       className='border border-gray-800 p-8'
                       startContent={
-                        <Image
-                          src={CONNECTOR_METADATA[connector.id].logo}
-                          width={20}
-                          height={20}
-                          alt={CONNECTOR_METADATA[connector.id].name}
-                          className='mr-2'
-                        />
+                        <div className='mr-2'>
+                          <Image
+                            src={CONNECTOR_METADATA[connector.id].logo}
+                            width={20}
+                            height={20}
+                            alt={CONNECTOR_METADATA[connector.id].name}
+                          />
+                        </div>
                       }
                     >
                       <MainText className='text-white' size='md'>
@@ -166,16 +168,22 @@ export default function WalletModal() {
               {!isConnected && (
                 <ModalFooter>
                   <MainText size='xs'>
+                    By connecting your wallet to the Stargaze Finance interface or interacting with the Stargaze Finance
+                    smart contracts, you acknowledge the experimental nature of the protocol and the potential for total
+                    loss of funds deposited, and hereby accept full liability for your usage of Stargaze Finance, and
+                    that no financial responsibility is placed on the protocol developers and contributors.
+                  </MainText>
+                  {/* <MainText size='xs'>
                     By connecting a wallet, you agree to the Stargaze Finance{' '}
                     <Link href={TERMS_OF_USE_URL} target='_blank' rel='noreferrer noopener'>
-                      <u className='text-amber-50'>terms of use</u>
+                      <u className='text-xs text-amber-50'>terms of use</u>
                     </Link>{' '}
                     and{' '}
                     <Link href={PRIVATE_POLICY_URL} target='_blank' rel='noreferrer noopener' className='underline'>
-                      <u className='text-amber-50'>privacy policy</u>
+                      <u className='text-xs text-amber-50'>privacy policy</u>
                     </Link>
                     .
-                  </MainText>
+                  </MainText> */}
                 </ModalFooter>
               )}
             </>
