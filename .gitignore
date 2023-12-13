@@ -9,6 +9,7 @@
 /coverage
 
 /out/
+dist/
 
 # production
 /build
