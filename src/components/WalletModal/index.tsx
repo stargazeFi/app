@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Image,
@@ -10,7 +10,7 @@ import {
   ModalHeader,
   useDisclosure
 } from '@nextui-org/react'
-import { useAccount, useConnect, useDisconnect } from '@starknet-react/core'
+import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
 import { Box } from '@/components/Layout'
 import { MainText } from '@/components/Text'
@@ -38,8 +38,14 @@ export default function WalletModal() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
+  const { chain } = useNetwork()
 
   const [copied, setCopied] = useState(false)
+
+  const explorerLink = useMemo(
+    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/search/') + 'contract/' + address,
+    [address, chain.testnet]
+  )
 
   useEffect(() => {
     if (copied) {
@@ -51,8 +57,20 @@ export default function WalletModal() {
 
   return (
     <>
-      <Button onClick={onOpen} radius='sm' variant='bordered' className='border border-gray-500'>
+      <Button
+        onClick={onOpen}
+        radius='sm'
+        variant='bordered'
+        className='flex items-center justify-center border border-gray-500 bg-black/60'
+      >
         <MainText size='md'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
+        {chain.testnet && (
+          <div className='ml-2 flex items-center bg-black'>
+            <MainText className='text-amber-200' size='xs'>
+              Testnet
+            </MainText>
+          </div>
+        )}
       </Button>
       <Modal
         backdrop='blur'
@@ -62,7 +80,7 @@ export default function WalletModal() {
         onOpenChange={onOpenChange}
         classNames={{
           body: 'py-6',
-          base: 'border border-gray-800 bg-black/75 text-[#a8b0d3]',
+          base: 'border border-gray-800 bg-black/60 text-[#a8b0d3]',
           header: 'gradient-border-b',
           footer: 'gradient-border-t'
         }}
@@ -77,10 +95,10 @@ export default function WalletModal() {
               </ModalHeader>
               <ModalBody>
                 {isConnected ? (
-                  <Box>
+                  <Box col center>
                     <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
-                    <div className='flex w-[85%] flex-col'>
-                      <div className='mb-2 flex justify-between'>
+                    <Box col className='w-[85%]'>
+                      <Box className='mb-2 justify-between'>
                         <MainText heading size='sm'>
                           Connected with {connector!.name}
                         </MainText>
@@ -91,18 +109,22 @@ export default function WalletModal() {
                             onClose()
                           }}
                         >
-                          <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                          <Box center className='mr-1 h-4 w-4 pb-0.5'>
                             <Logout fontSize='inherit' color='error' />
-                          </div>
-                          <MainText size='sm' heading className='text-red-600'>
+                          </Box>
+                          <MainText
+                            size='sm'
+                            heading
+                            className='!text-red-600 transition ease-in-out hover:!text-red-500'
+                          >
                             Disconnect
                           </MainText>
                         </button>
-                      </div>
-                      <Link href={`https://starkscan.co/search/${address}`} target='_blank' rel='noopener noreferrer'>
-                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                      </Box>
+                      <Link href={explorerLink} target='_blank' rel='noopener noreferrer'>
+                        <Box center className='mr-1 h-4 w-4 pb-0.5'>
                           <Launch fontSize='inherit' className='text-gray-200' />
-                        </div>
+                        </Box>
                         <MainText heading size='sm' className='self-start'>
                           View on StarkScan
                         </MainText>
@@ -116,18 +138,18 @@ export default function WalletModal() {
                           }
                         }}
                       >
-                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                        <Box className='mr-1 h-4 w-4 pb-0.5'>
                           {copied ? (
                             <Done fontSize='inherit' className='text-gray-200' />
                           ) : (
                             <ContentPaste fontSize='inherit' className='text-gray-200' />
                           )}
-                        </div>
+                        </Box>
                         <MainText heading size='sm' className='self-start'>
                           {copied ? 'Copied!' : 'Copy address to clipboard'}
                         </MainText>
                       </Link>
-                    </div>
+                    </Box>
                     <MainText heading size='2xl' className='mb-2 mt-6'>
                       Recent transactions
                     </MainText>

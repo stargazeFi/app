@@ -7,13 +7,13 @@ export default function Header() {
   const { pathname } = useLocation()
 
   const routes = [
-    { url: '/', name: 'Strategies' },
-    { url: '/dashboard', name: 'Dashboard' },
-    { url: '/analytics', name: 'Analytics' }
+    { url: '/', name: 'Strategies' }
+    // { url: '/dashboard', name: 'Dashboard' },
+    // { url: '/analytics', name: 'Analytics' }
   ]
 
   return (
-    <Navbar position='static' isBlurred={false} maxWidth='2xl' className='bg-transparent'>
+    <Navbar position='static' isBlurred={false} maxWidth='xl' className='mb-10 bg-transparent'>
       <NavbarBrand>
         <Link href='https://stargaze.finance'>
           <Image src='/assets/brand/logo.svg' width={40} height={40} alt='' />

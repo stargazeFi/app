@@ -10,14 +10,10 @@ export default function Home() {
     <Container>
       <Box>
         <Image src={image} className='mt-10 h-[40vw] w-auto md:h-[30vw]' />
-        {/* <MainText heading size='2xl'>
+        <MainText heading size='2xl'>
           Page not found
         </MainText>
-        <MainText>The page you requested does not exist</MainText> */}
-        <MainText heading size='2xl'>
-          Too early!
-        </MainText>
-        <MainText>You're an early Pepe. We need more time to build, but thanks for checking us out :3</MainText>
+        <MainText>The page you requested does not exist</MainText>
       </Box>
     </Container>
   )

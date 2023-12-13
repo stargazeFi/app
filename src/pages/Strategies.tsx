@@ -1,3 +1,253 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Image, Input } from '@nextui-org/react'
+import { Close, KeyboardArrowDown, KeyboardArrowUp, Search, SwapVert } from '@mui/icons-material'
+import { Box, Container } from '@/components/Layout'
+import { MainText } from '@/components/Text'
+import { formatAPY, formatCurrency } from '@/misc/format'
+
+type Order = 'decreasing' | 'increasing'
+type Sort = 'Wallet' | 'Deposited' | 'APY' | 'Daily' | 'TVL' | 'Safety'
+
+const FILTERS: { sort: Sort; flex: string }[] = [
+  { sort: 'Wallet', flex: 'flex-[4]' },
+  { sort: 'Deposited', flex: 'flex-[4]' },
+  { sort: 'APY', flex: 'flex-[3]' },
+  { sort: 'Daily', flex: 'flex-[4]' },
+  { sort: 'TVL', flex: 'flex-[4]' }
+]
+
+interface StrategyProps {
+  strategy: {
+    name: string
+    protocol: string
+    tokens: string[]
+    wallet: number
+    deposited: number
+    APY: number
+    daily: number
+    stargazeTVL: number
+    TVL: number
+  }
+}
+
+const Strategy = ({
+  strategy: { name, protocol, APY, TVL, stargazeTVL, daily, tokens, wallet, deposited }
+}: StrategyProps) => (
+  <Box className='w-full cursor-pointer rounded p-2 hover:bg-gray-950'>
+    <Box className='flex-[1]'>
+      <Box center className='w-[64px]'>
+        <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
+        {tokens[1] && (
+          <Box className='-ml-5'>
+            <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+          </Box>
+        )}
+      </Box>
+      <Box col className='ml-4 items-start'>
+        <MainText heading size='xl'>
+          {name}
+        </MainText>
+        <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+          <MainText size='xs'>{protocol}</MainText>
+        </Box>
+      </Box>
+    </Box>
+    <Box center className='flex-[3]'>
+      <Box className={`ml-6 justify-end ${FILTERS[0].flex}`}>
+        <MainText size='lg'>{formatCurrency(wallet)}</MainText>
+      </Box>
+      <Box className={`ml-6 justify-end ${FILTERS[1].flex}`}>
+        <MainText size='lg'>{formatCurrency(deposited)}</MainText>
+      </Box>
+      <Box className={`ml-6 justify-end ${FILTERS[2].flex}`}>
+        <MainText size='lg'>{formatAPY(APY)}</MainText>
+      </Box>
+      <Box className={`ml-6 justify-end ${FILTERS[3].flex}`}>
+        <MainText size='lg'>{formatAPY(daily)}</MainText>
+      </Box>
+      <Box col className={`ml-6 items-end ${FILTERS[4].flex}`}>
+        <MainText size='lg'>{formatCurrency(stargazeTVL)}</MainText>
+        <MainText size='xs' className='from-gray-600 to-gray-700'>
+          {formatCurrency(TVL)}
+        </MainText>
+      </Box>
+    </Box>
+  </Box>
+)
+
 export default function Strategies() {
-  return <div />
+  const [filter, setFilter] = useState('')
+  const [ordered, setOrdered] = useState<Order>('decreasing')
+  const [sorted, setSorted] = useState<Sort | undefined>()
+
+  const portfolio = [
+    { title: 'Deposited', value: 0 },
+    { title: 'Monthly Yield', value: 0 },
+    { title: 'Daily Yield', value: 0 },
+    { title: 'AVG. APY', value: 0 }
+  ]
+
+  const platform = [
+    { title: 'TVL', value: 0 },
+    { title: 'Strategies', value: 0 }
+  ]
+
+  const strategies = [
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 0,
+      deposited: 0,
+      APY: 0,
+      daily: 0,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 0,
+      deposited: 0,
+      APY: 0,
+      daily: 0,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'ETH-USDC v2 LBP 0.5%/0.005%',
+      protocol: 'ekubo',
+      tokens: ['eth', 'usdc'],
+      wallet: 0,
+      deposited: 0,
+      APY: 0,
+      daily: 0,
+      TVL: 0,
+      stargazeTVL: 0
+    }
+  ]
+
+  const filteredStrategies = useMemo(
+    () =>
+      strategies.filter(
+        ({ name, protocol, tokens }) =>
+          !filter ||
+          name.match(new RegExp(filter, 'i')) ||
+          protocol.match(new RegExp(filter, 'i')) ||
+          tokens[0].match(new RegExp(filter, 'i')) ||
+          (tokens[1] || '').match(new RegExp(filter, 'i'))
+      ),
+    [filter, strategies]
+  )
+
+  useEffect(() => console.log(filteredStrategies), [filteredStrategies])
+
+  return (
+    <Container>
+      <Box col className='justify-between rounded-xl bg-black/60 p-6 md:flex-row'>
+        <Box col center className='md:items-start'>
+          <MainText heading size='2xl' className='mb-2'>
+            Portfolio
+          </MainText>
+          <Box className='w-full justify-between px-4 md:p-0'>
+            {portfolio.map(({ title, value }, index) => (
+              <Box key={index} col className='items-start md:mr-6'>
+                <MainText heading size='xl' className='from-gray-600 to-gray-700 font-light'>
+                  {title}
+                </MainText>
+                <MainText size='xl'>{index !== 3 ? formatCurrency(value) : formatAPY(value)}</MainText>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+        <Box col center className='mt-6 md:mt-0 md:items-end'>
+          <MainText heading size='2xl' className='mb-2'>
+            Platform
+          </MainText>
+          <Box className='w-full justify-evenly'>
+            {platform.map(({ title, value }, index) => (
+              <Box key={index} col className='items-start md:ml-6 md:items-end'>
+                <MainText heading size='xl' className='from-gray-600 to-gray-700 font-light'>
+                  {title}
+                </MainText>
+                <MainText size='xl'>{!index ? formatCurrency(value) : value}</MainText>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+      <Box col className='mt-2 justify-between rounded-xl bg-black/60 p-6'>
+        <Box className='w-full'>
+          <div className='flex-[1]'>
+            <Input
+              size='sm'
+              variant='bordered'
+              placeholder='Search...'
+              isClearable
+              value={filter}
+              endContent={!filter ? <Search className='text-gray-500' /> : <Close className='text-gray-500' />}
+              classNames={{
+                input: 'text-amber-50 text-md mr-6',
+                inputWrapper: 'bg-black/60 border border-gray-500'
+              }}
+              onChange={(e) => setFilter(e.target.value)}
+              onClear={() => setFilter('')}
+            />
+          </div>
+          <Box center className='flex-[3] justify-between'>
+            {FILTERS.map(({ sort, flex }, index) => (
+              <Box key={index} className={`${flex} ml-6 justify-end`}>
+                <button
+                  className='flex cursor-pointer'
+                  onClick={() => {
+                    if (sorted !== sort) {
+                      setSorted(sort)
+                      setOrdered('decreasing')
+                    } else {
+                      setOrdered(ordered === 'increasing' ? 'decreasing' : 'increasing')
+                    }
+                    console.log(sorted, ordered)
+                  }}
+                >
+                  <MainText heading size='xl'>
+                    {sort}
+                  </MainText>
+                  <Box center className='ml-1 h-6'>
+                    {sorted !== sort ? (
+                      <SwapVert fontSize='inherit' className='text-amber-50' />
+                    ) : ordered === 'decreasing' ? (
+                      <KeyboardArrowDown fontSize='inherit' className='text-amber-50' />
+                    ) : (
+                      <KeyboardArrowUp fontSize='inherit' className='text-amber-50' />
+                    )}
+                  </Box>
+                </button>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+        <div className='gradient-border-b my-6 h-[1px] w-full' />
+        <Box col>
+          {filteredStrategies.length ? (
+            filteredStrategies.map((strategy, index) => (
+              <>
+                <div className='bg-gray-700 is-not-first-child:my-6 is-not-first-child:h-[0.1px]' />
+                <Strategy key={index} strategy={strategy} />
+              </>
+            ))
+          ) : (
+            <>
+              <MainText heading size='2xl'>
+                No strategies found
+              </MainText>
+              <Box center className='mb-4'>
+                <MainText size='sm'>Try clearing your filters or changing your search term.</MainText>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Box>
+    </Container>
+  )
 }
