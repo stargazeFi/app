@@ -1,14 +1,15 @@
-import { Image, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react'
-import { useLocation } from 'react-router-dom'
-import WalletModal from '@/components/WalletModal'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react'
 import { MainText } from '@/components/Text'
+import WalletModal from '@/components/WalletModal'
 
 export default function Header() {
-  const { pathname } = useLocation()
+  const { pathname } = useRouter()
 
   const routes = [
-    { url: '/', name: 'Strategies' }
-    // { url: '/dashboard', name: 'Dashboard' },
+    { url: '/', name: 'Strategies' },
+    { url: '/dashboard', name: 'Dashboard' }
     // { url: '/analytics', name: 'Analytics' }
   ]
 
@@ -22,7 +23,7 @@ export default function Header() {
       <NavbarContent justify='center' className='flex gap-10 xl:gap-20'>
         {routes.map(({ url, name }, index) => (
           <NavbarItem key={index} className={pathname !== url ? 'cursor-pointer' : ''} isActive={pathname === url}>
-            <Link href={url}>
+            <Link href={pathname === url ? '' : url}>
               <MainText>{name}</MainText>
             </Link>
           </NavbarItem>

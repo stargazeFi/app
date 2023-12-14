@@ -9,7 +9,7 @@ type BoxProps = {
 
 export const Box = ({ children, center, col, className = '' }: BoxProps) => {
   return (
-    <div className={`flex ${col ? 'flex-col' : ''} ${center ? 'items-center justify-center' : ''} ${className}`}>
+    <div className={`flex${col ? ' flex-col' : ''}${center ? ' items-center justify-center' : ''} ${className}`}>
       {children}
     </div>
   )

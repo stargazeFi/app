@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Image, Input } from '@nextui-org/react'
 import { Close, KeyboardArrowDown, KeyboardArrowUp, Search, SwapVert } from '@mui/icons-material'
 import { Box, Container } from '@/components/Layout'
@@ -17,6 +17,7 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 ]
 
 interface StrategyProps {
+  index: number
   strategy: {
     name: string
     protocol: string
@@ -31,48 +32,52 @@ interface StrategyProps {
 }
 
 const Strategy = ({
+  index,
   strategy: { name, protocol, APY, TVL, stargazeTVL, daily, tokens, wallet, deposited }
 }: StrategyProps) => (
-  <Box className='w-full cursor-pointer rounded p-2 hover:bg-gray-950'>
-    <Box className='flex-[1]'>
-      <Box center className='w-[64px]'>
-        <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
-        {tokens[1] && (
-          <Box className='-ml-5'>
-            <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+  <>
+    {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
+    <Box className='w-full cursor-pointer rounded p-2 hover:bg-gray-950'>
+      <Box className='flex-[1]'>
+        <Box center className='w-[64px]'>
+          <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
+          {tokens[1] && (
+            <Box className='-ml-5'>
+              <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+            </Box>
+          )}
+        </Box>
+        <Box col className='ml-4 items-start'>
+          <MainText heading size='xl'>
+            {name}
+          </MainText>
+          <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+            <MainText size='xs'>{protocol}</MainText>
           </Box>
-        )}
+        </Box>
       </Box>
-      <Box col className='ml-4 items-start'>
-        <MainText heading size='xl'>
-          {name}
-        </MainText>
-        <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-          <MainText size='xs'>{protocol}</MainText>
+      <Box center className='flex-[3]'>
+        <Box className={`ml-6 justify-end ${FILTERS[0].flex}`}>
+          <MainText size='lg'>{wallet}</MainText>
+        </Box>
+        <Box className={`ml-6 justify-end ${FILTERS[1].flex}`}>
+          <MainText size='lg'>{deposited}</MainText>
+        </Box>
+        <Box className={`ml-6 justify-end ${FILTERS[2].flex}`}>
+          <MainText size='lg'>{formatAPY(APY)}</MainText>
+        </Box>
+        <Box className={`ml-6 justify-end ${FILTERS[3].flex}`}>
+          <MainText size='lg'>{formatAPY(daily)}</MainText>
+        </Box>
+        <Box col className={`ml-6 items-end ${FILTERS[4].flex}`}>
+          <MainText size='lg'>{formatCurrency(stargazeTVL)}</MainText>
+          <MainText size='xs' className='from-gray-600 to-gray-700'>
+            {formatCurrency(TVL)}
+          </MainText>
         </Box>
       </Box>
     </Box>
-    <Box center className='flex-[3]'>
-      <Box className={`ml-6 justify-end ${FILTERS[0].flex}`}>
-        <MainText size='lg'>{formatCurrency(wallet)}</MainText>
-      </Box>
-      <Box className={`ml-6 justify-end ${FILTERS[1].flex}`}>
-        <MainText size='lg'>{formatCurrency(deposited)}</MainText>
-      </Box>
-      <Box className={`ml-6 justify-end ${FILTERS[2].flex}`}>
-        <MainText size='lg'>{formatAPY(APY)}</MainText>
-      </Box>
-      <Box className={`ml-6 justify-end ${FILTERS[3].flex}`}>
-        <MainText size='lg'>{formatAPY(daily)}</MainText>
-      </Box>
-      <Box col className={`ml-6 items-end ${FILTERS[4].flex}`}>
-        <MainText size='lg'>{formatCurrency(stargazeTVL)}</MainText>
-        <MainText size='xs' className='from-gray-600 to-gray-700'>
-          {formatCurrency(TVL)}
-        </MainText>
-      </Box>
-    </Box>
-  </Box>
+  </>
 )
 
 export default function Strategies() {
@@ -141,8 +146,6 @@ export default function Strategies() {
     [filter, strategies]
   )
 
-  useEffect(() => console.log(filteredStrategies), [filteredStrategies])
-
   return (
     <Container>
       <Box col className='justify-between rounded-xl bg-black/60 p-6 md:flex-row'>
@@ -207,7 +210,6 @@ export default function Strategies() {
                     } else {
                       setOrdered(ordered === 'increasing' ? 'decreasing' : 'increasing')
                     }
-                    console.log(sorted, ordered)
                   }}
                 >
                   <MainText heading size='xl'>
@@ -230,12 +232,7 @@ export default function Strategies() {
         <div className='gradient-border-b my-6 h-[1px] w-full' />
         <Box col>
           {filteredStrategies.length ? (
-            filteredStrategies.map((strategy, index) => (
-              <>
-                <div className='bg-gray-700 is-not-first-child:my-6 is-not-first-child:h-[0.1px]' />
-                <Strategy key={index} strategy={strategy} />
-              </>
-            ))
+            filteredStrategies.map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
           ) : (
             <>
               <MainText heading size='2xl'>
