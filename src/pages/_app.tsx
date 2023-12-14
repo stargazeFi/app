@@ -11,16 +11,20 @@ const queryClient = new QueryClient()
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <NextUIProvider>
+    <>
       <Head>
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
       </Head>
-      <QueryClientProvider client={queryClient}>
-        <StarknetConfigWrapper>
-          <Header />
-          <Component {...pageProps} />
-        </StarknetConfigWrapper>
-      </QueryClientProvider>
-    </NextUIProvider>
+      <NextUIProvider>
+        <main className='text-foreground dark'>
+          <QueryClientProvider client={queryClient}>
+            <StarknetConfigWrapper>
+              <Header />
+              <Component {...pageProps} />
+            </StarknetConfigWrapper>
+          </QueryClientProvider>
+        </main>
+      </NextUIProvider>
+    </>
   )
 }

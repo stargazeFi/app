@@ -131,7 +131,7 @@ export default function Strategies() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState('')
   const [ordered, setOrdered] = useState<Order>('decreasing')
-  const [sorted, setSorted] = useState<Sort | undefined>()
+  const [sorted, setSorted] = useState('TVL')
 
   const portfolio = [
     { title: 'Deposited', value: 0 },
@@ -280,7 +280,8 @@ export default function Strategies() {
             tokens[0].match(new RegExp(filter, 'i')) ||
             (tokens[1] || '').match(new RegExp(filter, 'i'))
         )
-        .sort((a, b) => (!sorted ? 0 : ordered === 'increasing' ? a[sorted] - b[sorted] : b[sorted] - a[sorted])),
+        // @ts-expect-error ts bitching for no reason
+        .sort((a, b) => (ordered === 'increasing' ? a[sorted] - b[sorted] : b[sorted] - a[sorted])),
     [filter, ordered, sorted, strategies]
   )
 
@@ -352,19 +353,36 @@ export default function Strategies() {
               }}
             />
           </div>
-          <Box className='lg:hidden'>
-            <Dropdown>
+          <Box className='ml-6 lg:hidden'>
+            <Dropdown
+              type='menu'
+              classNames={{
+                base: 'child:bg-black border border-gray-700 rounded-xl'
+              }}
+            >
               <DropdownTrigger>
                 <Button
                   radius='sm'
                   variant='bordered'
                   className='flex h-full items-center justify-center border border-gray-500 bg-black/60'
                 >
-                  TEST
+                  <MainText gradient>Sort by:</MainText>
+                  <MainText gradient heading size='lg'>
+                    {sorted}
+                  </MainText>
+                  <Box center>
+                    <KeyboardArrowDown fontSize='inherit' className='text-amber-50' />
+                  </Box>
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem>TEST</DropdownItem>
+              <DropdownMenu onAction={(sorted) => setSorted(sorted as Sort)}>
+                {FILTERS.map(({ sort }) => (
+                  <DropdownItem key={sort} variant='bordered' className='border-none'>
+                    <MainText heading gradient size='lg'>
+                      {sort}
+                    </MainText>
+                  </DropdownItem>
+                ))}
               </DropdownMenu>
             </Dropdown>
           </Box>
