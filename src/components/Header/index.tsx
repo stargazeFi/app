@@ -8,8 +8,8 @@ export default function Header() {
   const { pathname } = useRouter()
 
   const routes = [
-    { url: '/', name: 'Strategies' },
-    { url: '/dashboard', name: 'Dashboard' }
+    { url: '/', name: 'Strategies' }
+    // { url: '/dashboard', name: 'Dashboard' }
     // { url: '/analytics', name: 'Analytics' }
   ]
 
@@ -24,7 +24,7 @@ export default function Header() {
         {routes.map(({ url, name }, index) => (
           <NavbarItem key={index} className={pathname !== url ? 'cursor-pointer' : ''} isActive={pathname === url}>
             <Link href={pathname === url ? '' : url}>
-              <MainText>{name}</MainText>
+              <MainText gradient>{name}</MainText>
             </Link>
           </NavbarItem>
         ))}

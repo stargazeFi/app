@@ -63,7 +63,9 @@ export default function WalletModal() {
         variant='bordered'
         className='flex items-center justify-center border border-gray-500 bg-black/60'
       >
-        <MainText size='md'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
+        <MainText gradient size='md'>
+          {address ? shortenAddress(address) : 'Connect wallet'}
+        </MainText>
         {chain.testnet && (
           <div className='ml-2 flex items-center bg-black'>
             <MainText className='text-amber-200' size='xs'>
@@ -89,7 +91,7 @@ export default function WalletModal() {
           {(onClose) => (
             <>
               <ModalHeader className='flex flex-col gap-1'>
-                <MainText heading size='2xl'>
+                <MainText gradient heading size='2xl'>
                   {isConnected ? 'Your account' : 'Connect your wallet'}
                 </MainText>
               </ModalHeader>
@@ -150,7 +152,7 @@ export default function WalletModal() {
                         </MainText>
                       </Link>
                     </Box>
-                    <MainText heading size='2xl' className='mb-2 mt-6'>
+                    <MainText gradient heading size='2xl' className='mb-2 mt-6'>
                       Recent transactions
                     </MainText>
                     <span className='font-body text-xs text-amber-50 text-opacity-50'>

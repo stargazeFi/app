@@ -12,14 +12,10 @@ export default function Home() {
         <Box className='relative mt-10 h-[40vw] w-[40vw] md:h-[30vw] md:w-[30vw]'>
           <Image src={image} fill alt={image} />
         </Box>
-        {/* <MainText heading size='2xl'>
+        <MainText gradient heading size='2xl'>
           Page not found
         </MainText>
-        <MainText>The page you requested does not exist</MainText> */}
-        <MainText heading size='2xl'>
-          Too early!
-        </MainText>
-        <MainText>You're an early Pepe. We need more time to build, but thanks for checking us out :3</MainText>
+        <MainText gradient>The page you requested does not exist</MainText>
       </Box>
     </Container>
   )

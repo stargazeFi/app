@@ -2,14 +2,18 @@ import { ReactNode } from 'react'
 
 interface TextProps {
   children: ReactNode
+  gradient?: boolean
   heading?: boolean
   size?: string
   className?: string
 }
 
-export function MainText({ children, className, heading, size, ...props }: TextProps) {
-  className += ' bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-center text-transparent '
-  className += heading ? 'font-heading' : 'font-body'
+export function MainText({ children, className, gradient, heading, size, ...props }: TextProps) {
+  className += ' text-center'
+  className += heading ? ' font-heading' : ' font-body'
+  if (gradient) {
+    className += ' bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent'
+  }
   if (size === 'xs') {
     className += ' text-xs'
   } else if (size === 'md') {

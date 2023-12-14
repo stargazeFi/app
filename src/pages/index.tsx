@@ -1,12 +1,23 @@
 import { useMemo, useState } from 'react'
-import { Image, Input } from '@nextui-org/react'
-import { Close, KeyboardArrowDown, KeyboardArrowUp, Search, SwapVert } from '@mui/icons-material'
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Image,
+  Input,
+  Pagination
+} from '@nextui-org/react'
+import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
 import { Box, Container } from '@/components/Layout'
 import { MainText } from '@/components/Text'
 import { formatAPY, formatCurrency } from '@/misc/format'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
+
+const RESULTS_PER_PAGE = 7
 
 const FILTERS: { sort: Sort; flex: string }[] = [
   { sort: 'wallet', flex: 'flex-[4]' },
@@ -31,56 +42,93 @@ interface StrategyProps {
   }
 }
 
+const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; stargazeTVL: number; TVL: number }) => {
+  return (
+    <Box col className={`ml-6 items-end ${FILTERS[4].flex} ${className}`}>
+      <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+        TVL
+      </MainText>
+      <MainText gradient size='lg'>
+        {formatCurrency(stargazeTVL)}
+      </MainText>
+      <MainText size='xs' className='text-gray-600'>
+        {formatCurrency(TVL)}
+      </MainText>
+    </Box>
+  )
+}
+
 const Strategy = ({
   index,
   strategy: { name, protocol, APY, TVL, stargazeTVL, daily, tokens, wallet, deposited }
 }: StrategyProps) => (
   <>
     {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
-    <Box className='w-full cursor-pointer rounded p-2 hover:bg-gray-950'>
+    <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-950 lg:flex-row'>
       <Box className='flex-[1]'>
-        <Box center className='w-[64px]'>
-          <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
-          {tokens[1] && (
-            <Box className='-ml-5'>
-              <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+        <Box>
+          <Box center className='w-[64px]'>
+            <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
+            {tokens[1] && (
+              <Box className='-ml-5'>
+                <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+              </Box>
+            )}
+          </Box>
+          <Box col className='ml-4 items-start'>
+            <MainText gradient heading size='xl'>
+              {name}
+            </MainText>
+            <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+              <MainText gradient size='xs'>
+                {protocol}
+              </MainText>
             </Box>
-          )}
-        </Box>
-        <Box col className='ml-4 items-start'>
-          <MainText heading size='xl'>
-            {name}
-          </MainText>
-          <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-            <MainText size='xs'>{protocol}</MainText>
           </Box>
         </Box>
+        <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='lg:hidden' />
       </Box>
-      <Box center className='flex-[3]'>
-        <Box className={`ml-6 justify-end ${FILTERS[0].flex}`}>
-          <MainText size='lg'>{wallet}</MainText>
-        </Box>
-        <Box className={`ml-6 justify-end ${FILTERS[1].flex}`}>
-          <MainText size='lg'>{deposited}</MainText>
-        </Box>
-        <Box className={`ml-6 justify-end ${FILTERS[2].flex}`}>
-          <MainText size='lg'>{formatAPY(APY)}</MainText>
-        </Box>
-        <Box className={`ml-6 justify-end ${FILTERS[3].flex}`}>
-          <MainText size='lg'>{formatAPY(daily)}</MainText>
-        </Box>
-        <Box col className={`ml-6 items-end ${FILTERS[4].flex}`}>
-          <MainText size='lg'>{formatCurrency(stargazeTVL)}</MainText>
-          <MainText size='xs' className='from-gray-600 to-gray-700'>
-            {formatCurrency(TVL)}
+      <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
+        <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
+          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            Wallet
+          </MainText>
+          <MainText gradient size='lg'>
+            {wallet}
           </MainText>
         </Box>
+        <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
+          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            Deposited
+          </MainText>
+          <MainText gradient size='lg'>
+            {deposited}
+          </MainText>
+        </Box>
+        <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
+          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            APY
+          </MainText>
+          <MainText gradient size='lg'>
+            {formatAPY(APY)}
+          </MainText>
+        </Box>
+        <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
+          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            Daily
+          </MainText>
+          <MainText gradient size='lg'>
+            {formatAPY(daily)}
+          </MainText>
+        </Box>
+        <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='hidden lg:flex' />
       </Box>
     </Box>
   </>
 )
 
 export default function Strategies() {
+  const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState('')
   const [ordered, setOrdered] = useState<Order>('decreasing')
   const [sorted, setSorted] = useState<Sort | undefined>()
@@ -102,7 +150,7 @@ export default function Strategies() {
       name: 'USDC',
       protocol: 'ekubo',
       tokens: ['usdc'],
-      wallet: 1,
+      wallet: 0,
       deposited: 1,
       APY: 0.09,
       daily: 0.9998,
@@ -113,7 +161,7 @@ export default function Strategies() {
       name: 'USDC',
       protocol: 'ekubo',
       tokens: ['usdc'],
-      wallet: 123,
+      wallet: 1,
       deposited: 43267,
       APY: 0.48,
       daily: 0.000032178321,
@@ -121,10 +169,98 @@ export default function Strategies() {
       stargazeTVL: 123321
     },
     {
-      name: 'ETH-USDC v2 LBP 0.5%/0.005%',
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 2,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 3,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 4,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 5,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 6,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 7,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 8,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'USDC',
+      protocol: 'ekubo',
+      tokens: ['usdc'],
+      wallet: 9,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
+      TVL: 23828932,
+      stargazeTVL: 123321
+    },
+    {
+      name: 'ETH-USDC v2 LBP',
       protocol: 'ekubo',
       tokens: ['eth', 'usdc'],
-      wallet: 12,
+      wallet: 10,
       deposited: 2782,
       APY: 1.289,
       daily: 0.1,
@@ -148,59 +284,91 @@ export default function Strategies() {
     [filter, ordered, sorted, strategies]
   )
 
+  const totalPages = useMemo(
+    () => Math.ceil(displayedStrategies.length / RESULTS_PER_PAGE),
+    [displayedStrategies.length]
+  )
+
   return (
     <Container>
       <Box col className='justify-between rounded-xl bg-black/60 p-6 md:flex-row'>
         <Box col center className='md:items-start'>
-          <MainText heading size='2xl' className='mb-2'>
+          <MainText gradient heading size='2xl' className='mb-2'>
             Portfolio
           </MainText>
           <Box className='w-full justify-between px-4 md:p-0'>
             {portfolio.map(({ title, value }, index) => (
               <Box key={index} col className='items-start md:mr-6'>
-                <MainText heading size='xl' className='from-gray-600 to-gray-700 font-light'>
+                <MainText heading size='xl' className='font-light text-gray-600'>
                   {title}
                 </MainText>
-                <MainText size='xl'>{index !== 3 ? formatCurrency(value) : formatAPY(value)}</MainText>
+                <MainText gradient size='xl'>
+                  {index !== 3 ? formatCurrency(value) : formatAPY(value)}
+                </MainText>
               </Box>
             ))}
           </Box>
         </Box>
         <Box col center className='mt-6 md:mt-0 md:items-end'>
-          <MainText heading size='2xl' className='mb-2'>
+          <MainText gradient heading size='2xl' className='mb-2'>
             Platform
           </MainText>
           <Box className='w-full justify-evenly'>
             {platform.map(({ title, value }, index) => (
               <Box key={index} col className='items-start md:ml-6 md:items-end'>
-                <MainText heading size='xl' className='from-gray-600 to-gray-700 font-light'>
+                <MainText heading size='xl' className='font-light text-gray-600'>
                   {title}
                 </MainText>
-                <MainText size='xl'>{!index ? formatCurrency(value) : value}</MainText>
+                <MainText gradient size='xl'>
+                  {!index ? formatCurrency(value) : value}
+                </MainText>
               </Box>
             ))}
           </Box>
         </Box>
       </Box>
       <Box col className='mt-2 justify-between rounded-xl bg-black/60 p-6'>
-        <Box className='w-full'>
-          <div className='flex-[1]'>
+        <Box className='w-full justify-between'>
+          <div className='max-w-sm flex-[1]'>
             <Input
+              autoComplete='off'
               size='sm'
               variant='bordered'
               placeholder='Search...'
               isClearable
               value={filter}
-              endContent={!filter ? <Search className='text-gray-500' /> : <Close className='text-gray-500' />}
+              endContent={<Close className='text-gray-500' />}
               classNames={{
                 input: 'text-amber-50 text-md mr-6',
                 inputWrapper: 'bg-black/60 border border-gray-500'
               }}
-              onChange={(e) => setFilter(e.target.value)}
-              onClear={() => setFilter('')}
+              onChange={(e) => {
+                setFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              onClear={() => {
+                setFilter('')
+                setCurrentPage(1)
+              }}
             />
           </div>
-          <Box center className='flex-[3] justify-between'>
+          <Box className='lg:hidden'>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  radius='sm'
+                  variant='bordered'
+                  className='flex h-full items-center justify-center border border-gray-500 bg-black/60'
+                >
+                  TEST
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem>TEST</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </Box>
+          <Box center className='hidden flex-[3] justify-between lg:flex'>
             {FILTERS.map(({ sort, flex }, index) => (
               <Box key={index} className={`${flex} ml-6 justify-end`}>
                 <button
@@ -214,7 +382,7 @@ export default function Strategies() {
                     }
                   }}
                 >
-                  <MainText heading size='xl'>
+                  <MainText gradient heading size='xl'>
                     {sort}
                   </MainText>
                   <Box center className='ml-1 h-6'>
@@ -234,19 +402,41 @@ export default function Strategies() {
         <div className='gradient-border-b my-6 h-[1px] w-full' />
         <Box col>
           {displayedStrategies.length ? (
-            displayedStrategies.map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
+            displayedStrategies
+              .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
+              .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
           ) : (
             <>
-              <MainText heading size='2xl'>
+              <MainText gradient heading size='2xl'>
                 No strategies found
               </MainText>
               <Box center className='mb-4'>
-                <MainText size='sm'>Try clearing your filters or changing your search term.</MainText>
+                <MainText gradient size='sm'>
+                  Try clearing your filters or changing your search term.
+                </MainText>
               </Box>
             </>
           )}
         </Box>
       </Box>
+      {totalPages !== 1 && (
+        <Box center className='mt-6 pr-6 lg:justify-end'>
+          <Pagination
+            page={currentPage}
+            onChange={setCurrentPage}
+            variant='bordered'
+            showControls
+            total={totalPages}
+            initialPage={1}
+            classNames={{
+              prev: `${currentPage === 1 ? 'child:text-transparent' : 'child:text-white'}`,
+              next: `${currentPage === totalPages ? 'child:text-transparent' : 'child:text-white'}`,
+              item: 'border border-gray-700 text-white !bg-transparent hover:border-gray-500',
+              cursor: 'bg-transparent border border-white'
+            }}
+          />
+        </Box>
+      )}
     </Container>
   )
 }

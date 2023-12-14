@@ -13,8 +13,8 @@ html {
 }
 
 body {
-  height: 100vh;
   width: 100vw;
+  min-height: 100vh;
   font-family: 'Ubuntu', sans-serif;
   margin: 0;
   padding: 0;

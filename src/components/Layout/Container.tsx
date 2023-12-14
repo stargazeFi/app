@@ -15,5 +15,7 @@ const maxWidth = {
 }
 
 export const Container = ({ children, className = '', size = 'xxl' }: ContainerProps) => {
-  return <div className={`mx-auto max-w-[1280px] px-4 sm:px-6 ${maxWidth[size]} ${className}`}>{children}</div>
+  return (
+    <div className={`mx-auto max-w-[1280px] px-4 pb-6 sm:px-6 lg:pb-24 ${maxWidth[size]} ${className}`}>{children}</div>
+  )
 }
