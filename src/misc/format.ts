@@ -1,4 +1,4 @@
-export const formatAPY = (value: number) => `${value * 100}%`
+export const formatAPY = (value: number) => `${(value * 100).toFixed(4).replace(/\.?0+$/, '')}%`
 
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', {

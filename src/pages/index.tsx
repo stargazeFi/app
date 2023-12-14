@@ -6,13 +6,13 @@ import { MainText } from '@/components/Text'
 import { formatAPY, formatCurrency } from '@/misc/format'
 
 type Order = 'decreasing' | 'increasing'
-type Sort = 'Wallet' | 'Deposited' | 'APY' | 'Daily' | 'TVL' | 'Safety'
+type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
 
 const FILTERS: { sort: Sort; flex: string }[] = [
-  { sort: 'Wallet', flex: 'flex-[4]' },
-  { sort: 'Deposited', flex: 'flex-[4]' },
+  { sort: 'wallet', flex: 'flex-[4]' },
+  { sort: 'deposited', flex: 'flex-[4]' },
   { sort: 'APY', flex: 'flex-[3]' },
-  { sort: 'Daily', flex: 'flex-[4]' },
+  { sort: 'daily', flex: 'flex-[4]' },
   { sort: 'TVL', flex: 'flex-[4]' }
 ]
 
@@ -102,10 +102,10 @@ export default function Strategies() {
       name: 'USDC',
       protocol: 'ekubo',
       tokens: ['usdc'],
-      wallet: 0,
-      deposited: 0,
-      APY: 0,
-      daily: 0,
+      wallet: 1,
+      deposited: 1,
+      APY: 0.09,
+      daily: 0.9998,
       TVL: 23828932,
       stargazeTVL: 123321
     },
@@ -113,10 +113,10 @@ export default function Strategies() {
       name: 'USDC',
       protocol: 'ekubo',
       tokens: ['usdc'],
-      wallet: 0,
-      deposited: 0,
-      APY: 0,
-      daily: 0,
+      wallet: 123,
+      deposited: 43267,
+      APY: 0.48,
+      daily: 0.000032178321,
       TVL: 23828932,
       stargazeTVL: 123321
     },
@@ -124,26 +124,28 @@ export default function Strategies() {
       name: 'ETH-USDC v2 LBP 0.5%/0.005%',
       protocol: 'ekubo',
       tokens: ['eth', 'usdc'],
-      wallet: 0,
-      deposited: 0,
-      APY: 0,
-      daily: 0,
-      TVL: 0,
-      stargazeTVL: 0
+      wallet: 12,
+      deposited: 2782,
+      APY: 1.289,
+      daily: 0.1,
+      TVL: 233321,
+      stargazeTVL: 1234
     }
   ]
 
-  const filteredStrategies = useMemo(
+  const displayedStrategies = useMemo(
     () =>
-      strategies.filter(
-        ({ name, protocol, tokens }) =>
-          !filter ||
-          name.match(new RegExp(filter, 'i')) ||
-          protocol.match(new RegExp(filter, 'i')) ||
-          tokens[0].match(new RegExp(filter, 'i')) ||
-          (tokens[1] || '').match(new RegExp(filter, 'i'))
-      ),
-    [filter, strategies]
+      strategies
+        .filter(
+          ({ name, protocol, tokens }) =>
+            !filter ||
+            name.match(new RegExp(filter, 'i')) ||
+            protocol.match(new RegExp(filter, 'i')) ||
+            tokens[0].match(new RegExp(filter, 'i')) ||
+            (tokens[1] || '').match(new RegExp(filter, 'i'))
+        )
+        .sort((a, b) => (!sorted ? 0 : ordered === 'increasing' ? a[sorted] - b[sorted] : b[sorted] - a[sorted])),
+    [filter, ordered, sorted, strategies]
   )
 
   return (
@@ -231,8 +233,8 @@ export default function Strategies() {
         </Box>
         <div className='gradient-border-b my-6 h-[1px] w-full' />
         <Box col>
-          {filteredStrategies.length ? (
-            filteredStrategies.map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
+          {displayedStrategies.length ? (
+            displayedStrategies.map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
           ) : (
             <>
               <MainText heading size='2xl'>
