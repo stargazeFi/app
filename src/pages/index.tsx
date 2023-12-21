@@ -7,12 +7,16 @@ import {
   DropdownTrigger,
   Image,
   Input,
-  Pagination
+  Pagination,
+  Spinner
 } from '@nextui-org/react'
 import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
-import { Box, Container } from '@/components/Layout'
-import { MainText } from '@/components/Text'
-import { formatAPY, formatCurrency } from '@/misc/format'
+import ErrorPage from '@/components/ErrorPage'
+import { Box, Container, DarkElement, MainText } from '@/components/Layout'
+import { formatPercentage, formatCurrency } from '@/misc/format'
+import { useStrategies } from '@/hooks/api'
+import { Strategy } from '@/api'
+import Link from 'next/link'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
@@ -29,17 +33,7 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 
 interface StrategyProps {
   index: number
-  strategy: {
-    name: string
-    protocol: string
-    tokens: string[]
-    wallet: number
-    deposited: number
-    APY: number
-    daily: number
-    stargazeTVL: number
-    TVL: number
-  }
+  strategy: Strategy
 }
 
 const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; stargazeTVL: number; TVL: number }) => {
@@ -60,70 +54,80 @@ const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; star
 
 const Strategy = ({
   index,
-  strategy: { name, protocol, APY, TVL, stargazeTVL, daily, tokens, wallet, deposited }
+  strategy: { name, protocol, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress }
 }: StrategyProps) => (
   <>
     {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
-    <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-950 lg:flex-row'>
-      <Box className='flex-[1]'>
-        <Box>
-          <Box center className='w-[64px]'>
-            <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
-            {tokens[1] && (
-              <Box className='-ml-5'>
-                <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
-              </Box>
-            )}
-          </Box>
-          <Box col className='ml-4 items-start'>
-            <MainText gradient heading size='xl'>
-              {name}
-            </MainText>
-            <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-              <MainText gradient size='xs'>
-                {protocol}
+    <Link href={`/strategy/${strategyAddress}`}>
+      <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-950 lg:flex-row'>
+        <Box className='flex-[1]'>
+          <Box center>
+            <Box center className='w-[64px]'>
+              <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
+              {tokens[1] && (
+                <Box className='-ml-5'>
+                  <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+                </Box>
+              )}
+            </Box>
+            <Box col className='ml-4 items-start'>
+              <MainText gradient heading size='xl'>
+                {name}
               </MainText>
+              <Box>
+                <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                  <MainText size='xs'>{protocol}</MainText>
+                </Box>
+                <Box
+                  center
+                  className={`ml-2 w-fit rounded ${
+                    type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
+                  } px-2 py-1 uppercase`}
+                >
+                  <MainText size='xs'>{type}</MainText>
+                </Box>
+              </Box>
             </Box>
           </Box>
+          <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='lg:hidden' />
         </Box>
-        <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='lg:hidden' />
+        <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
+          <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
+            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+              Wallet
+            </MainText>
+            <MainText gradient size='lg' className={type === 'Direct' ? 'lg:hidden' : ''}>
+              {type === 'LP' ? '42' : '-'}
+            </MainText>
+          </Box>
+          <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
+            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+              Deposited
+            </MainText>
+            <MainText gradient size='lg'>
+              69
+            </MainText>
+          </Box>
+          <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
+            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+              APY
+            </MainText>
+            <MainText gradient size='lg'>
+              {formatPercentage(APY)}
+            </MainText>
+          </Box>
+          <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
+            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+              Daily
+            </MainText>
+            <MainText gradient size='lg'>
+              {formatPercentage(daily)}
+            </MainText>
+          </Box>
+          <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='hidden lg:flex' />
+        </Box>
       </Box>
-      <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
-        <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
-          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
-            Wallet
-          </MainText>
-          <MainText gradient size='lg'>
-            {wallet}
-          </MainText>
-        </Box>
-        <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
-          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
-            Deposited
-          </MainText>
-          <MainText gradient size='lg'>
-            {deposited}
-          </MainText>
-        </Box>
-        <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
-          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
-            APY
-          </MainText>
-          <MainText gradient size='lg'>
-            {formatAPY(APY)}
-          </MainText>
-        </Box>
-        <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
-          <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
-            Daily
-          </MainText>
-          <MainText gradient size='lg'>
-            {formatAPY(daily)}
-          </MainText>
-        </Box>
-        <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='hidden lg:flex' />
-      </Box>
-    </Box>
+    </Link>
   </>
 )
 
@@ -133,145 +137,21 @@ export default function Strategies() {
   const [ordered, setOrdered] = useState<Order>('decreasing')
   const [sorted, setSorted] = useState('TVL')
 
-  const portfolio = [
-    { title: 'Deposited', value: 0 },
-    { title: 'Monthly Yield', value: 0 },
-    { title: 'Daily Yield', value: 0 },
-    { title: 'AVG. APY', value: 0 }
-  ]
+  const { data: strategies, isError, isLoading } = useStrategies()
 
-  const platform = [
-    { title: 'TVL', value: 0 },
-    { title: 'Strategies', value: 0 }
-  ]
-
-  const strategies = [
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 0,
-      deposited: 1,
-      APY: 0.09,
-      daily: 0.9998,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 1,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 2,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 3,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 4,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 5,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 6,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 7,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 8,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'USDC',
-      protocol: 'ekubo',
-      tokens: ['usdc'],
-      wallet: 9,
-      deposited: 43267,
-      APY: 0.48,
-      daily: 0.000032178321,
-      TVL: 23828932,
-      stargazeTVL: 123321
-    },
-    {
-      name: 'ETH-USDC v2 LBP',
-      protocol: 'ekubo',
-      tokens: ['eth', 'usdc'],
-      wallet: 10,
-      deposited: 2782,
-      APY: 1.289,
-      daily: 0.1,
-      TVL: 233321,
-      stargazeTVL: 1234
-    }
-  ]
+  const portfolio = useMemo(
+    () => [
+      { title: 'Deposited', value: 0 },
+      { title: 'Monthly Yield', value: 0 },
+      { title: 'Daily Yield', value: 0 },
+      { title: 'AVG. APY', value: 0 }
+    ],
+    []
+  )
 
   const displayedStrategies = useMemo(
     () =>
-      strategies
+      (strategies || [])
         .filter(
           ({ name, protocol, tokens }) =>
             !filter ||
@@ -290,21 +170,25 @@ export default function Strategies() {
     [displayedStrategies.length]
   )
 
+  if (isError) {
+    return <ErrorPage />
+  }
+
   return (
     <Container>
-      <Box col className='justify-between rounded-xl bg-black/60 p-6 md:flex-row'>
+      <DarkElement col spaced className='md:flex-row'>
         <Box col center className='md:items-start'>
           <MainText gradient heading size='2xl' className='mb-2'>
             Portfolio
           </MainText>
-          <Box className='w-full justify-between px-4 md:p-0'>
+          <Box spaced className='w-full px-4 md:p-0'>
             {portfolio.map(({ title, value }, index) => (
               <Box key={index} col className='items-start md:mr-6'>
                 <MainText heading size='xl' className='font-light text-gray-600'>
                   {title}
                 </MainText>
                 <MainText gradient size='xl'>
-                  {index !== 3 ? formatCurrency(value) : formatAPY(value)}
+                  {index !== 3 ? formatCurrency(value) : formatPercentage(value)}
                 </MainText>
               </Box>
             ))}
@@ -312,24 +196,35 @@ export default function Strategies() {
         </Box>
         <Box col center className='mt-6 md:mt-0 md:items-end'>
           <MainText gradient heading size='2xl' className='mb-2'>
-            Platform
+            Stargaze
           </MainText>
           <Box className='w-full justify-evenly'>
-            {platform.map(({ title, value }, index) => (
-              <Box key={index} col className='items-start md:ml-6 md:items-end'>
-                <MainText heading size='xl' className='font-light text-gray-600'>
-                  {title}
-                </MainText>
-                <MainText gradient size='xl'>
-                  {!index ? formatCurrency(value) : value}
-                </MainText>
-              </Box>
-            ))}
+            {!isLoading && strategies && (
+              <>
+                <Box col className='items-start md:ml-6 md:items-end'>
+                  <MainText heading size='xl' className='font-light text-gray-600'>
+                    TVL
+                  </MainText>
+                  <MainText gradient size='xl'>
+                    {formatCurrency(strategies.reduce((acc, it) => acc + it.stargazeTVL, 0))}
+                  </MainText>
+                </Box>
+                <Box col className='items-start md:ml-6 md:items-end'>
+                  <MainText heading size='xl' className='font-light text-gray-600'>
+                    Strategies
+                  </MainText>
+                  <MainText gradient size='xl'>
+                    {strategies.length}
+                  </MainText>
+                </Box>
+              </>
+            )}
           </Box>
         </Box>
-      </Box>
-      <Box col className='mt-2 justify-between rounded-xl bg-black/60 p-6'>
-        <Box className='w-full justify-between'>
+      </DarkElement>
+
+      <DarkElement col spaced className='mt-2 p-6'>
+        <Box spaced className='w-full'>
           <div className='max-w-sm flex-[1]'>
             <Input
               autoComplete='off'
@@ -386,7 +281,7 @@ export default function Strategies() {
               </DropdownMenu>
             </Dropdown>
           </Box>
-          <Box center className='hidden flex-[3] justify-between lg:flex'>
+          <Box spaced className='hidden flex-[3] items-center lg:flex'>
             {FILTERS.map(({ sort, flex }, index) => (
               <Box key={index} className={`${flex} ml-6 justify-end`}>
                 <button
@@ -419,7 +314,9 @@ export default function Strategies() {
         </Box>
         <div className='gradient-border-b my-6 h-[1px] w-full' />
         <Box col>
-          {displayedStrategies.length ? (
+          {isLoading ? (
+            <Spinner size='lg' className='my-10' />
+          ) : displayedStrategies.length ? (
             displayedStrategies
               .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
               .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
@@ -436,7 +333,8 @@ export default function Strategies() {
             </>
           )}
         </Box>
-      </Box>
+      </DarkElement>
+
       {totalPages !== 1 && (
         <Box center className='mt-6 pr-6 lg:justify-end'>
           <Pagination

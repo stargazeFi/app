@@ -1,14 +1,15 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react'
-import { MainText } from '@/components/Text'
+import { CurrencyExchange } from '@mui/icons-material'
+import { Box, MainText } from '@/components/Layout'
 import WalletModal from '@/components/WalletModal'
 
 export default function Header() {
   const { pathname } = useRouter()
 
   const routes = [
-    { url: '/', name: 'Strategies' }
+    { url: '/', name: 'Strategies', icon: <CurrencyExchange fontSize='inherit' className='text-gray-200' /> }
     // { url: '/dashboard', name: 'Dashboard' }
     // { url: '/analytics', name: 'Analytics' }
   ]
@@ -21,10 +22,15 @@ export default function Header() {
         </Link>
       </NavbarBrand>
       <NavbarContent justify='center' className='flex gap-10 xl:gap-20'>
-        {routes.map(({ url, name }, index) => (
+        {routes.map(({ url, name, icon }, index) => (
           <NavbarItem key={index} className={pathname !== url ? 'cursor-pointer' : ''} isActive={pathname === url}>
             <Link href={pathname === url ? '' : url}>
-              <MainText gradient>{name}</MainText>
+              <Box center>
+                {icon}
+                <MainText gradient className='ml-2'>
+                  {name}
+                </MainText>
+              </Box>
             </Link>
           </NavbarItem>
         ))}

@@ -1,19 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Button,
-  Image,
-  Link,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  useDisclosure
-} from '@nextui-org/react'
+import { Image, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
 import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
-import { Box } from '@/components/Layout'
-import { MainText } from '@/components/Text'
+import { Box, MainButton, MainText } from '@/components/Layout'
 import { shortenAddress } from '@/misc/format'
 
 const CONNECTOR_METADATA: {
@@ -57,13 +46,8 @@ export default function WalletModal() {
 
   return (
     <>
-      <Button
-        onClick={onOpen}
-        radius='sm'
-        variant='bordered'
-        className='flex items-center justify-center border border-gray-500 bg-black/60'
-      >
-        <MainText gradient size='md'>
+      <MainButton onClick={onOpen}>
+        <MainText size='md' className='text-white'>
           {address ? shortenAddress(address) : 'Connect wallet'}
         </MainText>
         {chain.testnet && (
@@ -73,7 +57,7 @@ export default function WalletModal() {
             </MainText>
           </div>
         )}
-      </Button>
+      </MainButton>
       <Modal
         backdrop='blur'
         hideCloseButton
@@ -100,7 +84,7 @@ export default function WalletModal() {
                   <Box col center>
                     <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
                     <Box col className='w-[85%]'>
-                      <Box className='mb-2 justify-between'>
+                      <Box spaced className='mb-2'>
                         <MainText heading size='sm'>
                           Connected with {connector!.name}
                         </MainText>
@@ -161,16 +145,14 @@ export default function WalletModal() {
                   </Box>
                 ) : (
                   connectors.map((connector, index) => (
-                    <Button
+                    <MainButton
                       key={index}
-                      radius='sm'
                       isDisabled={!connector.available()}
-                      variant='bordered'
                       onClick={() => {
                         connect({ connector })
                         onClose()
                       }}
-                      className='border border-gray-800 p-8'
+                      className='p-8'
                       startContent={
                         <div className='mr-2'>
                           <Image
@@ -185,7 +167,7 @@ export default function WalletModal() {
                       <MainText className='text-white' size='md'>
                         Connect with {CONNECTOR_METADATA[connector.id].name}
                       </MainText>
-                    </Button>
+                    </MainButton>
                   ))
                 )}
               </ModalBody>

@@ -27,6 +27,38 @@ body {
   overflow-x: hidden;
 }
 
+.gradient-dark-element {
+  position: relative;
+}
+
+.gradient-dark-element > * {
+  z-index: 42;
+}
+
+.gradient-dark-element:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-image: linear-gradient(to bottom, #33333320, #333333A0, #33333320) 0 1;
+}
+
+.gradient-dark-element:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-image: linear-gradient(to right, #33333320, #333333A0, #33333320) 1 0;
+}
+
 .gradient-border-h {
   border-width: 2px;
   border-style: solid;

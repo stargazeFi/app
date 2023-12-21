@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { Box, Container, MainText } from '@/components/Layout'
 
-export default function NotFound() {
+export default function ErrorPage() {
   const rng = Math.floor(Math.random() * 10) + 1
   const image = rng === 10 ? '/assets/general/error-pepe.png' : `/assets/general/error-${(rng % 3) + 1}.png`
 
@@ -12,9 +12,9 @@ export default function NotFound() {
           <Image src={image} fill alt={image} />
         </Box>
         <MainText gradient heading size='2xl'>
-          Page not found
+          Error
         </MainText>
-        <MainText gradient>The page you requested does not exist</MainText>
+        <MainText gradient>It seems the app has encountered an error. Try to refresh or come back later.</MainText>
       </Box>
     </Container>
   )
