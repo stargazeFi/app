@@ -47,14 +47,10 @@ export default function WalletModal() {
   return (
     <>
       <MainButton onClick={onOpen}>
-        <MainText size='md' className='text-white'>
-          {address ? shortenAddress(address) : 'Connect wallet'}
-        </MainText>
+        <MainText className='text-white'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
         {chain.testnet && (
           <div className='ml-2 flex items-center bg-black'>
-            <MainText className='text-amber-200' size='xs'>
-              Testnet
-            </MainText>
+            <MainText className='text-xs text-amber-200'>Testnet</MainText>
           </div>
         )}
       </MainButton>
@@ -75,17 +71,19 @@ export default function WalletModal() {
           {(onClose) => (
             <>
               <ModalHeader className='flex flex-col gap-1'>
-                <MainText gradient heading size='2xl'>
+                <MainText gradient heading className='text-2xl'>
                   {isConnected ? 'Your account' : 'Connect your wallet'}
                 </MainText>
               </ModalHeader>
               <ModalBody>
                 {isConnected ? (
                   <Box col center>
-                    <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
+                    <MainText gradient className='text-lg'>
+                      {shortenAddress(address as string, 12)}
+                    </MainText>
                     <Box col className='w-[85%]'>
                       <Box spaced className='mb-2'>
-                        <MainText heading size='sm'>
+                        <MainText gradient heading className='text-sm'>
                           Connected with {connector!.name}
                         </MainText>
                         <button
@@ -98,11 +96,7 @@ export default function WalletModal() {
                           <Box center className='mr-1 h-4 w-4 pb-0.5'>
                             <Logout fontSize='inherit' color='error' />
                           </Box>
-                          <MainText
-                            size='sm'
-                            heading
-                            className='!text-red-600 transition ease-in-out hover:!text-red-500'
-                          >
+                          <MainText heading className='text-sm text-red-600 transition ease-in-out hover:text-red-500'>
                             Disconnect
                           </MainText>
                         </button>
@@ -111,7 +105,7 @@ export default function WalletModal() {
                         <Box center className='mr-1 h-4 w-4 pb-0.5'>
                           <Launch fontSize='inherit' className='text-gray-200' />
                         </Box>
-                        <MainText heading size='sm' className='self-start'>
+                        <MainText heading className='self-start'>
                           View on StarkScan
                         </MainText>
                       </Link>
@@ -131,12 +125,12 @@ export default function WalletModal() {
                             <ContentPaste fontSize='inherit' className='text-gray-200' />
                           )}
                         </Box>
-                        <MainText heading size='sm' className='self-start'>
+                        <MainText heading className='self-start'>
                           {copied ? 'Copied!' : 'Copy address to clipboard'}
                         </MainText>
                       </Link>
                     </Box>
-                    <MainText gradient heading size='2xl' className='mb-2 mt-6'>
+                    <MainText gradient heading className='mb-2 mt-6 text-2xl'>
                       Recent transactions
                     </MainText>
                     <span className='font-body text-xs text-amber-50 text-opacity-50'>
@@ -164,20 +158,18 @@ export default function WalletModal() {
                         </div>
                       }
                     >
-                      <MainText className='text-white' size='md'>
-                        Connect with {CONNECTOR_METADATA[connector.id].name}
-                      </MainText>
+                      <MainText className='text-white'>Connect with {CONNECTOR_METADATA[connector.id].name}</MainText>
                     </MainButton>
                   ))
                 )}
               </ModalBody>
               {!isConnected && (
                 <ModalFooter>
-                  <MainText size='xs'>
+                  <MainText className='text-xs'>
                     By connecting your wallet to the Stargaze Finance interface or interacting with the Stargaze Finance
-                    smart contracts, you acknowledge the experimental nature of the protocol and the potential for total
-                    loss of funds deposited, and hereby accept full liability for your usage of Stargaze Finance, and
-                    that no financial responsibility is placed on the protocol developers and contributors.
+                    contracts, you acknowledge the experimental nature of the protocol and the potential for total loss
+                    of funds deposited, and hereby accept full liability for your usage of Stargaze Finance, and that no
+                    financial responsibility is placed on the protocol developers and contributors.
                   </MainText>
                   {/* <MainText size='xs'>
                     By connecting a wallet, you agree to the Stargaze Finance{' '}

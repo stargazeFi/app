@@ -85,19 +85,19 @@ export default function Strategy() {
               </Box>
             )}
           </Box>
-          <MainText gradient heading size='h1' className='ml-2 pt-1'>
+          <MainText gradient heading className='ml-2 pt-1 text-4xl'>
             {name}
           </MainText>
         </Box>
         <Box center>
           <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
-            <MainText size='lg'>{protocol}</MainText>
+            <MainText>{protocol}</MainText>
           </Box>
           <Box
             center
             className={`ml-2 w-fit rounded ${type === 'LP' ? 'bg-purple-700' : 'bg-green-700'} px-2 uppercase`}
           >
-            <MainText size='lg'>{type}</MainText>
+            <MainText>{type}</MainText>
           </Box>
         </Box>
       </Box>
@@ -105,47 +105,45 @@ export default function Strategy() {
       <Box col className='mt-2 lg:flex-row'>
         <DarkElement spaced className='flex-[3]'>
           <Box col className='flex-1 items-start'>
-            <MainText heading size='xl' className='font-light'>
+            <MainText heading className='text-xl font-light'>
               TVL
             </MainText>
-            <MainText gradient size='lg'>
+            <MainText gradient className='text-lg'>
               {formatCurrency(stargazeTVL)}
             </MainText>
-            <MainText size='xs' className='text-gray-600'>
-              {formatCurrency(TVL)}
-            </MainText>
+            <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
-            <MainText heading size='xl' className='font-light'>
+            <MainText heading className='text-xl font-light'>
               APY
             </MainText>
-            <MainText gradient size='lg'>
+            <MainText gradient className='text-lg'>
               {formatPercentage(APY)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
-            <MainText heading size='xl' className='font-light'>
+            <MainText heading className='text-xl font-light'>
               Daily
             </MainText>
-            <MainText gradient size='lg'>
+            <MainText gradient className='text-lg'>
               {formatPercentage(daily)}
             </MainText>
           </Box>
         </DarkElement>
         <DarkElement spaced className='mt-2 flex-[2] lg:ml-2 lg:mt-0'>
           <Box col className='flex-1 items-start lg:items-end lg:border-r lg:border-gray-700 lg:pr-6'>
-            <MainText heading size='xl' className='font-light'>
+            <MainText heading className='text-xl font-light'>
               Your deposit
             </MainText>
-            <MainText gradient size='lg'>
+            <MainText gradient className='text-lg'>
               {formatCurrency(123321)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
-            <MainText heading size='xl' className='font-light'>
+            <MainText heading className='text-xl font-light'>
               Last update
             </MainText>
-            <MainText gradient size='lg'>
+            <MainText gradient className='text-lg'>
               {format(lastUpdate)}
             </MainText>
           </Box>
@@ -155,14 +153,14 @@ export default function Strategy() {
       <Box className='mt-2 flex-col-reverse md:flex-row'>
         <Box col className='flex-[3] lg:flex-[4]'>
           <DarkElement col className='h-fit'>
-            <Box spaced className='w-full'>
-              <MainText heading size='2xl' className='pt-1'>
+            <Box col spaced className='w-full lg:flex-row'>
+              <MainText heading className='pt-1 text-2xl'>
                 Strategy
               </MainText>
               <Box center>
                 <Link href={strategyContract} target='_blank' rel='noopener noreferrer'>
                   <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                    <MainText size='xs'>Strategy contract</MainText>
+                    <MainText className='text-xs'>Strategy contract</MainText>
                     <Box className='ml-2 text-small'>
                       <OpenInNew fontSize='inherit' className='text-gray-200' />
                     </Box>
@@ -170,7 +168,7 @@ export default function Strategy() {
                 </Link>
                 <Link href={vaultContract} target='_blank' rel='noopener noreferrer'>
                   <Box center className='ml-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                    <MainText size='xs'>Vault contract</MainText>
+                    <MainText className='text-xs'>Vault contract</MainText>
                     <Box className='ml-2 text-small'>
                       <OpenInNew fontSize='inherit' className='text-gray-200' />
                     </Box>
@@ -186,7 +184,7 @@ export default function Strategy() {
 
           <DarkElement col className='mt-2 h-fit'>
             <Box spaced className='w-full'>
-              <MainText heading size='2xl' className='pt-1'>
+              <MainText heading className='pt-1 text-2xl'>
                 Historical Rate
               </MainText>
             </Box>
@@ -218,7 +216,7 @@ export default function Strategy() {
           </Box>
           <Box col className='pt-6'>
             <Box className='justify-end px-2'>
-              <MainText size='xs'>Available: {userBalance}</MainText>
+              <MainText className='text-xs'>Available: {userBalance}</MainText>
             </Box>
             <Box spaced className='mt-2'>
               <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
@@ -245,7 +243,7 @@ export default function Strategy() {
             {type === 'LP' && (
               <a href={poolURL} target='_blank' rel='noopener noreferrer'>
                 <Box center className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                  <MainText size='xs'>{mode === 'deposit' ? 'Add' : 'Remove'} liquidity</MainText>
+                  <MainText className='text-xs'>{mode === 'deposit' ? 'Add' : 'Remove'} liquidity</MainText>
                   <Box className='ml-2 text-small'>
                     <OpenInNew fontSize='inherit' className='text-gray-200' />
                   </Box>
@@ -254,15 +252,13 @@ export default function Strategy() {
             )}
             <Box center className='mt-6'>
               <MainButton onClick={() => (!isConnected ? connect() : null)} className='w-full p-6'>
-                <MainText size='md' className='capitalize text-white'>
-                  {isConnected ? mode : 'Connect wallet'}
-                </MainText>
+                <MainText className='capitalize text-white'>{isConnected ? mode : 'Connect wallet'}</MainText>
               </MainButton>
             </Box>
             <Box col className='mt-6 rounded-xl border border-gray-800 p-3'>
               <Box spaced>
                 <Box center>
-                  <MainText className='text-gray-300' heading size='lg'>
+                  <MainText className='text-lg text-gray-300' heading>
                     Deposit Fee
                   </MainText>
                   <Box className='ml-2 pb-1 text-small'>
@@ -271,11 +267,11 @@ export default function Strategy() {
                     </Tooltip>
                   </Box>
                 </Box>
-                <MainText>{formatPercentage(depositFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(depositFee)}</MainText>
               </Box>
               <Box spaced>
                 <Box center>
-                  <MainText className='text-gray-300' heading size='lg'>
+                  <MainText className='text-lg text-gray-300' heading>
                     Withdrawal Fee
                   </MainText>
                   <Box className='ml-2 pb-1 text-small'>
@@ -284,15 +280,15 @@ export default function Strategy() {
                     </Tooltip>
                   </Box>
                 </Box>
-                <MainText>{formatPercentage(withdrawalFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(withdrawalFee)}</MainText>
               </Box>
               <Box spaced className='mt-4'>
                 <Box center>
-                  <MainText className='text-gray-300' heading size='lg'>
+                  <MainText className='text-lg text-gray-300' heading>
                     Performance Fee
                   </MainText>
                 </Box>
-                <MainText>{formatPercentage(performanceFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(performanceFee)}</MainText>
               </Box>
               <SecondaryText>
                 Stargaze Finance charges a performance fee on withdrawal. To learn more about the performance fee, you

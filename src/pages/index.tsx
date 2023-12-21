@@ -39,15 +39,13 @@ interface StrategyProps {
 const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; stargazeTVL: number; TVL: number }) => {
   return (
     <Box col className={`ml-6 items-end ${FILTERS[4].flex} ${className}`}>
-      <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+      <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
         TVL
       </MainText>
-      <MainText gradient size='lg'>
+      <MainText gradient className='text-lg'>
         {formatCurrency(stargazeTVL)}
       </MainText>
-      <MainText size='xs' className='text-gray-600'>
-        {formatCurrency(TVL)}
-      </MainText>
+      <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
     </Box>
   )
 }
@@ -71,12 +69,12 @@ const Strategy = ({
               )}
             </Box>
             <Box col className='ml-4 items-start'>
-              <MainText gradient heading size='xl'>
+              <MainText gradient heading className='text-xl'>
                 {name}
               </MainText>
               <Box>
                 <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                  <MainText size='xs'>{protocol}</MainText>
+                  <MainText className='text-xs'>{protocol}</MainText>
                 </Box>
                 <Box
                   center
@@ -84,7 +82,7 @@ const Strategy = ({
                     type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
                   } px-2 py-1 uppercase`}
                 >
-                  <MainText size='xs'>{type}</MainText>
+                  <MainText className='text-xs'>{type}</MainText>
                 </Box>
               </Box>
             </Box>
@@ -93,36 +91,30 @@ const Strategy = ({
         </Box>
         <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
           <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
-            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
               Wallet
             </MainText>
-            <MainText gradient size='lg' className={type === 'Direct' ? 'lg:hidden' : ''}>
-              {type === 'LP' ? '42' : '-'}
+            <MainText gradient className={`text-lg ${type === 'Direct' ? 'lg:hidden' : ''}`}>
+              {type === 'LP' ? '42' : 0}
             </MainText>
           </Box>
           <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
-            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
               Deposited
             </MainText>
-            <MainText gradient size='lg'>
-              69
-            </MainText>
+            <MainText gradient>69</MainText>
           </Box>
           <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
-            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
               APY
             </MainText>
-            <MainText gradient size='lg'>
-              {formatPercentage(APY)}
-            </MainText>
+            <MainText gradient>{formatPercentage(APY)}</MainText>
           </Box>
           <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
-            <MainText heading size='xl' className='font-light text-gray-600 lg:hidden'>
+            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
               Daily
             </MainText>
-            <MainText gradient size='lg'>
-              {formatPercentage(daily)}
-            </MainText>
+            <MainText gradient>{formatPercentage(daily)}</MainText>
           </Box>
           <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='hidden lg:flex' />
         </Box>
@@ -178,16 +170,16 @@ export default function Strategies() {
     <Container>
       <DarkElement col spaced className='md:flex-row'>
         <Box col center className='md:items-start'>
-          <MainText gradient heading size='2xl' className='mb-2'>
+          <MainText gradient heading className='mb-2 text-2xl lg:text-3xl'>
             Portfolio
           </MainText>
           <Box spaced className='w-full px-4 md:p-0'>
             {portfolio.map(({ title, value }, index) => (
               <Box key={index} col className='items-start md:mr-6'>
-                <MainText heading size='xl' className='font-light text-gray-600'>
+                <MainText heading className='text-xl font-light text-gray-600'>
                   {title}
                 </MainText>
-                <MainText gradient size='xl'>
+                <MainText gradient className='text-xl'>
                   {index !== 3 ? formatCurrency(value) : formatPercentage(value)}
                 </MainText>
               </Box>
@@ -195,25 +187,25 @@ export default function Strategies() {
           </Box>
         </Box>
         <Box col center className='mt-6 md:mt-0 md:items-end'>
-          <MainText gradient heading size='2xl' className='mb-2'>
+          <MainText gradient heading className='mb-2 text-2xl lg:text-3xl'>
             Stargaze
           </MainText>
           <Box className='w-full justify-evenly'>
             {!isLoading && strategies && (
               <>
                 <Box col className='items-start md:ml-6 md:items-end'>
-                  <MainText heading size='xl' className='font-light text-gray-600'>
+                  <MainText heading className='text-xl font-light text-gray-600'>
                     TVL
                   </MainText>
-                  <MainText gradient size='xl'>
+                  <MainText gradient className='text-xl'>
                     {formatCurrency(strategies.reduce((acc, it) => acc + it.stargazeTVL, 0))}
                   </MainText>
                 </Box>
                 <Box col className='items-start md:ml-6 md:items-end'>
-                  <MainText heading size='xl' className='font-light text-gray-600'>
+                  <MainText heading className='text-xl font-light text-gray-600'>
                     Strategies
                   </MainText>
-                  <MainText gradient size='xl'>
+                  <MainText gradient className='text-xl'>
                     {strategies.length}
                   </MainText>
                 </Box>
@@ -262,7 +254,7 @@ export default function Strategies() {
                   className='flex h-full items-center justify-center border border-gray-500 bg-black/60'
                 >
                   <MainText gradient>Sort by:</MainText>
-                  <MainText gradient heading size='lg'>
+                  <MainText gradient heading className='text-lg'>
                     {sorted}
                   </MainText>
                   <Box center>
@@ -273,7 +265,7 @@ export default function Strategies() {
               <DropdownMenu onAction={(sorted) => setSorted(sorted as Sort)}>
                 {FILTERS.map(({ sort }) => (
                   <DropdownItem key={sort} variant='bordered' className='border-none'>
-                    <MainText heading gradient size='lg'>
+                    <MainText heading gradient className='text-lg'>
                       {sort}
                     </MainText>
                   </DropdownItem>
@@ -295,7 +287,7 @@ export default function Strategies() {
                     }
                   }}
                 >
-                  <MainText gradient heading size='xl'>
+                  <MainText gradient heading className='text-xl'>
                     {sort}
                   </MainText>
                   <Box center className='ml-1 h-6'>
@@ -322,11 +314,11 @@ export default function Strategies() {
               .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
           ) : (
             <>
-              <MainText gradient heading size='2xl'>
+              <MainText gradient heading className='text-2xl'>
                 No strategies found
               </MainText>
               <Box center className='mb-4'>
-                <MainText gradient size='sm'>
+                <MainText gradient className='text-sm'>
                   Try clearing your filters or changing your search term.
                 </MainText>
               </Box>

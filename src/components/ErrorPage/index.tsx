@@ -11,7 +11,7 @@ export default function ErrorPage() {
         <Box className='relative mt-10 h-[40vw] w-[40vw] md:h-[30vw] md:w-[30vw]'>
           <Image src={image} fill alt={image} />
         </Box>
-        <MainText gradient heading size='2xl'>
+        <MainText gradient heading className='text-2xl'>
           Error
         </MainText>
         <MainText gradient>It seems the app has encountered an error. Try to refresh or come back later.</MainText>
