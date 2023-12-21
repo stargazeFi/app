@@ -9,7 +9,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const client = createDatabaseClient()
   await client.connect()
-  const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
+  // const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev') // TODO RESTORE FOR API SPLIT
+  const database = client.db('prod')
   const collection: Collection<TokenInfo> = database.collection<TokenInfo>('tokens')
 
   let tokens

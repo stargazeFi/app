@@ -3,7 +3,7 @@ import { Strategy } from '@/api'
 
 const strategies: Strategy[] = [
   {
-    name: 'USDC',
+    name: 'WBTC',
     type: 'Direct',
     protocol: 'ekubo',
     description:
@@ -11,7 +11,7 @@ const strategies: Strategy[] = [
     depositFee: 0.01,
     withdrawalFee: 0.005,
     performanceFee: 0.05,
-    tokens: ['usdc'],
+    tokens: ['0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac'],
     APY: 0.09,
     daily: 0.9998,
     TVL: 23828932,
@@ -21,7 +21,7 @@ const strategies: Strategy[] = [
     lastUpdate: 1703018298000
   },
   {
-    name: 'ETH-USDC v2 LBP',
+    name: 'USDC-LUSD',
     type: 'LP',
     protocol: 'sithswap',
     poolURL: 'https://sithswap.com/',
@@ -30,7 +30,10 @@ const strategies: Strategy[] = [
     depositFee: 0,
     withdrawalFee: 0.005,
     performanceFee: 0.05,
-    tokens: ['eth', 'usdc'],
+    tokens: [
+      '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8',
+      '0x070a76fd48ca0ef910631754d77dd822147fe98a569b826ec85e3c33fde586ac'
+    ],
     APY: 1.289,
     daily: 0.1,
     TVL: 233321,
@@ -40,7 +43,7 @@ const strategies: Strategy[] = [
     lastUpdate: 1703018298000
   },
   {
-    name: 'ETH-USDC v2 LBP',
+    name: 'ETH-DAI v2 LBP',
     type: 'LP',
     protocol: 'jediswap',
     poolURL: 'https://jediswap.xyz',
@@ -49,7 +52,10 @@ const strategies: Strategy[] = [
     depositFee: 0.01,
     withdrawalFee: 0.005,
     performanceFee: 0.05,
-    tokens: ['eth', 'usdc'],
+    tokens: [
+      '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
+      '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3'
+    ],
     APY: 1.289,
     daily: 0.1,
     TVL: 233321,
@@ -59,7 +65,7 @@ const strategies: Strategy[] = [
     lastUpdate: 1703018298000
   },
   {
-    name: 'ETH-USDC v2 LBP',
+    name: 'LORDS-rETH v3',
     type: 'LP',
     protocol: 'myswap',
     poolURL: 'https://myswap.xyz',
@@ -68,7 +74,10 @@ const strategies: Strategy[] = [
     depositFee: 0.01,
     withdrawalFee: 0.005,
     performanceFee: 0.05,
-    tokens: ['eth', 'usdc'],
+    tokens: [
+      '0x0124aeb495b947201f5fac96fd1138e326ad86195b98df6dec9009158a533b49',
+      '0x0319111a5037cbec2b3e638cc34a3474e2d2608299f3e62866e9cc683208c610'
+    ],
     APY: 1.289,
     daily: 0.1,
     TVL: 233321,

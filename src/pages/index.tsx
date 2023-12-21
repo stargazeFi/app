@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
 import {
   Button,
   Dropdown,
@@ -17,6 +17,8 @@ import { formatPercentage, formatCurrency } from '@/misc/format'
 import { useStrategies } from '@/hooks/api'
 import { Strategy } from '@/api'
 import Link from 'next/link'
+import { TokenContext, TokenContextInfo } from '@/contexts'
+import { getTokenIcon } from '@/misc/tokens'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
@@ -34,6 +36,7 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 interface StrategyProps {
   index: number
   strategy: Strategy
+  tokensList: TokenContextInfo[]
 }
 
 const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; stargazeTVL: number; TVL: number }) => {
@@ -52,19 +55,20 @@ const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; star
 
 const Strategy = ({
   index,
-  strategy: { name, protocol, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress }
+  strategy: { name, protocol, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress },
+  tokensList
 }: StrategyProps) => (
   <>
     {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
     <Link href={`/strategy/${strategyAddress}`}>
-      <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-950 lg:flex-row'>
+      <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-800/50 lg:flex-row'>
         <Box className='flex-[1]'>
           <Box center>
             <Box center className='w-[64px]'>
-              <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
+              <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={40} height={40} />
               {tokens[1] && (
                 <Box className='-ml-5'>
-                  <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
+                  <Image src={getTokenIcon(tokens[1], tokensList)} width={40} height={40} />
                 </Box>
               )}
             </Box>
@@ -130,6 +134,7 @@ export default function Strategies() {
   const [sorted, setSorted] = useState('TVL')
 
   const { data: strategies, isError, isLoading } = useStrategies()
+  const tokens = useContext(TokenContext)
 
   const portfolio = useMemo(
     () => [
@@ -311,7 +316,7 @@ export default function Strategies() {
           ) : displayedStrategies.length ? (
             displayedStrategies
               .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
-              .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} />)
+              .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} tokensList={tokens} />)
           ) : (
             <>
               <MainText gradient heading className='text-2xl'>

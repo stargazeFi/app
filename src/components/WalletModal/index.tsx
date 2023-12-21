@@ -32,7 +32,7 @@ export default function WalletModal() {
   const [copied, setCopied] = useState(false)
 
   const explorerLink = useMemo(
-    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/search/') + 'contract/' + address,
+    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address,
     [address, chain.testnet]
   )
 

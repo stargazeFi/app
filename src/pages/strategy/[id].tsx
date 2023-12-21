@@ -1,23 +1,37 @@
-import React, { useMemo, useState } from 'react'
-import { Image, Input } from '@nextui-org/react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
+import { Button, Image, Input } from '@nextui-org/react'
 import { format } from 'timeago.js'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { HelpOutline, OpenInNew } from '@mui/icons-material'
+import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
 import { Strategy } from '@/api'
-import { Box, Container, DarkElement, MainButton, MainText, SecondaryText, Tooltip } from '@/components/Layout'
+import {
+  Box,
+  Container,
+  DarkElement,
+  GrayElement,
+  MainButton,
+  MainText,
+  SecondaryText,
+  Tooltip
+} from '@/components/Layout'
 import ErrorPage from '@/components/ErrorPage'
 import AppLoader from '@/components/AppLoader'
 import { useStrategies } from '@/hooks/api'
 import { formatPercentage, formatCurrency } from '@/misc/format'
 import { useAccount, useConnect, useNetwork } from '@starknet-react/core'
 import { DOCS_FEES_URL } from '@/misc/constants'
+import { TokenContext } from '@/contexts'
+import { getTokenDescription, getTokenIcon, getTokenName } from '@/misc/tokens'
 
 export default function Strategy() {
   const { isConnected } = useAccount()
   const { connect } = useConnect()
   const { chain } = useNetwork()
   const router = useRouter()
+
+  const tokensList = useContext(TokenContext)
+
   const { id } = router.query
 
   const [amount, setAmount] = useState('0')
@@ -50,16 +64,18 @@ export default function Strategy() {
   } = useMemo(() => (!isError && !isLoading && strategy) || ({} as Strategy), [isError, isLoading, strategy])
 
   const strategyContract = useMemo(
-    () =>
-      (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/search/') +
-      'contract/' +
-      strategyAddress,
+    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + strategyAddress,
     [chain.testnet, strategyAddress]
   )
 
+  const tokenContract = useCallback(
+    (address: string) =>
+      (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address,
+    [chain.testnet]
+  )
+
   const vaultContract = useMemo(
-    () =>
-      (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/search/') + 'contract/' + vaultAddress,
+    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + vaultAddress,
     [chain.testnet, vaultAddress]
   )
 
@@ -77,17 +93,24 @@ export default function Strategy() {
     <Container>
       <Box spaced>
         <Box center>
-          <Box center className='w-[64px]'>
-            <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={40} height={40} />
-            {tokens[1] && (
-              <Box className='-ml-5'>
-                <Image src={`/assets/tokens/${tokens[1]}.svg`} width={40} height={40} />
-              </Box>
-            )}
+          <Box className={`${tokens.length === 1 ? 'mr-2' : 'mr-4'} text-2xl`}>
+            <button onClick={() => router.back()}>
+              <ArrowBack fontSize='inherit' className='text-gray-200' />
+            </button>
           </Box>
-          <MainText gradient heading className='ml-2 pt-1 text-4xl'>
-            {name}
-          </MainText>
+          <Box center>
+            <Box center className='w-[64px]'>
+              <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={40} height={40} />
+              {tokens[1] && (
+                <Box className='-ml-5'>
+                  <Image src={getTokenIcon(tokens[1], tokensList)} width={40} height={40} />
+                </Box>
+              )}
+            </Box>
+            <MainText heading className='ml-2 pt-1 text-4xl'>
+              {name}
+            </MainText>
+          </Box>
         </Box>
         <Box center>
           <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
@@ -193,9 +216,47 @@ export default function Strategy() {
               <SecondaryText>Coming soon</SecondaryText>
             </Box>
           </DarkElement>
+
+          <DarkElement col className='mt-2 h-fit'>
+            <Box spaced className='w-full'>
+              <MainText heading className='pt-1 text-2xl'>
+                Asset Details
+              </MainText>
+            </Box>
+            <div className='gradient-border-b my-6 h-[1px] w-full' />
+            <Box col center className='justify-start'>
+              {tokens.map((address, index) => (
+                <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
+                  <Box spaced className='w-full'>
+                    <Box center>
+                      <Image className='z-20' src={getTokenIcon(address, tokensList)} width={30} height={30} />
+                      <MainText className='mx-4'>{getTokenName(address, tokensList)}</MainText>
+                      {/* <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
+                        // TODO FETCH PRICE
+                        <MainText className='text-sm'>$400</MainText>
+                      </Box>*/}
+                    </Box>
+                    <Box center>
+                      <Link href={tokenContract(address)} target='_blank' rel='noopener noreferrer'>
+                        <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                          <Box className='mr-2 text-small'>
+                            <LinkIcon fontSize='inherit' className='text-gray-200' />
+                          </Box>
+                          <MainText className='text-xs'>Contract</MainText>
+                        </Box>
+                      </Link>
+                    </Box>
+                  </Box>
+                  <Box className='mt-2 w-full'>
+                    <SecondaryText className='mt-4'>{getTokenDescription(address, tokensList)}</SecondaryText>
+                  </Box>
+                </GrayElement>
+              ))}
+            </Box>
+          </DarkElement>
         </Box>
 
-        <DarkElement col spaced className='mb-2 flex-[2] md:mb-0 md:ml-2'>
+        <DarkElement col spaced className='mb-2 h-fit flex-[2] md:mb-0 md:ml-2'>
           <Box className='-mx-6 -mt-6'>
             <Box
               center
@@ -220,10 +281,10 @@ export default function Strategy() {
             </Box>
             <Box spaced className='mt-2'>
               <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-                <Image className='z-20' src={`/assets/tokens/${tokens[0]}.svg`} width={28} height={28} />
+                <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={28} height={28} />
                 {tokens[1] && (
-                  <Box className='-ml-3'>
-                    <Image src={`/assets/tokens/${tokens[1]}.svg`} width={28} height={28} />
+                  <Box className='-ml-2'>
+                    <Image src={getTokenIcon(tokens[1], tokensList)} width={28} height={28} />
                   </Box>
                 )}
               </Box>
@@ -237,7 +298,24 @@ export default function Strategy() {
                   input: 'text-amber-50 text-md mr-6',
                   inputWrapper: 'bg-black/60 border border-gray-500'
                 }}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const { value } = e.target
+                  if (!isNaN(Number(value))) {
+                    setAmount(value)
+                  }
+                }}
+                endContent={
+                  <Button
+                    radius='sm'
+                    variant='bordered'
+                    onClick={() => {}}
+                    className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
+                  >
+                    <MainText heading gradient>
+                      MAX
+                    </MainText>
+                  </Button>
+                }
               />
             </Box>
             {type === 'LP' && (
@@ -255,7 +333,7 @@ export default function Strategy() {
                 <MainText className='capitalize text-white'>{isConnected ? mode : 'Connect wallet'}</MainText>
               </MainButton>
             </Box>
-            <Box col className='mt-6 rounded-xl border border-gray-800 p-3'>
+            <GrayElement col className='mt-6'>
               <Box spaced>
                 <Box center>
                   <MainText className='text-lg text-gray-300' heading>
@@ -303,7 +381,7 @@ export default function Strategy() {
                 </Link>
                 .
               </SecondaryText>
-            </Box>
+            </GrayElement>
           </Box>
         </DarkElement>
       </Box>
