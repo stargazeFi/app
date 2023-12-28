@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { Box, Container, MainText } from '@/components/Layout'
 
-export default function ErrorPage() {
+export default function ErrorPage({ errMessage }: { errMessage?: string }) {
   const rng = Math.floor(Math.random() * 10) + 1
   const image = rng === 10 ? '/assets/general/error-pepe.png' : `/assets/general/error-${(rng % 3) + 1}.png`
 
@@ -14,7 +14,9 @@ export default function ErrorPage() {
         <MainText gradient heading className='text-2xl'>
           Error
         </MainText>
-        <MainText gradient>It seems the app has encountered an error. Try to refresh or come back later.</MainText>
+        <MainText gradient>
+          {errMessage || 'It seems the app has encountered an error. Try to refresh or come back later.'}
+        </MainText>
       </Box>
     </Container>
   )

@@ -38,8 +38,8 @@ export const TokenContext = createContext<TokenContextInfo[]>([])
 export const TokensProvider = ({ children }: { children: ReactNode }) => {
   const { data } = useDefaultTokens()
 
-  const tokens: TokenContextInfo[] | null = useMemo(
-    () => (!data ? null : data.map((token) => ({ ...token, description: DESCRIPTIONS[token.l2_token_address] }))),
+  const tokens: TokenContextInfo[] | undefined = useMemo(
+    () => data?.map((token) => ({ ...token, description: DESCRIPTIONS[token.l2_token_address] })),
     [data]
   )
 

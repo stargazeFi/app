@@ -1,4 +1,5 @@
-import { useContext, useMemo, useState } from 'react'
+import { useAccount, useBalance } from '@starknet-react/core'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Dropdown,
@@ -13,7 +14,7 @@ import {
 import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
 import ErrorPage from '@/components/ErrorPage'
 import { Box, Container, DarkElement, MainText } from '@/components/Layout'
-import { formatPercentage, formatCurrency } from '@/misc/format'
+import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc/format'
 import { useStrategies } from '@/hooks/api'
 import { Strategy } from '@/api'
 import Link from 'next/link'
@@ -33,99 +34,111 @@ const FILTERS: { sort: Sort; flex: string }[] = [
   { sort: 'TVL', flex: 'flex-[4]' }
 ]
 
-interface StrategyProps {
-  index: number
-  strategy: Strategy
-  tokensList: TokenContextInfo[]
-}
-
-const TVLComponent = ({ className, stargazeTVL, TVL }: { className: string; stargazeTVL: number; TVL: number }) => {
-  return (
-    <Box col className={`ml-6 items-end ${FILTERS[4].flex} ${className}`}>
-      <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-        TVL
-      </MainText>
-      <MainText gradient className='text-lg'>
-        {formatCurrency(stargazeTVL)}
-      </MainText>
-      <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
-    </Box>
-  )
-}
-
 const Strategy = ({
   index,
-  strategy: { name, protocol, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress },
+  address,
+  strategy: { name, protocol, poolToken, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress },
   tokensList
-}: StrategyProps) => (
-  <>
-    {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
-    <Link href={`/strategy/${strategyAddress}`}>
-      <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-800/50 lg:flex-row'>
-        <Box className='flex-[1]'>
-          <Box center>
-            <Box center className='w-[64px]'>
-              <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={40} height={40} />
-              {tokens[1] && (
-                <Box className='-ml-5'>
-                  <Image src={getTokenIcon(tokens[1], tokensList)} width={40} height={40} />
-                </Box>
-              )}
-            </Box>
-            <Box col className='ml-4 items-start'>
-              <MainText gradient heading className='text-xl'>
-                {name}
-              </MainText>
-              <Box>
-                <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                  <MainText className='text-xs'>{protocol}</MainText>
-                </Box>
-                <Box
-                  center
-                  className={`ml-2 w-fit rounded ${
-                    type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
-                  } px-2 py-1 uppercase`}
-                >
-                  <MainText className='text-xs'>{type}</MainText>
+}: {
+  index: number
+  address: string | undefined
+  strategy: Strategy
+  tokensList: TokenContextInfo[]
+}) => {
+  const { data: balance } = useBalance({
+    token: poolToken,
+    address,
+    enabled: !!address,
+    watch: true
+  })
+
+  const TVLComponent = useCallback(
+    ({ className }: { className: string }) => {
+      return (
+        <Box col className={`ml-6 items-end ${FILTERS[4].flex} ${className}`}>
+          <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+            TVL
+          </MainText>
+          <MainText gradient className='text-lg'>
+            {formatCurrency(stargazeTVL)}
+          </MainText>
+          <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
+        </Box>
+      )
+    },
+    [TVL, stargazeTVL]
+  )
+
+  return (
+    <>
+      {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
+      <Link href={`/strategy/${strategyAddress}`}>
+        <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-800/50 lg:flex-row'>
+          <Box className='flex-[1]'>
+            <Box center>
+              <Box center className='w-[64px]'>
+                <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={40} height={40} />
+                {tokens[1] && (
+                  <Box className='-ml-5'>
+                    <Image src={getTokenIcon(tokens[1], tokensList)} width={40} height={40} />
+                  </Box>
+                )}
+              </Box>
+              <Box col className='ml-4 items-start'>
+                <MainText gradient heading className='text-xl'>
+                  {name}
+                </MainText>
+                <Box>
+                  <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                    <MainText className='text-xs'>{protocol}</MainText>
+                  </Box>
+                  <Box
+                    center
+                    className={`ml-2 w-fit rounded ${
+                      type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
+                    } px-2 py-1 uppercase`}
+                  >
+                    <MainText className='text-xs'>{type}</MainText>
+                  </Box>
                 </Box>
               </Box>
             </Box>
+            <TVLComponent className='lg:hidden' />
           </Box>
-          <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='lg:hidden' />
+          <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
+            <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
+              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+                Wallet
+              </MainText>
+              <MainText gradient className={`text-lg ${type === 'Direct' ? 'lg:hidden' : ''}`}>
+                {(type === 'LP' && formatToDecimal(balance?.formatted, 4)) ?? ''}
+              </MainText>
+            </Box>
+            <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
+              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+                Deposited
+              </MainText>
+              <MainText gradient>??</MainText>
+            </Box>
+            <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
+              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+                APY
+              </MainText>
+              <MainText gradient>{formatPercentage(APY)}</MainText>
+            </Box>
+            <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
+              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+                Daily
+              </MainText>
+              <MainText gradient>{formatPercentage(daily)}</MainText>
+            </Box>
+            <TVLComponent className='hidden lg:flex' />
+          </Box>
         </Box>
-        <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
-          <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
-            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-              Wallet
-            </MainText>
-            <MainText gradient className={`text-lg ${type === 'Direct' ? 'lg:hidden' : ''}`}>
-              {type === 'LP' ? '42' : 0}
-            </MainText>
-          </Box>
-          <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
-            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-              Deposited
-            </MainText>
-            <MainText gradient>69</MainText>
-          </Box>
-          <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
-            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-              APY
-            </MainText>
-            <MainText gradient>{formatPercentage(APY)}</MainText>
-          </Box>
-          <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
-            <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-              Daily
-            </MainText>
-            <MainText gradient>{formatPercentage(daily)}</MainText>
-          </Box>
-          <TVLComponent stargazeTVL={stargazeTVL} TVL={TVL} className='hidden lg:flex' />
-        </Box>
-      </Box>
-    </Link>
-  </>
-)
+      </Link>
+    </>
+  )
+}
 
 export default function Strategies() {
   const [currentPage, setCurrentPage] = useState(1)
@@ -133,6 +146,7 @@ export default function Strategies() {
   const [ordered, setOrdered] = useState<Order>('decreasing')
   const [sorted, setSorted] = useState('TVL')
 
+  const { address } = useAccount()
   const { data: strategies, isError, isLoading } = useStrategies()
   const tokens = useContext(TokenContext)
 
@@ -316,7 +330,9 @@ export default function Strategies() {
           ) : displayedStrategies.length ? (
             displayedStrategies
               .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
-              .map((strategy, index) => <Strategy index={index} key={index} strategy={strategy} tokensList={tokens} />)
+              .map((strategy, index) => (
+                <Strategy index={index} key={index} address={address} strategy={strategy} tokensList={tokens} />
+              ))
           ) : (
             <>
               <MainText gradient heading className='text-2xl'>

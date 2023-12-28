@@ -1,10 +1,11 @@
+import { serializeAddress, serializeU256 } from '@/misc/types'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { Button, Image, Input } from '@nextui-org/react'
+import { Call } from 'starknet'
 import { format } from 'timeago.js'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
-import { Strategy } from '@/api'
 import {
   Box,
   Container,
@@ -18,14 +19,14 @@ import {
 import ErrorPage from '@/components/ErrorPage'
 import AppLoader from '@/components/AppLoader'
 import { useStrategies } from '@/hooks/api'
-import { formatPercentage, formatCurrency } from '@/misc/format'
-import { useAccount, useConnect, useNetwork } from '@starknet-react/core'
+import { formatPercentage, formatCurrency, formatToDecimal, explorerContractAddress } from '@/misc/format'
+import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import { DOCS_FEES_URL } from '@/misc/constants'
 import { TokenContext } from '@/contexts'
 import { getTokenDescription, getTokenIcon, getTokenName } from '@/misc/tokens'
 
 export default function Strategy() {
-  const { isConnected } = useAccount()
+  const { address, isConnected } = useAccount()
   const { connect } = useConnect()
   const { chain } = useNetwork()
   const router = useRouter()
@@ -37,90 +38,151 @@ export default function Strategy() {
   const [amount, setAmount] = useState('0')
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
-  const { data: strategies, isError, isLoading } = useStrategies()
+  const { data: strategies, isError: strategyError, isLoading: strategyLoading } = useStrategies()
 
-  const strategy = useMemo(
-    () => !isLoading && strategies!.find(({ strategyAddress }) => id === strategyAddress),
-    [id, isLoading, strategies]
+  const strategy = useMemo(() => strategies?.find(({ strategyAddress }) => id === strategyAddress), [id, strategies])
+
+  const { data: vaultShares } = useBalance({
+    token: strategy?.vaultAddress,
+    address,
+    enabled: !!address,
+    watch: true
+  })
+
+  const { data: baseToken, isError: baseTokenError } = useBalance({
+    token: strategy?.poolToken || strategy?.tokens[0],
+    address,
+    enabled: !!address,
+    watch: true
+  })
+
+  const { data: quoteToken, isError: quoteTokenError } = useBalance({
+    token: strategy?.tokens[1],
+    address,
+    enabled: !!address && strategy?.type === 'Direct',
+    watch: true
+  })
+
+  const available = useMemo(
+    () =>
+      mode === 'deposit'
+        ? formatToDecimal(baseToken?.formatted, baseToken?.decimals)
+        : formatToDecimal(vaultShares?.formatted, vaultShares?.decimals),
+    [baseToken, mode, vaultShares]
   )
 
-  const {
-    name,
-    protocol,
-    poolURL,
-    description,
-    depositFee,
-    withdrawalFee,
-    performanceFee,
-    strategyAddress,
-    vaultAddress,
-    APY,
-    daily,
-    tokens,
-    type,
-    TVL,
-    stargazeTVL,
-    lastUpdate
-  } = useMemo(() => (!isError && !isLoading && strategy) || ({} as Strategy), [isError, isLoading, strategy])
+  const depositCalls = useMemo(() => {
+    if (strategy) {
+      try {
+        const approveToken0: Call = {
+          contractAddress: strategy.poolToken || strategy.tokens[0],
+          entrypoint: 'approve',
+          calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, baseToken?.decimals)]
+        }
 
-  const strategyContract = useMemo(
-    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + strategyAddress,
-    [chain.testnet, strategyAddress]
+        const approveToken1: Call | null =
+          strategy.type === 'Direct'
+            ? {
+                contractAddress: strategy.tokens[1],
+                entrypoint: 'approve',
+                calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, quoteToken?.decimals)]
+              }
+            : null
+
+        const deposit: Call = {
+          contractAddress: strategy.strategyAddress,
+          entrypoint: 'deposit',
+          calldata: [...serializeU256(amount, baseToken?.decimals)]
+        }
+
+        return [approveToken0, approveToken1, deposit].filter((x): x is Call => x !== null)
+      } catch (error) {
+        console.error('Failed to generate call data', error)
+      }
+    }
+  }, [amount, baseToken, quoteToken, strategy])
+
+  const withdrawCalls = useMemo(() => {
+    if (strategy) {
+      try {
+        const withdraw: Call = {
+          contractAddress: strategy.strategyAddress,
+          entrypoint: 'redeem',
+          calldata: [...serializeU256(amount, vaultShares?.decimals)]
+        }
+
+        return [withdraw].filter((x): x is Call => x !== null)
+      } catch (error) {
+        console.error('Failed to generate call data', error)
+      }
+    }
+  }, [amount, vaultShares, strategy])
+
+  const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
+  const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
+
+  const disableCTA = useMemo(
+    () =>
+      !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : vaultShares?.formatted),
+    [amount, baseToken, mode, vaultShares]
   )
 
-  const tokenContract = useCallback(
-    (address: string) =>
-      (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address,
-    [chain.testnet]
-  )
+  const handleCTA = useCallback(() => {
+    if (!isConnected) {
+      connect()
+    }
 
-  const vaultContract = useMemo(
-    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + vaultAddress,
-    [chain.testnet, vaultAddress]
-  )
+    if (mode === 'deposit') {
+      deposit().then()
+    } else {
+      withdraw().then()
+    }
+  }, [connect, deposit, isConnected, mode, withdraw])
 
-  const userBalance = useMemo(() => 0, [])
-
-  if (isLoading) {
+  if (strategyLoading) {
     return <AppLoader />
   }
 
-  if (isError || strategy === undefined) {
+  if (strategyError || baseTokenError || quoteTokenError) {
     return <ErrorPage />
+  }
+
+  if (!strategy) {
+    return <ErrorPage errMessage='Invalid strategy.' />
   }
 
   return (
     <Container>
       <Box spaced>
         <Box center>
-          <Box className={`${tokens.length === 1 ? 'mr-2' : 'mr-4'} text-2xl`}>
+          <Box className={`${strategy.tokens.length === 1 ? 'mr-2' : 'mr-4'} text-2xl`}>
             <button onClick={() => router.back()}>
               <ArrowBack fontSize='inherit' className='text-gray-200' />
             </button>
           </Box>
           <Box center>
             <Box center className='w-[64px]'>
-              <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={40} height={40} />
-              {tokens[1] && (
+              <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={40} height={40} />
+              {strategy.type === 'Direct' && (
                 <Box className='-ml-5'>
-                  <Image src={getTokenIcon(tokens[1], tokensList)} width={40} height={40} />
+                  <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={40} height={40} />
                 </Box>
               )}
             </Box>
             <MainText heading className='ml-2 pt-1 text-4xl'>
-              {name}
+              {strategy.name}
             </MainText>
           </Box>
         </Box>
         <Box center>
           <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
-            <MainText>{protocol}</MainText>
+            <MainText>{strategy.protocol}</MainText>
           </Box>
           <Box
             center
-            className={`ml-2 w-fit rounded ${type === 'LP' ? 'bg-purple-700' : 'bg-green-700'} px-2 uppercase`}
+            className={`ml-2 w-fit rounded ${strategy.type === 'LP' ? 'bg-purple-700' : 'bg-green-700'} px-2 uppercase`}
           >
-            <MainText>{type}</MainText>
+            <MainText>{strategy.type}</MainText>
           </Box>
         </Box>
       </Box>
@@ -132,16 +194,16 @@ export default function Strategy() {
               TVL
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatCurrency(stargazeTVL)}
+              {formatCurrency(strategy.stargazeTVL)}
             </MainText>
-            <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
+            <MainText className='text-sm text-gray-600'>{formatCurrency(strategy.TVL)}</MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
             <MainText heading className='text-xl font-light'>
               APY
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(APY)}
+              {formatPercentage(strategy.APY)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
@@ -149,7 +211,7 @@ export default function Strategy() {
               Daily
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(daily)}
+              {formatPercentage(strategy.daily)}
             </MainText>
           </Box>
         </DarkElement>
@@ -167,7 +229,7 @@ export default function Strategy() {
               Last update
             </MainText>
             <MainText gradient className='text-lg'>
-              {format(lastUpdate)}
+              {format(strategy.lastUpdate)}
             </MainText>
           </Box>
         </DarkElement>
@@ -181,7 +243,11 @@ export default function Strategy() {
                 Strategy
               </MainText>
               <Box center>
-                <Link href={strategyContract} target='_blank' rel='noopener noreferrer'>
+                <Link
+                  href={explorerContractAddress(strategy.strategyAddress, chain)}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
                   <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                     <MainText className='text-xs'>Strategy contract</MainText>
                     <Box className='ml-2 text-small'>
@@ -189,7 +255,11 @@ export default function Strategy() {
                     </Box>
                   </Box>
                 </Link>
-                <Link href={vaultContract} target='_blank' rel='noopener noreferrer'>
+                <Link
+                  href={explorerContractAddress(strategy.vaultAddress, chain)}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
                   <Box center className='ml-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                     <MainText className='text-xs'>Vault contract</MainText>
                     <Box className='ml-2 text-small'>
@@ -201,7 +271,7 @@ export default function Strategy() {
             </Box>
             <div className='gradient-border-b my-6 h-[1px] w-full' />
             <Box className='justify-start'>
-              <SecondaryText>{description}</SecondaryText>
+              <SecondaryText>{strategy.description}</SecondaryText>
             </Box>
           </DarkElement>
 
@@ -225,7 +295,7 @@ export default function Strategy() {
             </Box>
             <div className='gradient-border-b my-6 h-[1px] w-full' />
             <Box col center className='justify-start'>
-              {tokens.map((address, index) => (
+              {strategy.tokens.map((address, index) => (
                 <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
                   <Box spaced className='w-full'>
                     <Box center>
@@ -237,7 +307,7 @@ export default function Strategy() {
                       </Box>*/}
                     </Box>
                     <Box center>
-                      <Link href={tokenContract(address)} target='_blank' rel='noopener noreferrer'>
+                      <Link href={explorerContractAddress(address, chain)} target='_blank' rel='noopener noreferrer'>
                         <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                           <Box className='mr-2 text-small'>
                             <LinkIcon fontSize='inherit' className='text-gray-200' />
@@ -277,14 +347,14 @@ export default function Strategy() {
           </Box>
           <Box col className='pt-6'>
             <Box className='justify-end px-2'>
-              <MainText className='text-xs'>Available: {userBalance}</MainText>
+              <MainText className='text-xs'>Available: {available}</MainText>
             </Box>
             <Box spaced className='mt-2'>
               <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-                <Image className='z-20' src={getTokenIcon(tokens[0], tokensList)} width={28} height={28} />
-                {tokens[1] && (
+                <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={28} height={28} />
+                {strategy.type === 'Direct' && (
                   <Box className='-ml-2'>
-                    <Image src={getTokenIcon(tokens[1], tokensList)} width={28} height={28} />
+                    <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={28} height={28} />
                   </Box>
                 )}
               </Box>
@@ -308,7 +378,9 @@ export default function Strategy() {
                   <Button
                     radius='sm'
                     variant='bordered'
-                    onClick={() => {}}
+                    onClick={() =>
+                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : vaultShares?.formatted || '0')
+                    }
                     className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
                   >
                     <MainText heading gradient>
@@ -318,18 +390,18 @@ export default function Strategy() {
                 }
               />
             </Box>
-            {type === 'LP' && (
-              <a href={poolURL} target='_blank' rel='noopener noreferrer'>
-                <Box center className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+            {strategy.type === 'LP' && (
+              <Box className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                <a href={strategy.poolURL} target='_blank' rel='noopener noreferrer' className='flex items-center'>
                   <MainText className='text-xs'>{mode === 'deposit' ? 'Add' : 'Remove'} liquidity</MainText>
                   <Box className='ml-2 text-small'>
                     <OpenInNew fontSize='inherit' className='text-gray-200' />
                   </Box>
-                </Box>
-              </a>
+                </a>
+              </Box>
             )}
             <Box center className='mt-6'>
-              <MainButton onClick={() => (!isConnected ? connect() : null)} className='w-full p-6'>
+              <MainButton isDisabled={disableCTA} onClick={handleCTA} className='w-full p-6'>
                 <MainText className='capitalize text-white'>{isConnected ? mode : 'Connect wallet'}</MainText>
               </MainButton>
             </Box>
@@ -345,7 +417,7 @@ export default function Strategy() {
                     </Tooltip>
                   </Box>
                 </Box>
-                <MainText className='text-sm'>{formatPercentage(depositFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(strategy.depositFee)}</MainText>
               </Box>
               <Box spaced>
                 <Box center>
@@ -358,7 +430,7 @@ export default function Strategy() {
                     </Tooltip>
                   </Box>
                 </Box>
-                <MainText className='text-sm'>{formatPercentage(withdrawalFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(strategy.withdrawalFee)}</MainText>
               </Box>
               <Box spaced className='mt-4'>
                 <Box center>
@@ -366,7 +438,7 @@ export default function Strategy() {
                     Performance Fee
                   </MainText>
                 </Box>
-                <MainText className='text-sm'>{formatPercentage(performanceFee)}</MainText>
+                <MainText className='text-sm'>{formatPercentage(strategy.performanceFee)}</MainText>
               </Box>
               <SecondaryText>
                 Stargaze Finance charges a performance fee on withdrawal. To learn more about the performance fee, you

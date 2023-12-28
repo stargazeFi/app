@@ -2,12 +2,13 @@ export type StrategyType = 'LP' | 'Direct'
 
 export type Strategy = {
   name: string
+  type: StrategyType
   protocol: string
   description: string
-  type: StrategyType
   depositFee: number
   withdrawalFee: number
   performanceFee: number
+  poolToken?: string
   poolURL?: string
   tokens: string[]
   APY: number
