@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Strategy, TokenInfo } from '@/api'
+import { Strategy, TokenInfo } from '@/types'
 // import { useNetwork } from '@starknet-react/core'
 // import { goerli, mainnet } from '@starknet-react/chains'
 

@@ -1,9 +1,10 @@
+import { useTransactionManager } from '@/hooks'
 import { useEffect, useMemo, useState } from 'react'
 import { Image, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
 import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
-import { Box, MainButton, MainText } from '@/components/Layout'
-import { shortenAddress } from '@/misc/format'
+import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
+import { explorerContractAddress, explorerTransactionAddress, formatEpochToTime, shortenAddress } from '@/misc'
 
 const CONNECTOR_METADATA: {
   [id: string]: { name: string; logo: string }
@@ -29,12 +30,11 @@ export default function WalletModal() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const { chain } = useNetwork()
 
+  const { clearTransactions, transactions } = useTransactionManager()
+
   const [copied, setCopied] = useState(false)
 
-  const explorerLink = useMemo(
-    () => (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address,
-    [address, chain.testnet]
-  )
+  const explorerLink = useMemo(() => explorerContractAddress(address, chain), [address, chain])
 
   useEffect(() => {
     if (copied) {
@@ -131,11 +131,51 @@ export default function WalletModal() {
                       </Link>
                     </Box>
                     <MainText gradient heading className='mb-2 mt-6 text-2xl'>
-                      Recent transactions
+                      Recent transactions{' '}
+                      {transactions.length ? (
+                        <button onClick={clearTransactions}>
+                          <MainText
+                            heading
+                            className='ml-2 text-sm text-red-600 transition ease-in-out hover:text-red-500'
+                          >
+                            (Clear)
+                          </MainText>
+                        </button>
+                      ) : (
+                        ''
+                      )}
                     </MainText>
-                    <span className='font-body text-xs text-amber-50 text-opacity-50'>
-                      Transactions you send from the app will appear here.
-                    </span>
+                    {!transactions.length ? (
+                      <span className='font-body text-xs text-amber-50 text-opacity-50'>
+                        Transactions you send from the app will appear here.
+                      </span>
+                    ) : (
+                      <div className='mt-2 max-h-[400px] w-full overflow-scroll'>
+                        {transactions.map((transaction, index) => (
+                          <GrayElement key={index} col className='w-full is-not-first-child:mt-6'>
+                            <MainText heading gradient className='text-start text-xl'>
+                              {transaction.action}
+                            </MainText>
+                            <MainText className='text-start text-sm'>Strategy: {transaction.strategyName}</MainText>
+                            <MainText className='text-start text-sm'>
+                              {formatEpochToTime(transaction.timestamp)}
+                            </MainText>
+                            <Link
+                              href={explorerTransactionAddress(transaction.hash, chain)}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              <MainText heading className='self-start'>
+                                View details
+                              </MainText>
+                              <Box center className='ml-1 h-4 w-4 pb-0.5'>
+                                <Launch fontSize='inherit' className='text-blue-500' />
+                              </Box>
+                            </Link>
+                          </GrayElement>
+                        ))}
+                      </div>
+                    )}
                   </Box>
                 ) : (
                   connectors.map((connector, index) => (

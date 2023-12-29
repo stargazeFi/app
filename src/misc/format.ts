@@ -1,7 +1,10 @@
 import { Chain } from '@starknet-react/chains'
 
-export const explorerContractAddress = (address: string, chain: Chain) =>
+export const explorerContractAddress = (address: string | undefined, chain: Chain) =>
   (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address
+
+export const explorerTransactionAddress = (address: string, chain: Chain) =>
+  (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'tx/' + address
 
 export const formatToDecimal = (amount: string | undefined, decimals: number = 2) =>
   !amount
@@ -20,7 +23,11 @@ export const formatCurrency = (value: number) =>
     compactDisplay: 'short'
   }).format(value)
 
+export const formatEpochToTime = (epoch: number): string => new Date(epoch).toLocaleString()
+
 export const formatPercentage = (value: number) => `${(value * 100).toFixed(4).replace(/\.?0+$/, '')}%`
 
 export const shortenAddress = (address: string, length: number = 4) =>
   `${address.slice(0, length + 2)}...${address.slice(-length)}`
+
+export const shortenTxHash = (hash: string) => `${hash.slice(0, 10)}...${hash.slice(-8)}`

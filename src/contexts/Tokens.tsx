@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useMemo } from 'react'
 import { Spinner } from '@nextui-org/react'
-import { TokenInfo } from '@/api'
+import { TokenInfo } from '@/types'
 import { Box, Container } from '@/components/Layout'
 import { useDefaultTokens } from '@/hooks/api'
 
@@ -19,6 +19,8 @@ const DESCRIPTIONS: { [_: string]: string } = {
     'As a Rocket Pool staker, your role is to deposit ETH into the deposit pool which will enable a node operator to create a new Beacon Chain validator. You can stake as little as 0.01 ETH. In doing so, you will be given a token called rETH. rETH represents both how much ETH you deposited, and when you deposited it.',
   '0x049210ffc442172463f3177147c1aeaa36c51d152c1b0630f2364c300d4f48ee':
     'UNI is the governance token for Uniswap. UNI was introduced on 16th September 2020 through a retrospective airdrop to users who have interacted with the protocol either by swapping tokens or by providing liquidity.',
+  '0x005a643907b9a4bc6a55e9069c4fd5fd1f5c79a22470690f75556c4736e34426':
+    'USDC is a fully collateralized US dollar stablecoin. USDC is issued by regulated financial institutions, backed by fully reserved assets, redeemable on a 1:1 basis for US dollars.',
   '0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8':
     'USDC is a fully collateralized US dollar stablecoin. USDC is issued by regulated financial institutions, backed by fully reserved assets, redeemable on a 1:1 basis for US dollars.',
   '0x042b8f0484674ca266ac5d08e4ac6a3fe65bd3129795def2dca5c34ecc5f96d2':

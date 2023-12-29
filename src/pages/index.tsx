@@ -1,5 +1,5 @@
 import { useAccount, useBalance } from '@starknet-react/core'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
 import {
   Button,
   Dropdown,
@@ -14,12 +14,11 @@ import {
 import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
 import ErrorPage from '@/components/ErrorPage'
 import { Box, Container, DarkElement, MainText } from '@/components/Layout'
-import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc/format'
+import { formatPercentage, formatCurrency, formatToDecimal, getTokenIcon } from '@/misc'
 import { useStrategies } from '@/hooks/api'
-import { Strategy } from '@/api'
+import { Strategy } from '@/types'
 import Link from 'next/link'
 import { TokenContext, TokenContextInfo } from '@/contexts'
-import { getTokenIcon } from '@/misc/tokens'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'

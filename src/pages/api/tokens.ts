@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { Collection } from 'mongodb'
-import { createDatabaseClient, TokenInfo } from '@/api'
+import { createDatabaseClient } from '@/api'
+import { TokenInfo } from '@/types'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'GET') {

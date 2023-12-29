@@ -1,4 +1,5 @@
-import { serializeAddress, serializeU256 } from '@/misc/types'
+import { useTransactionManager } from '@/hooks'
+import { Strategy, TransactionType } from '@/types'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { Button, Image, Input } from '@nextui-org/react'
 import { Call } from 'starknet'
@@ -19,17 +20,27 @@ import {
 import ErrorPage from '@/components/ErrorPage'
 import AppLoader from '@/components/AppLoader'
 import { useStrategies } from '@/hooks/api'
-import { formatPercentage, formatCurrency, formatToDecimal, explorerContractAddress } from '@/misc/format'
+import {
+  DOCS_FEES_URL,
+  formatPercentage,
+  formatCurrency,
+  formatToDecimal,
+  explorerContractAddress,
+  getTokenDescription,
+  getTokenIcon,
+  getTokenName,
+  serializeAddress,
+  serializeU256
+} from '@/misc'
 import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
-import { DOCS_FEES_URL } from '@/misc/constants'
 import { TokenContext } from '@/contexts'
-import { getTokenDescription, getTokenIcon, getTokenName } from '@/misc/tokens'
 
 export default function Strategy() {
   const { address, isConnected } = useAccount()
   const { connect } = useConnect()
   const { chain } = useNetwork()
   const router = useRouter()
+  const { addTransaction } = useTransactionManager()
 
   const tokensList = useContext(TokenContext)
 
@@ -40,7 +51,10 @@ export default function Strategy() {
 
   const { data: strategies, isError: strategyError, isLoading: strategyLoading } = useStrategies()
 
-  const strategy = useMemo(() => strategies?.find(({ strategyAddress }) => id === strategyAddress), [id, strategies])
+  const strategy: Strategy | undefined = useMemo(
+    () => strategies?.find(({ strategyAddress }) => id === strategyAddress),
+    [id, strategies]
+  )
 
   const { data: vaultShares } = useBalance({
     token: strategy?.vaultAddress,
@@ -105,13 +119,22 @@ export default function Strategy() {
   const withdrawCalls = useMemo(() => {
     if (strategy) {
       try {
+        const approveToken: Call | null =
+          strategy.type === 'LP'
+            ? {
+                contractAddress: strategy.vaultAddress,
+                entrypoint: 'approve',
+                calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, vaultShares?.decimals)]
+              }
+            : null
+
         const withdraw: Call = {
           contractAddress: strategy.strategyAddress,
           entrypoint: 'redeem',
           calldata: [...serializeU256(amount, vaultShares?.decimals)]
         }
 
-        return [withdraw].filter((x): x is Call => x !== null)
+        return [approveToken, withdraw].filter((x): x is Call => x !== null)
       } catch (error) {
         console.error('Failed to generate call data', error)
       }
@@ -133,11 +156,27 @@ export default function Strategy() {
     }
 
     if (mode === 'deposit') {
-      deposit().then()
+      deposit().then(({ transaction_hash }) =>
+        addTransaction({
+          action: TransactionType.StrategyDeposit,
+          hash: transaction_hash,
+          strategyName: strategy!.name,
+          timestamp: Date.now(),
+          toastMessage: `Depositing into strategy...`
+        })
+      )
     } else {
-      withdraw().then()
+      withdraw().then(({ transaction_hash }) =>
+        addTransaction({
+          action: TransactionType.StrategyRedeem,
+          hash: transaction_hash,
+          strategyName: strategy!.name,
+          timestamp: Date.now(),
+          toastMessage: `Redeeming from strategy...`
+        })
+      )
     }
-  }, [connect, deposit, isConnected, mode, withdraw])
+  }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
 
   if (strategyLoading) {
     return <AppLoader />
@@ -156,14 +195,14 @@ export default function Strategy() {
       <Box spaced>
         <Box center>
           <Box className={`${strategy.tokens.length === 1 ? 'mr-2' : 'mr-4'} text-2xl`}>
-            <button onClick={() => router.back()}>
+            <button onClick={() => router.back()} className='flex items-center'>
               <ArrowBack fontSize='inherit' className='text-gray-200' />
             </button>
           </Box>
           <Box center>
             <Box center className='w-[64px]'>
               <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={40} height={40} />
-              {strategy.type === 'Direct' && (
+              {strategy.type === 'LP' && (
                 <Box className='-ml-5'>
                   <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={40} height={40} />
                 </Box>
@@ -352,7 +391,7 @@ export default function Strategy() {
             <Box spaced className='mt-2'>
               <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
                 <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={28} height={28} />
-                {strategy.type === 'Direct' && (
+                {strategy.type === 'LP' && (
                   <Box className='-ml-2'>
                     <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={28} height={28} />
                   </Box>
