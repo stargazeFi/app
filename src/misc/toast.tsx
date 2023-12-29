@@ -1,4 +1,4 @@
-import { explorerTransactionAddress, shortenTxHash } from '@/misc/format'
+import { explorerTransactionURL, shortenTxHash } from '@/misc'
 import { Chain } from '@starknet-react/chains'
 import Link from 'next/link'
 import { toast as toastify } from 'react-toastify'
@@ -18,7 +18,7 @@ export const toast = ({ chain, content, transactionHash, type = 'info' }: ToastP
         {content}
       </MainText>
       {transactionHash && (
-        <Link href={explorerTransactionAddress(transactionHash, chain)} target='_blank' rel='noopener noreferrer'>
+        <Link href={explorerTransactionURL(transactionHash, chain)} target='_blank' rel='noopener noreferrer'>
           <MainText className='text-sm'>
             Transaction hash: <u className='text-blue-600'>{shortenTxHash(transactionHash)}</u>
           </MainText>

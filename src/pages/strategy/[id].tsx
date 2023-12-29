@@ -25,12 +25,13 @@ import {
   formatPercentage,
   formatCurrency,
   formatToDecimal,
-  explorerContractAddress,
+  explorerContractURL,
   getTokenDescription,
   getTokenIcon,
   getTokenName,
   serializeAddress,
-  serializeU256
+  serializeU256,
+  poolLiquidityURL
 } from '@/misc'
 import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import { TokenContext } from '@/contexts'
@@ -283,7 +284,7 @@ export default function Strategy() {
               </MainText>
               <Box center>
                 <Link
-                  href={explorerContractAddress(strategy.strategyAddress, chain)}
+                  href={explorerContractURL(strategy.strategyAddress, chain)}
                   target='_blank'
                   rel='noopener noreferrer'
                 >
@@ -295,7 +296,7 @@ export default function Strategy() {
                   </Box>
                 </Link>
                 <Link
-                  href={explorerContractAddress(strategy.vaultAddress, chain)}
+                  href={explorerContractURL(strategy.vaultAddress, chain)}
                   target='_blank'
                   rel='noopener noreferrer'
                 >
@@ -346,7 +347,7 @@ export default function Strategy() {
                       </Box>*/}
                     </Box>
                     <Box center>
-                      <Link href={explorerContractAddress(address, chain)} target='_blank' rel='noopener noreferrer'>
+                      <Link href={explorerContractURL(address, chain)} target='_blank' rel='noopener noreferrer'>
                         <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                           <Box className='mr-2 text-small'>
                             <LinkIcon fontSize='inherit' className='text-gray-200' />
@@ -431,7 +432,12 @@ export default function Strategy() {
             </Box>
             {strategy.type === 'LP' && (
               <Box className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                <a href={strategy.poolURL} target='_blank' rel='noopener noreferrer' className='flex items-center'>
+                <a
+                  href={poolLiquidityURL(strategy.protocol, strategy.poolToken as string, mode)}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center'
+                >
                   <MainText className='text-xs'>{mode === 'deposit' ? 'Add' : 'Remove'} liquidity</MainText>
                   <Box className='ml-2 text-small'>
                     <OpenInNew fontSize='inherit' className='text-gray-200' />

@@ -4,7 +4,7 @@ import { Image, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, 
 import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
 import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
-import { explorerContractAddress, explorerTransactionAddress, formatEpochToTime, shortenAddress } from '@/misc'
+import { explorerContractURL, explorerTransactionURL, formatEpochToTime, shortenAddress } from '@/misc'
 
 const CONNECTOR_METADATA: {
   [id: string]: { name: string; logo: string }
@@ -34,7 +34,7 @@ export default function WalletModal() {
 
   const [copied, setCopied] = useState(false)
 
-  const explorerLink = useMemo(() => explorerContractAddress(address, chain), [address, chain])
+  const explorerLink = useMemo(() => explorerContractURL(address, chain), [address, chain])
 
   useEffect(() => {
     if (copied) {
@@ -161,7 +161,7 @@ export default function WalletModal() {
                               {formatEpochToTime(transaction.timestamp)}
                             </MainText>
                             <Link
-                              href={explorerTransactionAddress(transaction.hash, chain)}
+                              href={explorerTransactionURL(transaction.hash, chain)}
                               target='_blank'
                               rel='noopener noreferrer'
                             >

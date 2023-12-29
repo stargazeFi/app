@@ -25,6 +25,7 @@ export const store = configureStore({
     ]
   },
   preloadedState: load({
+    disableWarnings: true,
     states: persistedStates
   })
 })

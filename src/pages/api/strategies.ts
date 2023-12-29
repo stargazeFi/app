@@ -25,7 +25,6 @@ const strategies: Strategy[] = [
     type: 'LP',
     protocol: 'sithswap',
     poolToken: '0x0490ae81d31d6d0a255e0cf1f27ac393d28911526c5bbdc1519f34059e6b143c',
-    poolURL: 'https://app.sithswap.com/add/0x0490ae81d31d6d0a255e0cf1f27ac393d28911526c5bbdc1519f34059e6b143c/',
     description:
       "The vault deposits the user's SS_V1_VLP #7 in a Sithswap farm, earning the platform's governance token. Earned token is swapped for USDC and ETH in order to acquire more of the same LP token. To complete the compounding cycle, the new SS_V1_VLP #7 is added to the farm, ready to go for the next earning event. The transaction cost required to do all this is socialized among the vault's users.",
     depositFee: 0,
@@ -48,7 +47,6 @@ const strategies: Strategy[] = [
     type: 'LP',
     protocol: 'jediswap',
     poolToken: '',
-    poolURL: 'https://jediswap.xyz',
     description:
       'This strategy uses a volatility-adjusted bollinger band algorithm to dynamically rebalance a tight liquidity range',
     depositFee: 0.01,

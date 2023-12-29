@@ -1,11 +1,3 @@
-import { Chain } from '@starknet-react/chains'
-
-export const explorerContractAddress = (address: string | undefined, chain: Chain) =>
-  (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'contract/' + address
-
-export const explorerTransactionAddress = (address: string, chain: Chain) =>
-  (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'tx/' + address
-
 export const formatToDecimal = (amount: string | undefined, decimals: number = 2) =>
   !amount
     ? '0'
