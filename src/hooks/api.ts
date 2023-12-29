@@ -53,14 +53,14 @@ const useDataApi = <TQueryFnData = unknown>({
     refetchOnWindowFocus: 'always',
     refetchIntervalInBackground: false,
     refetchOnMount: 'always',
-    staleTime: refetchInterval,
     enabled: Boolean(baseUrl && path)
   })
 }
 
 export const useDefaultTokens = () => {
   return useDataApi<TokenInfo[]>({
-    path: '/tokens'
+    path: '/tokens',
+    refetchInterval: 30000
   })
 }
 
@@ -73,6 +73,7 @@ export const usePrices = () => {
 
 export const useStrategies = () => {
   return useDataApi<Strategy[]>({
-    path: '/strategies'
+    path: '/strategies',
+    refetchInterval: 10000
   })
 }

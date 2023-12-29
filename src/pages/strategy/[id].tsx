@@ -1,6 +1,6 @@
-import { useTransactionManager } from '@/hooks'
+import { useStrategiesManager, useTransactionManager } from '@/hooks'
 import { Strategy, TransactionType } from '@/types'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Button, Image, Input } from '@nextui-org/react'
 import { Call } from 'starknet'
 import { format } from 'timeago.js'
@@ -50,7 +50,12 @@ export default function Strategy() {
   const [amount, setAmount] = useState('0')
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
-  const { data: strategies, isError: strategyError, isLoading: strategyLoading } = useStrategies()
+  const { data, isError: strategyError, isLoading } = useStrategies()
+  const { strategies, storeStrategies } = useStrategiesManager()
+
+  const isFetching = useMemo(() => !strategies.length && isLoading, [isLoading, strategies])
+
+  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
   const strategy: Strategy | undefined = useMemo(
     () => strategies?.find(({ strategyAddress }) => id === strategyAddress),
@@ -179,7 +184,7 @@ export default function Strategy() {
     }
   }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
 
-  if (strategyLoading) {
+  if (isFetching) {
     return <AppLoader />
   }
 

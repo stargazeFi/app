@@ -7,9 +7,9 @@ import { useAccount, useNetwork } from '@starknet-react/core'
 import { num } from 'starknet'
 
 export function useTransactionManager(): {
-  transactions: Transaction[]
   addTransaction(transaction: Transaction): void
   clearTransactions(): void
+  transactions: Transaction[]
 } {
   const dispatch = useDispatch()
   const { address } = useAccount()
@@ -36,9 +36,9 @@ export function useTransactionManager(): {
     }
 
     return {
-      transactions: address && chain ? txHistory?.[`${num.toHex(chain.id)}-${address}`] ?? [] : [],
       addTransaction,
-      clearTransactions
+      clearTransactions,
+      transactions: address && chain ? txHistory?.[`${num.toHex(chain.id)}-${address}`] ?? [] : []
     }
   }, [address, chain, dispatch, txHistory])
 }

@@ -1,5 +1,5 @@
 import { useAccount, useBalance } from '@starknet-react/core'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Dropdown,
@@ -9,13 +9,14 @@ import {
   Image,
   Input,
   Pagination,
+  Skeleton,
   Spinner
 } from '@nextui-org/react'
 import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
 import ErrorPage from '@/components/ErrorPage'
 import { Box, Container, DarkElement, MainText } from '@/components/Layout'
 import { formatPercentage, formatCurrency, formatToDecimal, getTokenIcon } from '@/misc'
-import { useStrategies } from '@/hooks/api'
+import { useStrategies, useStrategiesManager } from '@/hooks'
 import { Strategy } from '@/types'
 import Link from 'next/link'
 import { TokenContext, TokenContextItem } from '@/contexts'
@@ -146,7 +147,11 @@ export default function Strategies() {
   const [sorted, setSorted] = useState('TVL')
 
   const { address } = useAccount()
-  const { data: strategies, isError, isLoading } = useStrategies()
+  const { data, isError, isLoading } = useStrategies()
+  const { strategies, storeStrategies } = useStrategiesManager()
+
+  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
+
   const tokens = useContext(TokenContext)
 
   const portfolio = useMemo(
@@ -180,6 +185,8 @@ export default function Strategies() {
     [displayedStrategies.length]
   )
 
+  const isFetching = useMemo(() => !strategies.length && isLoading, [isLoading, strategies])
+
   if (isError) {
     return <ErrorPage />
   }
@@ -209,26 +216,30 @@ export default function Strategies() {
             Stargaze
           </MainText>
           <Box className='w-full justify-evenly'>
-            {!isLoading && strategies && (
-              <>
-                <Box col className='items-start md:ml-6 md:items-end'>
-                  <MainText heading className='text-xl font-light text-gray-600'>
-                    TVL
-                  </MainText>
-                  <MainText gradient className='text-xl'>
-                    {formatCurrency(strategies.reduce((acc, it) => acc + it.stargazeTVL, 0))}
-                  </MainText>
-                </Box>
-                <Box col className='items-start md:ml-6 md:items-end'>
-                  <MainText heading className='text-xl font-light text-gray-600'>
-                    Strategies
-                  </MainText>
-                  <MainText gradient className='text-xl'>
-                    {strategies.length}
-                  </MainText>
-                </Box>
-              </>
-            )}
+            <Box col className='items-start md:ml-6 md:items-end'>
+              <MainText heading className='text-xl font-light text-gray-600'>
+                TVL
+              </MainText>
+              {isFetching ? (
+                <Skeleton className='my-1 flex h-5 w-24 rounded-md' />
+              ) : (
+                <MainText gradient className='text-xl'>
+                  {formatCurrency(strategies.reduce((acc, it) => acc + it.stargazeTVL, 0))}
+                </MainText>
+              )}
+            </Box>
+            <Box col className='items-start md:ml-6 md:items-end'>
+              <MainText heading className='text-xl font-light text-gray-600'>
+                Strategies
+              </MainText>
+              {isFetching ? (
+                <Skeleton className='my-1 flex h-5 w-12 rounded-md' />
+              ) : (
+                <MainText gradient className='text-xl'>
+                  {strategies.length}
+                </MainText>
+              )}
+            </Box>
           </Box>
         </Box>
       </DarkElement>
@@ -324,7 +335,7 @@ export default function Strategies() {
         </Box>
         <div className='gradient-border-b my-6 h-[1px] w-full' />
         <Box col>
-          {isLoading ? (
+          {isFetching ? (
             <Spinner size='lg' className='my-10' />
           ) : displayedStrategies.length ? (
             displayedStrategies

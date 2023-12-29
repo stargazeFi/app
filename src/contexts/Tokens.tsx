@@ -1,8 +1,8 @@
 import { ReactNode, createContext, useMemo } from 'react'
 import { Spinner } from '@nextui-org/react'
-import { TokenInfo } from '@/types'
 import { Box, Container } from '@/components/Layout'
 import { useDefaultTokens, usePrices } from '@/hooks/api'
+import { TokenInfo } from '@/types'
 
 const DESCRIPTIONS: { [_: string]: string } = {
   '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac':
