@@ -2,7 +2,7 @@ import { ReactNode, createContext, useMemo } from 'react'
 import { Spinner } from '@nextui-org/react'
 import { TokenInfo } from '@/types'
 import { Box, Container } from '@/components/Layout'
-import { useDefaultTokens } from '@/hooks/api'
+import { useDefaultTokens, usePrices } from '@/hooks/api'
 
 const DESCRIPTIONS: { [_: string]: string } = {
   '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac':
@@ -31,21 +31,28 @@ const DESCRIPTIONS: { [_: string]: string } = {
     'sfrxETH is a ERC-4626 vault designed to accrue the staking yield of the Frax ETH validators. At any time, frxETH can be exchanged for sfrxETH by depositing it into the sfrxETH vault, which allows users to earn staking yield on their frxETH. Over time, as validators accrue staking yield, an equivalent amount of frxETH is minted and added to the vault, allowing users to redeem their sfrxETH for an greater amount of frxETH than they deposited.'
 }
 
-export type TokenContextInfo = TokenInfo & {
+export type TokenContextItem = TokenInfo & {
   description: string
+  price: number
 }
 
-export const TokenContext = createContext<TokenContextInfo[]>([])
+export const TokenContext = createContext<TokenContextItem[]>([])
 
 export const TokensProvider = ({ children }: { children: ReactNode }) => {
-  const { data } = useDefaultTokens()
+  const { data: tokens } = useDefaultTokens()
+  const { data: prices } = usePrices()
 
-  const tokens: TokenContextInfo[] | undefined = useMemo(
-    () => data?.map((token) => ({ ...token, description: DESCRIPTIONS[token.l2_token_address] })),
-    [data]
+  const contextItems: TokenContextItem[] | undefined = useMemo(
+    () =>
+      tokens?.map((token) => ({
+        ...token,
+        description: DESCRIPTIONS[token.l2_token_address],
+        price: (prices?.find(({ ticker }) => ticker === token.symbol) || { price: 0 }).price
+      })),
+    [prices, tokens]
   )
 
-  if (!tokens) {
+  if (!contextItems) {
     return (
       <Container>
         <Box center className='h-[100vh]'>
@@ -55,5 +62,5 @@ export const TokensProvider = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  return <TokenContext.Provider value={tokens}>{children}</TokenContext.Provider>
+  return <TokenContext.Provider value={contextItems}>{children}</TokenContext.Provider>
 }

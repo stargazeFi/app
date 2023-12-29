@@ -13,13 +13,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
   const collection: Collection<TokenInfo> = database.collection<TokenInfo>('tokens')
 
-  let tokens
   try {
-    tokens = await collection.find().toArray()
+    const tokens = await collection.find().toArray()
+    res.status(200).json(tokens)
   } catch (e) {
     console.error(e)
+    res.status(500).json({ error: 'Internal Server Error' })
   }
 
   await client.close()
-  res.status(200).json(tokens)
 }

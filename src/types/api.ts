@@ -2,6 +2,12 @@ export type Protocol = 'sithswap' | 'ekubo' | 'jediswap'
 
 export type StrategyType = 'LP' | 'Direct'
 
+export type Price = {
+  ticker: string
+  price: number
+  lastUpdated: number
+}
+
 export type Strategy = {
   name: string
   type: StrategyType
@@ -18,7 +24,7 @@ export type Strategy = {
   stargazeTVL: number
   strategyAddress: string
   vaultAddress: string
-  lastUpdate: number
+  lastUpdated: number
 }
 
 export type TokenInfo = {

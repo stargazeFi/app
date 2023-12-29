@@ -269,7 +269,7 @@ export default function Strategy() {
               Last update
             </MainText>
             <MainText gradient className='text-lg'>
-              {format(strategy.lastUpdate)}
+              {format(strategy.lastUpdated)}
             </MainText>
           </Box>
         </DarkElement>

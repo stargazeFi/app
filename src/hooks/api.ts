@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Strategy, TokenInfo } from '@/types'
+import { Price, Strategy, TokenInfo } from '@/types'
 // import { useNetwork } from '@starknet-react/core'
 // import { goerli, mainnet } from '@starknet-react/chains'
 
@@ -53,6 +53,7 @@ const useDataApi = <TQueryFnData = unknown>({
     refetchOnWindowFocus: 'always',
     refetchIntervalInBackground: false,
     refetchOnMount: 'always',
+    staleTime: refetchInterval,
     enabled: Boolean(baseUrl && path)
   })
 }
@@ -60,6 +61,13 @@ const useDataApi = <TQueryFnData = unknown>({
 export const useDefaultTokens = () => {
   return useDataApi<TokenInfo[]>({
     path: '/tokens'
+  })
+}
+
+export const usePrices = () => {
+  return useDataApi<Price[]>({
+    path: '/prices',
+    refetchInterval: 30000
   })
 }
 

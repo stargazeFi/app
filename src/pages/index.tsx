@@ -18,7 +18,7 @@ import { formatPercentage, formatCurrency, formatToDecimal, getTokenIcon } from 
 import { useStrategies } from '@/hooks/api'
 import { Strategy } from '@/types'
 import Link from 'next/link'
-import { TokenContext, TokenContextInfo } from '@/contexts'
+import { TokenContext, TokenContextItem } from '@/contexts'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
@@ -42,7 +42,7 @@ const Strategy = ({
   index: number
   address: string | undefined
   strategy: Strategy
-  tokensList: TokenContextInfo[]
+  tokensList: TokenContextItem[]
 }) => {
   const { data: balance } = useBalance({
     token: poolToken,
