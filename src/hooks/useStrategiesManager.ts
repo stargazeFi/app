@@ -13,21 +13,21 @@ export function useStrategiesManager(): {
   const { chain } = useNetwork()
   const storedStrategies = useAppSelector(selectStrategies)
 
-  function storeStrategies(strategies: Strategy[]) {
-    if (chain) {
-      dispatch(
-        storeFetchedStrategies({
-          chainId: num.toHex(chain.id),
-          strategies
-        })
-      )
-    }
-  }
-
   return useMemo(() => {
+    function storeStrategies(strategies: Strategy[]) {
+      if (chain) {
+        dispatch(
+          storeFetchedStrategies({
+            chainId: num.toHex(chain.id),
+            strategies
+          })
+        )
+      }
+    }
+
     return {
       storeStrategies,
       strategies: chain ? storedStrategies?.[num.toHex(chain.id)] ?? [] : []
     }
-  }, [chain, storeStrategies, storedStrategies])
+  }, [chain, dispatch, storedStrategies])
 }

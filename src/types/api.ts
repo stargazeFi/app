@@ -23,7 +23,6 @@ export type Strategy = {
   TVL: number
   stargazeTVL: number
   strategyAddress: string
-  vaultAddress: string
   lastUpdated: number
 }
 

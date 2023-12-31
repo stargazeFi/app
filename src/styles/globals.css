@@ -44,7 +44,7 @@ body {
   width: 100%;
   border-width: 1px;
   border-style: solid;
-  border-image: linear-gradient(to bottom, #33333320, #333333A0, #33333320) 0 1;
+  border-image: linear-gradient(to bottom, #33333320, #333333a0, #33333320) 0 1;
 }
 
 .gradient-dark-element:after {
@@ -56,7 +56,7 @@ body {
   width: 100%;
   border-width: 1px;
   border-style: solid;
-  border-image: linear-gradient(to right, #33333320, #333333A0, #33333320) 1 0;
+  border-image: linear-gradient(to right, #33333320, #333333a0, #33333320) 1 0;
 }
 
 .gradient-border-h {

@@ -62,8 +62,8 @@ export default function Strategy() {
     [id, strategies]
   )
 
-  const { data: vaultShares } = useBalance({
-    token: strategy?.vaultAddress,
+  const { data: shares } = useBalance({
+    token: strategy?.strategyAddress,
     address,
     enabled: !!address,
     watch: true
@@ -87,12 +87,12 @@ export default function Strategy() {
     () =>
       mode === 'deposit'
         ? formatToDecimal(baseToken?.formatted, baseToken?.decimals)
-        : formatToDecimal(vaultShares?.formatted, vaultShares?.decimals),
-    [baseToken, mode, vaultShares]
+        : formatToDecimal(shares?.formatted, shares?.decimals),
+    [baseToken, mode, shares]
   )
 
   const depositCalls = useMemo(() => {
-    if (strategy) {
+    if (address && strategy) {
       try {
         const approveToken0: Call = {
           contractAddress: strategy.poolToken || strategy.tokens[0],
@@ -112,7 +112,7 @@ export default function Strategy() {
         const deposit: Call = {
           contractAddress: strategy.strategyAddress,
           entrypoint: 'deposit',
-          calldata: [...serializeU256(amount, baseToken?.decimals)]
+          calldata: [...serializeU256(amount, baseToken?.decimals), serializeAddress(address)]
         }
 
         return [approveToken0, approveToken1, deposit].filter((x): x is Call => x !== null)
@@ -120,40 +120,30 @@ export default function Strategy() {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [amount, baseToken, quoteToken, strategy])
+  }, [address, amount, baseToken, quoteToken, strategy])
 
   const withdrawCalls = useMemo(() => {
-    if (strategy) {
+    if (address && strategy) {
       try {
-        const approveToken: Call | null =
-          strategy.type === 'LP'
-            ? {
-                contractAddress: strategy.vaultAddress,
-                entrypoint: 'approve',
-                calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, vaultShares?.decimals)]
-              }
-            : null
-
         const withdraw: Call = {
           contractAddress: strategy.strategyAddress,
           entrypoint: 'redeem',
-          calldata: [...serializeU256(amount, vaultShares?.decimals)]
+          calldata: [...serializeU256(amount, shares?.decimals), serializeAddress(address)]
         }
 
-        return [approveToken, withdraw].filter((x): x is Call => x !== null)
+        return [withdraw].filter((x): x is Call => x !== null)
       } catch (error) {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [amount, vaultShares, strategy])
+  }, [address, amount, shares?.decimals, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
 
   const disableCTA = useMemo(
-    () =>
-      !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : vaultShares?.formatted),
-    [amount, baseToken, mode, vaultShares]
+    () => !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : shares?.formatted),
+    [amount, baseToken, mode, shares]
   )
 
   const handleCTA = useCallback(() => {
@@ -283,7 +273,7 @@ export default function Strategy() {
       <Box className='mt-2 flex-col-reverse md:flex-row'>
         <Box col className='flex-[3] lg:flex-[4]'>
           <DarkElement col className='h-fit'>
-            <Box col spaced className='w-full lg:flex-row'>
+            <Box spaced className='w-full lg:flex-row'>
               <MainText heading className='pt-1 text-2xl'>
                 Strategy
               </MainText>
@@ -295,18 +285,6 @@ export default function Strategy() {
                 >
                   <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                     <MainText className='text-xs'>Strategy contract</MainText>
-                    <Box className='ml-2 text-small'>
-                      <OpenInNew fontSize='inherit' className='text-gray-200' />
-                    </Box>
-                  </Box>
-                </Link>
-                <Link
-                  href={explorerContractURL(strategy.vaultAddress, chain)}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  <Box center className='ml-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                    <MainText className='text-xs'>Vault contract</MainText>
                     <Box className='ml-2 text-small'>
                       <OpenInNew fontSize='inherit' className='text-gray-200' />
                     </Box>
@@ -424,7 +402,7 @@ export default function Strategy() {
                     radius='sm'
                     variant='bordered'
                     onClick={() =>
-                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : vaultShares?.formatted || '0')
+                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : shares?.formatted || '0')
                     }
                     className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
                   >
