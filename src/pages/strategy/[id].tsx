@@ -1,12 +1,5 @@
-import { useStrategiesManager, useTransactionManager } from '@/hooks'
-import { Strategy, TransactionType } from '@/types'
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { Button, Image, Input } from '@nextui-org/react'
-import { Call } from 'starknet'
-import { format } from 'timeago.js'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
+import AppLoader from '@/components/AppLoader'
+import ErrorPage from '@/components/ErrorPage'
 import {
   Box,
   Container,
@@ -17,24 +10,31 @@ import {
   SecondaryText,
   Tooltip
 } from '@/components/Layout'
-import ErrorPage from '@/components/ErrorPage'
-import AppLoader from '@/components/AppLoader'
+import { TokenContext } from '@/contexts'
+import { useStrategiesManager, useTransactionManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
 import {
   DOCS_FEES_URL,
-  formatPercentage,
-  formatCurrency,
-  formatToDecimal,
   explorerContractURL,
+  formatCurrency,
+  formatPercentage,
+  formatToDecimal,
   getTokenDescription,
   getTokenIcon,
   getTokenName,
+  poolLiquidityURL,
   serializeAddress,
-  serializeU256,
-  poolLiquidityURL
+  serializeU256
 } from '@/misc'
+import { Strategy, TransactionType } from '@/types'
+import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
+import { Button, Image, Input } from '@nextui-org/react'
 import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
-import { TokenContext } from '@/contexts'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { Call } from 'starknet'
+import { format } from 'timeago.js'
 
 export default function Strategy() {
   const { address, isConnected } = useAccount()
@@ -128,7 +128,7 @@ export default function Strategy() {
         const withdraw: Call = {
           contractAddress: strategy.strategyAddress,
           entrypoint: 'redeem',
-          calldata: [...serializeU256(amount, shares?.decimals), serializeAddress(address)]
+          calldata: [...serializeU256(amount, shares?.decimals), serializeAddress(address), serializeAddress(address)]
         }
 
         return [withdraw].filter((x): x is Call => x !== null)
@@ -146,31 +146,22 @@ export default function Strategy() {
     [amount, baseToken, mode, shares]
   )
 
-  const handleCTA = useCallback(() => {
+  const handleCTA = useCallback(async () => {
     if (!isConnected) {
       connect()
     }
 
-    if (mode === 'deposit') {
-      deposit().then(({ transaction_hash }) =>
-        addTransaction({
-          action: TransactionType.StrategyDeposit,
-          hash: transaction_hash,
-          strategyName: strategy!.name,
-          timestamp: Date.now(),
-          toastMessage: `Depositing into strategy...`
-        })
-      )
-    } else {
-      withdraw().then(({ transaction_hash }) =>
-        addTransaction({
-          action: TransactionType.StrategyRedeem,
-          hash: transaction_hash,
-          strategyName: strategy!.name,
-          timestamp: Date.now(),
-          toastMessage: `Redeeming from strategy...`
-        })
-      )
+    try {
+      const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : withdraw())
+      addTransaction({
+        action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
+        hash,
+        strategyName: strategy!.name,
+        timestamp: Date.now(),
+        toastMessage: mode === 'deposit' ? 'Depositing into strategy...' : 'Redeeming from strategy...'
+      })
+    } catch (e) {
+      console.error(e)
     }
   }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
 
