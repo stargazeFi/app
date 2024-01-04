@@ -6,11 +6,11 @@ import { addTransactionHistory, clearTransactionHistory, selectTransactionHistor
 import { useAccount, useNetwork } from '@starknet-react/core'
 import { num } from 'starknet'
 
-export function useTransactionManager(): {
+export const useTransactionManager = (): {
   addTransaction(transaction: Transaction): void
   clearTransactions(): void
   transactions: Transaction[]
-} {
+} => {
   const dispatch = useDispatch()
   const { address } = useAccount()
   const { chain } = useNetwork()

@@ -5,7 +5,7 @@ export const formatToDecimal = (amount: string | undefined, decimals: number = 2
         .toFixed(decimals)
         .replace(/\.?0+$/, '')
 
-export const formatCurrency = (value: number) =>
+export const formatCurrency = (value: number | bigint) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',

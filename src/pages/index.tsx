@@ -1,5 +1,6 @@
+import { usePairTVL } from '@/hooks/usePairTVL'
 import { useAccount, useBalance } from '@starknet-react/core'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Dropdown,
@@ -12,11 +13,11 @@ import {
   Skeleton,
   Spinner
 } from '@nextui-org/react'
-import { Close, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
+import { Close, HelpOutline, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
 import ErrorPage from '@/components/ErrorPage'
-import { Box, Container, DarkElement, MainText } from '@/components/Layout'
+import { Box, Container, DarkElement, MainText, Tooltip } from '@/components/Layout'
 import { formatPercentage, formatCurrency, formatToDecimal, getTokenIcon } from '@/misc'
-import { useStrategies, useStrategiesManager } from '@/hooks'
+import { usePairs, usePrices, useStrategies, useStrategiesManager } from '@/hooks'
 import { Strategy } from '@/types'
 import Link from 'next/link'
 import { TokenContext, TokenContextItem } from '@/contexts'
@@ -37,7 +38,7 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 const Strategy = ({
   index,
   address,
-  strategy: { name, protocol, poolToken, type, APY, TVL, stargazeTVL, daily, tokens, strategyAddress },
+  strategy: { name, protocol, poolToken, type, APY, TVL, daily, tokens, strategyAddress },
   tokensList
 }: {
   index: number
@@ -45,12 +46,16 @@ const Strategy = ({
   strategy: Strategy
   tokensList: TokenContextItem[]
 }) => {
+  const { data: pairs } = usePairs()
+  const { data: prices } = usePrices()
   const { data: balance } = useBalance({
     token: poolToken,
     address,
     enabled: !!address,
     watch: true
   })
+
+  const pairTVL = usePairTVL({ pairs, poolToken, prices, tokensList })
 
   const TVLComponent = useCallback(
     ({ className }: { className: string }) => {
@@ -60,13 +65,24 @@ const Strategy = ({
             TVL
           </MainText>
           <MainText gradient className='text-lg'>
-            {formatCurrency(stargazeTVL)}
+            {formatCurrency(TVL)}
           </MainText>
-          <MainText className='text-sm text-gray-600'>{formatCurrency(TVL)}</MainText>
+          {!pairTVL ? (
+            <Skeleton className='my-0.5 flex h-3.5 w-20 rounded-md' />
+          ) : (
+            <Box center>
+              <MainText className='text-sm text-gray-600'>{formatCurrency(pairTVL)}</MainText>
+              <Box className='ml-2 pb-0.5 text-small'>
+                <Tooltip content="Protocol's own TVL">
+                  <HelpOutline fontSize='inherit' className='text-gray-600' />
+                </Tooltip>
+              </Box>
+            </Box>
+          )}
         </Box>
       )
     },
-    [TVL, stargazeTVL]
+    [TVL, pairTVL]
   )
 
   return (
@@ -147,7 +163,7 @@ export default function Strategies() {
   const [sorted, setSorted] = useState('TVL')
 
   const { address } = useAccount()
-  const { data, isError, isLoading } = useStrategies()
+  const { data, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
   const { strategies, storeStrategies } = useStrategiesManager()
 
   useEffect(() => data && storeStrategies(data), [data, storeStrategies])
@@ -185,9 +201,9 @@ export default function Strategies() {
     [displayedStrategies.length]
   )
 
-  const isFetching = useMemo(() => !strategies.length && isLoading, [isLoading, strategies])
+  const isFetching = useMemo(() => !strategies.length && strategiesLoading, [strategies, strategiesLoading])
 
-  if (isError) {
+  if (strategiesError) {
     return <ErrorPage />
   }
 
@@ -224,7 +240,7 @@ export default function Strategies() {
                 <Skeleton className='my-1 flex h-5 w-24 rounded-md' />
               ) : (
                 <MainText gradient className='text-xl'>
-                  {formatCurrency(strategies.reduce((acc, it) => acc + it.stargazeTVL, 0))}
+                  {formatCurrency(strategies.reduce((acc, it) => acc + it.TVL, 0))}
                 </MainText>
               )}
             </Box>

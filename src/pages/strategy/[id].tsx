@@ -11,8 +11,9 @@ import {
   Tooltip
 } from '@/components/Layout'
 import { TokenContext } from '@/contexts'
-import { useStrategiesManager, useTransactionManager } from '@/hooks'
+import { usePairs, usePrices, useStrategiesManager, useTransactionManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
+import { usePairTVL } from '@/hooks/usePairTVL'
 import {
   DOCS_FEES_URL,
   explorerContractURL,
@@ -28,7 +29,7 @@ import {
 } from '@/misc'
 import { Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
-import { Button, Image, Input } from '@nextui-org/react'
+import { Button, Image, Input, Skeleton } from '@nextui-org/react'
 import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -40,8 +41,8 @@ export default function Strategy() {
   const { address, isConnected } = useAccount()
   const { connect } = useConnect()
   const { chain } = useNetwork()
-  const router = useRouter()
   const { addTransaction } = useTransactionManager()
+  const router = useRouter()
 
   const tokensList = useContext(TokenContext)
 
@@ -50,6 +51,8 @@ export default function Strategy() {
   const [amount, setAmount] = useState('0')
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
+  const { data: prices } = usePrices()
+  const { data: pairs } = usePairs()
   const { data, isError: strategyError, isLoading } = useStrategies()
   const { strategies, storeStrategies } = useStrategiesManager()
 
@@ -61,6 +64,8 @@ export default function Strategy() {
     () => strategies?.find(({ strategyAddress }) => id === strategyAddress),
     [id, strategies]
   )
+
+  const pairTVL = usePairTVL({ pairs, poolToken: strategy?.poolToken, prices, tokensList })
 
   const { data: shares } = useBalance({
     token: strategy?.strategyAddress,
@@ -220,9 +225,20 @@ export default function Strategy() {
               TVL
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatCurrency(strategy.stargazeTVL)}
+              {formatCurrency(strategy.TVL)}
             </MainText>
-            <MainText className='text-sm text-gray-600'>{formatCurrency(strategy.TVL)}</MainText>
+            {!pairTVL ? (
+              <Skeleton className='my-0.5 flex h-3.5 w-20 rounded-md' />
+            ) : (
+              <Box center>
+                <MainText className='text-sm text-gray-600'>{formatCurrency(pairTVL)}</MainText>
+                <Box className='ml-2 pb-0.5 text-small'>
+                  <Tooltip content="Protocol's own TVL">
+                    <HelpOutline fontSize='inherit' className='text-gray-600' />
+                  </Tooltip>
+                </Box>
+              </Box>
+            )}
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
             <MainText heading className='text-xl font-light'>

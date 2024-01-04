@@ -1,7 +1,7 @@
 import { ReactNode, createContext, useMemo } from 'react'
 import { Spinner } from '@nextui-org/react'
 import { Box, Container } from '@/components/Layout'
-import { useDefaultTokens, usePrices } from '@/hooks/api'
+import { useTokens, usePrices } from '@/hooks/api'
 import { TokenInfo } from '@/types'
 
 const DESCRIPTIONS: { [_: string]: string } = {
@@ -39,7 +39,7 @@ export type TokenContextItem = TokenInfo & {
 export const TokenContext = createContext<TokenContextItem[]>([])
 
 export const TokensProvider = ({ children }: { children: ReactNode }) => {
-  const { data: tokens } = useDefaultTokens()
+  const { data: tokens } = useTokens()
   const { data: prices } = usePrices()
 
   const contextItems: TokenContextItem[] | undefined = useMemo(
