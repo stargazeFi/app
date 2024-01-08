@@ -5,7 +5,7 @@ export const formatToDecimal = (amount: string | undefined, decimals: number = 2
         .toFixed(decimals)
         .replace(/\.?0+$/, '')
 
-export const formatCurrency = (value: number | bigint) =>
+export const formatCurrency = (value: number | bigint | string) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -13,6 +13,14 @@ export const formatCurrency = (value: number | bigint) =>
     maximumFractionDigits: 2,
     notation: 'compact',
     compactDisplay: 'short'
+  }).format(typeof value === 'string' ? Number(value) : value)
+
+export const formatTokenPrice = (value: number | bigint) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(value)
 
 export const formatEpochToTime = (epoch: number): string => new Date(epoch).toLocaleString()

@@ -5,6 +5,8 @@ import { useTokens, usePrices } from '@/hooks/api'
 import { TokenInfo } from '@/types'
 
 const DESCRIPTIONS: { [_: string]: string } = {
+  '0x012d537dc323c439dc65c976fad242d5610d27cfb5f31689a0a319b8be7f3d56':
+    'Wrapped Bitcoin (WBTC) is the first ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.',
   '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac':
     'Wrapped Bitcoin (WBTC) is the first ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.',
   '0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3':

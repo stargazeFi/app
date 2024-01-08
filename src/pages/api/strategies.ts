@@ -1,6 +1,5 @@
 import { createDatabaseClient } from '@/api'
 import { Strategy } from '@/types'
-import { Collection } from 'mongodb'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -11,10 +10,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   const client = createDatabaseClient()
   await client.connect()
   const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
-  const collection: Collection<Strategy> = database.collection<Strategy>('strategies')
+  const collection = database.collection<Strategy>('strategies')
 
   try {
-    const strategies = await collection.find().toArray()
+    const strategies: Strategy[] = await collection.find({ cursor: { $ne: true } }).toArray()
     res.status(200).json(strategies)
   } catch (e) {
     console.error(e)

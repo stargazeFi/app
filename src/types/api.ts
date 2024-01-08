@@ -1,13 +1,12 @@
+import { Uint256 } from 'starknet'
+
 export type Protocol = 'sithswap' | 'ekubo' | 'jediswap'
 
 export type StrategyType = 'LP' | 'Direct'
 
-export type Pair = {
+export type Balances = {
   address: string
-  token0: string
-  token1: string
-  reserve0: bigint
-  reserve1: bigint
+  balances: Record<string, Uint256>
 }
 
 export type Price = {
@@ -19,19 +18,21 @@ export type Price = {
 
 export type Strategy = {
   name: string
+  address: string
   type: StrategyType
   protocol: Protocol
+  protocolTVL: string
+  poolToken?: string
+  tokens: Array<string>
   description: string
   depositFee: number
   withdrawalFee: number
   performanceFee: number
-  poolToken?: string
-  tokens: string[]
-  APY: number
   daily: number
-  TVL: number
-  strategyAddress: string
-  lastUpdated: number
+  APY: number
+  TVL: string
+  reserves: Uint256
+  lastUpdated: bigint
 }
 
 export type TokenInfo = {
@@ -39,6 +40,4 @@ export type TokenInfo = {
   symbol: string
   decimals: number
   l2_token_address: string
-  hidden?: boolean
-  sort_order?: number
 }

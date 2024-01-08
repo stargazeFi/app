@@ -10,18 +10,19 @@ import {
   SecondaryText,
   Tooltip
 } from '@/components/Layout'
+import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
-import { usePairs, usePrices, useStrategiesManager, useTransactionManager } from '@/hooks'
+import { usePrices, useStrategiesManager, useTransactionManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
-import { usePairTVL } from '@/hooks/usePairTVL'
+import { useUserBalance } from '@/hooks/useUserBalance'
 import {
   DOCS_FEES_URL,
   explorerContractURL,
   formatCurrency,
   formatPercentage,
   formatToDecimal,
+  formatTokenPrice,
   getTokenDescription,
-  getTokenIcon,
   getTokenName,
   poolLiquidityURL,
   serializeAddress,
@@ -29,7 +30,7 @@ import {
 } from '@/misc'
 import { Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
-import { Button, Image, Input, Skeleton } from '@nextui-org/react'
+import { Button, Input } from '@nextui-org/react'
 import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -52,7 +53,6 @@ export default function Strategy() {
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
   const { data: prices } = usePrices()
-  const { data: pairs } = usePairs()
   const { data, isError: strategyError, isLoading } = useStrategies()
   const { strategies, storeStrategies } = useStrategiesManager()
 
@@ -61,14 +61,14 @@ export default function Strategy() {
   useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
   const strategy: Strategy | undefined = useMemo(
-    () => strategies?.find(({ strategyAddress }) => id === strategyAddress),
+    () => strategies?.find(({ address }) => id === address),
     [id, strategies]
   )
 
-  const pairTVL = usePairTVL({ pairs, poolToken: strategy?.poolToken, prices, tokensList })
+  const { data: deposited } = useUserBalance(address, strategy?.address)
 
   const { data: shares } = useBalance({
-    token: strategy?.strategyAddress,
+    token: strategy?.address,
     address,
     enabled: !!address,
     watch: true
@@ -102,7 +102,7 @@ export default function Strategy() {
         const approveToken0: Call = {
           contractAddress: strategy.poolToken || strategy.tokens[0],
           entrypoint: 'approve',
-          calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, baseToken?.decimals)]
+          calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken?.decimals)]
         }
 
         const approveToken1: Call | null =
@@ -110,12 +110,12 @@ export default function Strategy() {
             ? {
                 contractAddress: strategy.tokens[1],
                 entrypoint: 'approve',
-                calldata: [serializeAddress(strategy.strategyAddress), ...serializeU256(amount, quoteToken?.decimals)]
+                calldata: [serializeAddress(strategy.address), ...serializeU256(amount, quoteToken?.decimals)]
               }
             : null
 
         const deposit: Call = {
-          contractAddress: strategy.strategyAddress,
+          contractAddress: strategy.address,
           entrypoint: 'deposit',
           calldata: [...serializeU256(amount, baseToken?.decimals), serializeAddress(address)]
         }
@@ -131,7 +131,7 @@ export default function Strategy() {
     if (address && strategy) {
       try {
         const withdraw: Call = {
-          contractAddress: strategy.strategyAddress,
+          contractAddress: strategy.address,
           entrypoint: 'redeem',
           calldata: [...serializeU256(amount, shares?.decimals), serializeAddress(address), serializeAddress(address)]
         }
@@ -145,6 +145,13 @@ export default function Strategy() {
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
+
+  const tokenPrice = useCallback(
+    (address: string) => {
+      return prices?.find((price) => price.address === address)?.price
+    },
+    [prices]
+  )
 
   const disableCTA = useMemo(
     () => !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : shares?.formatted),
@@ -187,16 +194,16 @@ export default function Strategy() {
       <Box spaced>
         <Box center>
           <Box className={`${strategy.tokens.length === 1 ? 'mr-2' : 'mr-4'} text-2xl`}>
-            <button onClick={() => router.back()} className='flex items-center'>
+            <button onClick={() => router.push('/')} className='flex items-center'>
               <ArrowBack fontSize='inherit' className='text-gray-200' />
             </button>
           </Box>
           <Box center>
             <Box center className='w-[64px]'>
-              <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={40} height={40} />
+              <TokenIcon address={strategy.tokens[0]} size={40} />
               {strategy.type === 'LP' && (
-                <Box className='-ml-5'>
-                  <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={40} height={40} />
+                <Box className='z-20 -ml-3'>
+                  <TokenIcon address={strategy.tokens[1]} size={40} />
                 </Box>
               )}
             </Box>
@@ -227,18 +234,14 @@ export default function Strategy() {
             <MainText gradient className='text-lg'>
               {formatCurrency(strategy.TVL)}
             </MainText>
-            {!pairTVL ? (
-              <Skeleton className='my-0.5 flex h-3.5 w-20 rounded-md' />
-            ) : (
-              <Box center>
-                <MainText className='text-sm text-gray-600'>{formatCurrency(pairTVL)}</MainText>
-                <Box className='ml-2 pb-0.5 text-small'>
-                  <Tooltip content="Protocol's own TVL">
-                    <HelpOutline fontSize='inherit' className='text-gray-600' />
-                  </Tooltip>
-                </Box>
+            <Box center>
+              <MainText className='text-sm text-gray-600'>{formatCurrency(strategy.protocolTVL)}</MainText>
+              <Box className='ml-2 pb-0.5 text-small'>
+                <Tooltip content='Pool TVL'>
+                  <HelpOutline fontSize='inherit' className='text-gray-600' />
+                </Tooltip>
               </Box>
-            )}
+            </Box>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
             <MainText heading className='text-xl font-light'>
@@ -263,7 +266,7 @@ export default function Strategy() {
               Your deposit
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatCurrency(123321)}
+              {deposited ? formatCurrency(deposited) : 0}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
@@ -271,7 +274,7 @@ export default function Strategy() {
               Last update
             </MainText>
             <MainText gradient className='text-lg'>
-              {format(strategy.lastUpdated)}
+              {format(Number(strategy.lastUpdated) * 1000)}
             </MainText>
           </Box>
         </DarkElement>
@@ -285,11 +288,7 @@ export default function Strategy() {
                 Strategy
               </MainText>
               <Box center>
-                <Link
-                  href={explorerContractURL(strategy.strategyAddress, chain)}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
+                <Link href={explorerContractURL(strategy.address, chain)} target='_blank' rel='noopener noreferrer'>
                   <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                     <MainText className='text-xs'>Strategy contract</MainText>
                     <Box className='ml-2 text-small'>
@@ -325,33 +324,38 @@ export default function Strategy() {
             </Box>
             <div className='gradient-border-b my-6 h-[1px] w-full' />
             <Box col center className='justify-start'>
-              {strategy.tokens.map((address, index) => (
-                <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
-                  <Box spaced className='w-full'>
-                    <Box center>
-                      <Image className='z-20' src={getTokenIcon(address, tokensList)} width={30} height={30} />
-                      <MainText className='mx-4'>{getTokenName(address, tokensList)}</MainText>
-                      {/* <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
-                        // TODO FETCH PRICE
-                        <MainText className='text-sm'>$400</MainText>
-                      </Box>*/}
-                    </Box>
-                    <Box center>
-                      <Link href={explorerContractURL(address, chain)} target='_blank' rel='noopener noreferrer'>
-                        <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                          <Box className='mr-2 text-small'>
-                            <LinkIcon fontSize='inherit' className='text-gray-200' />
+              {strategy.tokens.map((address, index) => {
+                const price = tokenPrice(address)
+
+                return (
+                  <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
+                    <Box spaced className='w-full'>
+                      <Box center>
+                        <TokenIcon address={address} size={30} className='z-20' />
+                        <MainText className='mx-4'>{getTokenName(address, tokensList)}</MainText>
+                        {price && (
+                          <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
+                            <MainText className='text-sm'>{formatTokenPrice(price)}</MainText>
                           </Box>
-                          <MainText className='text-xs'>Contract</MainText>
-                        </Box>
-                      </Link>
+                        )}
+                      </Box>
+                      <Box center>
+                        <Link href={explorerContractURL(address, chain)} target='_blank' rel='noopener noreferrer'>
+                          <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                            <Box className='mr-2 text-small'>
+                              <LinkIcon fontSize='inherit' className='text-gray-200' />
+                            </Box>
+                            <MainText className='text-xs'>Contract</MainText>
+                          </Box>
+                        </Link>
+                      </Box>
                     </Box>
-                  </Box>
-                  <Box className='mt-2 w-full'>
-                    <SecondaryText className='mt-4'>{getTokenDescription(address, tokensList)}</SecondaryText>
-                  </Box>
-                </GrayElement>
-              ))}
+                    <Box className='mt-2 w-full'>
+                      <SecondaryText className='mt-4'>{getTokenDescription(address, tokensList)}</SecondaryText>
+                    </Box>
+                  </GrayElement>
+                )
+              })}
             </Box>
           </DarkElement>
         </Box>
@@ -381,10 +385,10 @@ export default function Strategy() {
             </Box>
             <Box spaced className='mt-2'>
               <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-                <Image className='z-20' src={getTokenIcon(strategy.tokens[0], tokensList)} width={28} height={28} />
+                <TokenIcon address={strategy.tokens[0]} size={28} />
                 {strategy.type === 'LP' && (
-                  <Box className='-ml-2'>
-                    <Image src={getTokenIcon(strategy.tokens[1], tokensList)} width={28} height={28} />
+                  <Box className='z-20 -ml-2'>
+                    <TokenIcon address={strategy.tokens[1]} size={28} />
                   </Box>
                 )}
               </Box>

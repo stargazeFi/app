@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Collection } from 'mongodb'
 import { createDatabaseClient } from '@/api'
 import { Price } from '@/types'
 
@@ -11,7 +10,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   const client = createDatabaseClient()
   await client.connect()
   const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
-  const collection: Collection<Price> = database.collection<Price>('prices')
+  const collection = database.collection<Price>('prices')
 
   try {
     const prices = await collection.find().toArray()
