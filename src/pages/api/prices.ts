@@ -9,7 +9,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const client = createDatabaseClient()
   await client.connect()
-  const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
+  const database = client.db(process.env.DB_ENV === 'production' ? 'prod' : 'dev')
   const collection = database.collection<Price>('prices')
 
   try {

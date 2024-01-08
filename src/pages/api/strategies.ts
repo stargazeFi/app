@@ -9,11 +9,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const client = createDatabaseClient()
   await client.connect()
-  const database = client.db(process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
+  const database = client.db(process.env.DB_ENV)
   const collection = database.collection<Strategy>('strategies')
 
   try {
-    const strategies: Strategy[] = await collection.find({ cursor: { $ne: true } }).toArray()
+    const strategies: Strategy[] = await collection.find().toArray()
     res.status(200).json(strategies)
   } catch (e) {
     console.error(e)

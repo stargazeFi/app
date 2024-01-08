@@ -2,17 +2,13 @@ import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Price, Strategy, TokenInfo } from '@/types'
 import { num, Uint256 } from 'starknet'
-// import { useNetwork } from '@starknet-react/core'
-// import { goerli, mainnet } from '@starknet-react/chains'
 
 export function useApiBaseUrl() {
-  // const { chain } = useNetwork() // TODO RESTORE FOR PROPER API SPLIT
-  return 'http://localhost:3000/api'
-  /* return chain?.id === goerli.id
-    ? 'http://nyanya.stargaze.finance/api'
-    : chain?.id === mainnet.id
-      ? 'https://stargaze.finance/api'
-      : 'http://localhost:3000/api' */
+  return process.env.NEXT_PUBLIC__DEV
+    ? 'http://localhost:3000/api'
+    : process.env.NEXT_PUBLIC_ENV === 'dev'
+      ? 'https://nyanya.stargaze.finance/api'
+      : 'https://app.stargaze.finance/api'
 }
 
 const useDataApi = <TQueryFnData = unknown>({
