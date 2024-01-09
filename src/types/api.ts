@@ -14,10 +14,11 @@ export type Price = {
 export type Strategy = {
   name: string
   address: string
+  asset: string
+  assetDecimals: number
   type: StrategyType
   protocol: Protocol
   protocolTVL: string
-  poolToken?: string
   tokens: Array<string>
   description: string
   depositFee: number

@@ -1,6 +1,6 @@
 import { TokenIcon } from '@/components/TokenIcon'
-import { useUserBalances } from '@/hooks/useUserBalance'
-import { useAccount, useBalance } from '@starknet-react/core'
+import { useDeposit, useDeposits, useWalletBalance } from '@/hooks/useBalances'
+import { useAccount } from '@starknet-react/core'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Button,
@@ -35,24 +35,16 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 ]
 
 const Strategy = ({
-  deposited,
-  isLoading,
   index,
   userAddress,
-  strategy: { name, protocol, poolToken, type, APY, daily, tokens, address, TVL, protocolTVL }
+  strategy: { name, protocol, asset, type, APY, daily, tokens, address, TVL, protocolTVL }
 }: {
-  deposited: string | number | undefined
-  isLoading: boolean
   index: number
   userAddress: string | undefined
   strategy: Strategy
 }) => {
-  const { data: poolTokenBalance } = useBalance({
-    token: poolToken,
-    address: userAddress,
-    enabled: !!userAddress,
-    watch: true
-  })
+  const { data: balance, isLoading: balanceLoading } = useWalletBalance(userAddress, asset)
+  const { data: deposit, isLoading: depositLoading } = useDeposit(userAddress, address)
 
   const TVLComponent = useCallback(
     ({ className }: { className: string }) => {
@@ -121,12 +113,12 @@ const Strategy = ({
               </MainText>
               {type === 'LP' && (
                 <Box>
-                  {poolTokenBalance ? (
-                    <MainText gradient className='text-lg'>
-                      {formatToDecimal(poolTokenBalance.formatted, 4)}
-                    </MainText>
-                  ) : (
+                  {balanceLoading ? (
                     <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
+                  ) : (
+                    <MainText gradient className='text-lg'>
+                      {balance ? formatToDecimal(balance.formatted, 8) : '0'}
+                    </MainText>
                   )}
                 </Box>
               )}
@@ -135,10 +127,10 @@ const Strategy = ({
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 Deposited
               </MainText>
-              {isLoading ? (
+              {depositLoading ? (
                 <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
               ) : (
-                <MainText gradient>{deposited ? formatCurrency(deposited) : 0}</MainText>
+                <MainText gradient>{deposit ? formatCurrency(deposit.formatted) : 0}</MainText>
               )}
             </Box>
             <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
@@ -173,18 +165,18 @@ export default function Strategies() {
   const { strategies, storeStrategies } = useStrategiesManager()
   useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
-  const { data: balances, isLoading } = useUserBalances(address)
+  const { data: deposits, isLoading: depositsLoading } = useDeposits(address)
 
   const stargazeTVL = useMemo(() => strategies.reduce((acc, it) => acc + Number(it.TVL), 0), [strategies])
 
   const portfolio = useMemo(
     () => [
-      { title: 'Deposited', value: Object.values(balances).reduce((acc, it) => acc + Number(it), 0) },
+      { title: 'Deposited', value: Object.values(deposits).reduce((acc, it) => acc + Number(it.formatted), 0) },
       { title: 'Monthly Yield', value: 0 },
       { title: 'Daily Yield', value: 0 },
       { title: 'AVG. APY', value: 0 }
     ],
-    [balances]
+    [deposits]
   )
 
   const displayedStrategies = useMemo(
@@ -227,7 +219,7 @@ export default function Strategies() {
                 <MainText heading className='text-xl font-light text-gray-600'>
                   {title}
                 </MainText>
-                {isLoading ? (
+                {depositsLoading ? (
                   <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
                 ) : (
                   <MainText gradient className='text-xl'>
@@ -368,14 +360,7 @@ export default function Strategies() {
             displayedStrategies
               .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
               .map((strategy, index) => (
-                <Strategy
-                  key={index}
-                  index={index}
-                  isLoading={isLoading}
-                  userAddress={address}
-                  strategy={strategy}
-                  deposited={balances?.[strategy.address]}
-                />
+                <Strategy key={index} index={index} userAddress={address} strategy={strategy} />
               ))
           ) : (
             <>

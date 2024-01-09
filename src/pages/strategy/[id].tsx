@@ -14,7 +14,7 @@ import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
 import { usePrices, useStrategiesManager, useTransactionManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
-import { useUserBalance } from '@/hooks/useUserBalance'
+import { useDeposit } from '@/hooks/useBalances'
 import {
   DOCS_FEES_URL,
   explorerContractURL,
@@ -65,7 +65,7 @@ export default function Strategy() {
     [id, strategies]
   )
 
-  const { data: deposited } = useUserBalance(address, strategy?.address)
+  const { data: deposited } = useDeposit(address, strategy?.address)
 
   const { data: shares } = useBalance({
     token: strategy?.address,
@@ -75,7 +75,7 @@ export default function Strategy() {
   })
 
   const { data: baseToken, isError: baseTokenError } = useBalance({
-    token: strategy?.poolToken || strategy?.tokens[0],
+    token: strategy?.asset || strategy?.tokens[0],
     address,
     enabled: !!address,
     watch: true
@@ -100,7 +100,7 @@ export default function Strategy() {
     if (address && strategy) {
       try {
         const approveToken0: Call = {
-          contractAddress: strategy.poolToken || strategy.tokens[0],
+          contractAddress: strategy.asset || strategy.tokens[0],
           entrypoint: 'approve',
           calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken?.decimals)]
         }
@@ -266,7 +266,7 @@ export default function Strategy() {
               Your deposit
             </MainText>
             <MainText gradient className='text-lg'>
-              {deposited ? formatCurrency(deposited) : 0}
+              {deposited ? formatCurrency(deposited.formatted) : 0}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
@@ -427,7 +427,7 @@ export default function Strategy() {
             {strategy.type === 'LP' && (
               <Box className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                 <a
-                  href={poolLiquidityURL(strategy.protocol, strategy.poolToken as string, mode)}
+                  href={poolLiquidityURL(strategy.protocol, strategy.asset, strategy.tokens, mode)}
                   target='_blank'
                   rel='noopener noreferrer'
                   className='flex items-center'

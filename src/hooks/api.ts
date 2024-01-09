@@ -64,8 +64,15 @@ const useDataApi = <TQueryFnData = unknown>({
 }
 
 export const useBalances = (address: string | undefined) => {
-  return useDataApi<Record<string, Uint256>>({
+  return useDataApi<Record<string, { balance: Uint256; decimals: number }>>({
     path: `/balances?address=${num.toStorageKey(address || 0n)}`,
+    refetchInterval: 30000
+  })
+}
+
+export const useDeposits = (address: string | undefined) => {
+  return useDataApi<Record<string, Uint256>>({
+    path: `/deposits?address=${num.toStorageKey(address || 0n)}`,
     refetchInterval: 30000
   })
 }
