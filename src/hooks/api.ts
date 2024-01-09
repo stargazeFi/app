@@ -24,12 +24,14 @@ const useDataApi = <TQueryFnData = unknown>({
   path,
   refetchInterval,
   retry = true,
-  handleErrorResponse
+  handleErrorResponse,
+  staleTime = 0
 }: {
   path?: string | null
   refetchInterval?: number
   handleErrorResponse?: (response: Response) => TQueryFnData
   retry?: boolean | number
+  staleTime?: number
 }) => {
   const baseUrl = useApiBaseUrl()
   const url = `${baseUrl}${path}`
@@ -59,6 +61,7 @@ const useDataApi = <TQueryFnData = unknown>({
     refetchOnWindowFocus: 'always',
     refetchIntervalInBackground: false,
     refetchOnMount: 'always',
+    staleTime,
     enabled: Boolean(baseUrl && path)
   })
 }
@@ -66,34 +69,32 @@ const useDataApi = <TQueryFnData = unknown>({
 export const useBalances = (address: string | undefined) => {
   return useDataApi<Record<string, { balance: Uint256; decimals: number }>>({
     path: `/balances?address=${num.toStorageKey(address || 0n)}`,
-    refetchInterval: 30000
+    staleTime: 1000
   })
 }
 
 export const useDeposits = (address: string | undefined) => {
   return useDataApi<Record<string, Uint256>>({
     path: `/deposits?address=${num.toStorageKey(address || 0n)}`,
-    refetchInterval: 30000
+    staleTime: 1000
   })
 }
 
 export const usePrices = () => {
   return useDataApi<Price[]>({
     path: '/prices',
-    refetchInterval: 30000
+    refetchInterval: 30 * 1000
   })
 }
 
 export const useStrategies = () => {
   return useDataApi<Strategy[]>({
-    path: '/strategies',
-    refetchInterval: 10000
+    path: '/strategies'
   })
 }
 
 export const useTokens = () => {
   return useDataApi<TokenInfo[]>({
-    path: '/tokens',
-    refetchInterval: 30000
+    path: '/tokens'
   })
 }

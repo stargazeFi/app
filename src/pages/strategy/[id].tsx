@@ -64,8 +64,8 @@ export default function Strategy() {
     [id, strategies]
   )
 
-  const { data: balances } = useBalances(address)
-  const { data: deposited } = useDeposit(address, strategy?.address)
+  const { data: balances, refetch: refetchBalances } = useBalances(address)
+  const { data: deposited, refetch: refetchDeposits } = useDeposit(address, strategy?.address)
 
   const baseToken = useMemo(
     () => (!strategy ? null : balances[strategy.type === 'LP' ? strategy.asset : strategy.tokens[0]]),
@@ -155,16 +155,20 @@ export default function Strategy() {
     try {
       const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : withdraw())
       addTransaction({
-        action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
-        hash,
-        strategyName: strategy!.name,
-        timestamp: Date.now(),
-        toastMessage: mode === 'deposit' ? 'Depositing into strategy...' : 'Redeeming from strategy...'
+        onSuccess: async () => {
+          await Promise.all([refetchDeposits(), refetchBalances()])
+        },
+        transaction: {
+          action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
+          hash,
+          strategyName: strategy!.name,
+          timestamp: Date.now()
+        }
       })
     } catch (e) {
       console.error(e)
     }
-  }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
+  }, [addTransaction, connect, deposit, isConnected, mode, refetchBalances, refetchDeposits, strategy, withdraw])
 
   if (isFetching) {
     return <AppLoader />

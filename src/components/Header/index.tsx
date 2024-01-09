@@ -1,11 +1,14 @@
+import { useAppSelector } from '@/hooks'
+import { selectPendingTransactions } from '@/store/appSlice'
 import Link from 'next/link'
-import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react'
+import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
 import { CurrencyExchange } from '@mui/icons-material'
 import { Box, MainText } from '@/components/Layout'
 import WalletModal from '@/components/WalletModal'
 import { useRouter } from 'next/router'
 
 export default function Header() {
+  const pendingTransactions = useAppSelector(selectPendingTransactions)
   const { pathname } = useRouter()
 
   const routes = [
@@ -36,6 +39,12 @@ export default function Header() {
         ))}
       </NavbarContent>
       <NavbarContent justify='end'>
+        {!!pendingTransactions.length && (
+          <Box center className='relative rounded-3xl border border-gray-500 bg-black/60 p-0.5'>
+            <MainText className='absolute'>{pendingTransactions.length}</MainText>
+            <Spinner />
+          </Box>
+        )}
         <WalletModal />
         <Box center className='rounded-md bg-red-900 px-3 py-1.5'>
           <MainText className='text-xs'>Alpha v0.3.0</MainText>

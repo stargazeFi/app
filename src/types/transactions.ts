@@ -1,6 +1,6 @@
 export enum TransactionType {
-  StrategyDeposit = 'Deposit in strategy',
-  StrategyRedeem = 'Redeem from strategy'
+  StrategyDeposit,
+  StrategyRedeem
 }
 
 export interface StrategyDeposit {
@@ -13,4 +13,7 @@ export interface StrategyRedeem {
   strategyName: string
 }
 
-export type Transaction = (StrategyDeposit | StrategyRedeem) & { hash: string; timestamp: number; toastMessage: string }
+export type Transaction = (StrategyDeposit | StrategyRedeem) & {
+  hash: string
+  timestamp: number
+}

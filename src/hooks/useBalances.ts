@@ -6,11 +6,11 @@ import { useBalances as fetchBalances, useDeposits as fetchDeposits } from '@/ho
 import { uint256 } from 'starknet'
 
 export const useBalance = (address: string | undefined, asset: string) => {
-  const { data: balances, isLoading } = fetchBalances(address)
+  const { data: balances, isLoading, refetch } = fetchBalances(address)
 
   return useMemo(() => {
     let data
-    if (balances) {
+    if (balances && balances[asset]) {
       const { balance, decimals } = balances[asset]
       data = {
         formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString(),
@@ -20,13 +20,14 @@ export const useBalance = (address: string | undefined, asset: string) => {
 
     return {
       data,
-      isLoading
+      isLoading,
+      refetch
     }
-  }, [asset, balances, isLoading])
+  }, [asset, balances, isLoading, refetch])
 }
 
 export const useBalances = (address: string | undefined) => {
-  const { data: balances, isLoading } = fetchBalances(address)
+  const { data: balances, isLoading, refetch } = fetchBalances(address)
 
   return useMemo(
     () => ({
@@ -42,14 +43,15 @@ export const useBalances = (address: string | undefined) => {
         },
         {} as Record<string, { decimals: number; formatted: string }>
       ),
-      isLoading
+      isLoading,
+      refetch
     }),
-    [balances, isLoading]
+    [balances, isLoading, refetch]
   )
 }
 
 export const useDeposit = (address: string | undefined, strategyAddress: string | undefined) => {
-  const { data: balances, isLoading } = fetchDeposits(address)
+  const { data: balances, isLoading, refetch } = fetchDeposits(address)
   const { strategies } = useStrategiesManager()
 
   return useMemo(() => {
@@ -66,13 +68,14 @@ export const useDeposit = (address: string | undefined, strategyAddress: string 
 
     return {
       data,
-      isLoading
+      isLoading,
+      refetch
     }
-  }, [balances, isLoading, strategies, strategyAddress])
+  }, [balances, isLoading, refetch, strategies, strategyAddress])
 }
 
 export const useDeposits = (address: string | undefined) => {
-  const { data: balances, isLoading } = fetchDeposits(address)
+  const { data: balances, isLoading, refetch } = fetchDeposits(address)
   const { strategies } = useStrategiesManager()
 
   return useMemo(() => {
@@ -99,7 +102,8 @@ export const useDeposits = (address: string | undefined) => {
 
     return {
       data,
-      isLoading
+      isLoading,
+      refetch
     }
-  }, [balances, isLoading, strategies])
+  }, [balances, isLoading, refetch, strategies])
 }

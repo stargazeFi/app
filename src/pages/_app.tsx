@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { NextUIProvider } from '@nextui-org/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider as ReduxProvider } from 'react-redux'
-import { TokensProvider } from '@/contexts'
+import { PendingTransactionsProvider, TokensProvider } from '@/contexts'
 import Header from '@/components/Header'
 import StarknetConfigWrapper from '@/components/StarknetConfigWrapper'
 import { ToastContainer } from 'react-toastify'
@@ -26,16 +26,18 @@ export default function App({ Component, pageProps }: AppProps) {
             <ReduxProvider store={store}>
               <StarknetConfigWrapper>
                 <TokensProvider>
-                  <ToastContainer
-                    position='bottom-right'
-                    autoClose={3000}
-                    newestOnTop
-                    pauseOnFocusLoss
-                    draggable={false}
-                    pauseOnHover={false}
-                  />
-                  <Header />
-                  <Component {...pageProps} />
+                  <PendingTransactionsProvider>
+                    <ToastContainer
+                      position='bottom-right'
+                      autoClose={3000}
+                      newestOnTop
+                      pauseOnFocusLoss
+                      draggable={false}
+                      pauseOnHover={false}
+                    />
+                    <Header />
+                    <Component {...pageProps} />
+                  </PendingTransactionsProvider>
                 </TokensProvider>
               </StarknetConfigWrapper>
             </ReduxProvider>

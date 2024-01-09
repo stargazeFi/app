@@ -2,27 +2,24 @@ import { createSlice } from '@reduxjs/toolkit'
 import { RootState } from '@/store'
 import { Strategy, Transaction } from '@/types'
 
-interface BasePayload {
-  payload: {
-    chainId: string
-  }
-}
-
 interface AddTransactionHistoryPayload {
-  payload: BasePayload['payload'] & {
+  payload: {
     address: string
+    chainId: string
     transaction: Transaction
   }
 }
 
 interface ClearTransactionHistoryPayload {
-  payload: BasePayload['payload'] & {
+  payload: {
     address: string
+    chainId: string
   }
 }
 
 interface StoreFetchedStrategiesPayload {
-  payload: BasePayload['payload'] & {
+  payload: {
+    chainId: string
     strategies: Strategy[]
   }
 }
