@@ -38,7 +38,7 @@ export default function Header() {
       <NavbarContent justify='end'>
         <WalletModal />
         <Box center className='rounded-md bg-red-900 px-3 py-1.5'>
-          <MainText className='text-xs'>Alpha 0.2.0</MainText>
+          <MainText className='text-xs'>Alpha v0.3.0</MainText>
         </Box>
       </NavbarContent>
     </Navbar>

@@ -1,5 +1,4 @@
 import { TokenIcon } from '@/components/TokenIcon'
-import { useDeposit, useDeposits, useWalletBalance } from '@/hooks/useBalances'
 import { useAccount } from '@starknet-react/core'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
@@ -17,7 +16,8 @@ import { Close, HelpOutline, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from
 import ErrorPage from '@/components/ErrorPage'
 import { Box, Container, DarkElement, MainText, Tooltip } from '@/components/Layout'
 import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc'
-import { useStrategies, useStrategiesManager } from '@/hooks'
+import { useBalance, useDeposit, useDeposits, useStrategiesManager } from '@/hooks'
+import { useStrategies } from '@/hooks/api'
 import { Strategy } from '@/types'
 import Link from 'next/link'
 
@@ -43,7 +43,7 @@ const Strategy = ({
   userAddress: string | undefined
   strategy: Strategy
 }) => {
-  const { data: balance, isLoading: balanceLoading } = useWalletBalance(userAddress, asset)
+  const { data: balance, isLoading: balanceLoading } = useBalance(userAddress, asset)
   const { data: deposit, isLoading: depositLoading } = useDeposit(userAddress, address)
 
   const TVLComponent = useCallback(
@@ -130,7 +130,7 @@ const Strategy = ({
               {depositLoading ? (
                 <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
               ) : (
-                <MainText gradient>{deposit ? formatCurrency(deposit.formatted) : 0}</MainText>
+                <MainText gradient>{deposit ? formatCurrency(deposit.value) : 0}</MainText>
               )}
             </Box>
             <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
@@ -171,7 +171,7 @@ export default function Strategies() {
 
   const portfolio = useMemo(
     () => [
-      { title: 'Deposited', value: Object.values(deposits).reduce((acc, it) => acc + Number(it.formatted), 0) },
+      { title: 'Deposited', value: Object.values(deposits).reduce((acc, it) => acc + Number(it.value), 0) },
       { title: 'Monthly Yield', value: 0 },
       { title: 'Daily Yield', value: 0 },
       { title: 'AVG. APY', value: 0 }

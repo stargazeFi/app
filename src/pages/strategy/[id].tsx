@@ -12,9 +12,8 @@ import {
 } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
-import { usePrices, useStrategiesManager, useTransactionManager } from '@/hooks'
-import { useStrategies } from '@/hooks/api'
-import { useDeposit } from '@/hooks/useBalances'
+import { useBalances, useDeposit, useStrategiesManager, useTransactionManager } from '@/hooks'
+import { usePrices, useStrategies } from '@/hooks/api'
 import {
   DOCS_FEES_URL,
   explorerContractURL,
@@ -31,7 +30,7 @@ import {
 import { Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
 import { Button, Input } from '@nextui-org/react'
-import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
+import { useAccount, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
@@ -65,47 +64,33 @@ export default function Strategy() {
     [id, strategies]
   )
 
+  const { data: balances } = useBalances(address)
   const { data: deposited } = useDeposit(address, strategy?.address)
 
-  const { data: shares } = useBalance({
-    token: strategy?.address,
-    address,
-    enabled: !!address,
-    watch: true
-  })
-
-  const { data: baseToken, isError: baseTokenError } = useBalance({
-    token: strategy?.asset || strategy?.tokens[0],
-    address,
-    enabled: !!address,
-    watch: true
-  })
-
-  const { data: quoteToken, isError: quoteTokenError } = useBalance({
-    token: strategy?.tokens[1],
-    address,
-    enabled: !!address && strategy?.type === 'Direct',
-    watch: true
-  })
+  const baseToken = useMemo(
+    () => (!strategy ? null : balances[strategy.type === 'LP' ? strategy.asset : strategy.tokens[0]]),
+    [balances, strategy]
+  )
+  const quoteToken = useMemo(() => strategy && balances[strategy.asset], [balances, strategy])
 
   const available = useMemo(
     () =>
       mode === 'deposit'
         ? formatToDecimal(baseToken?.formatted, baseToken?.decimals)
-        : formatToDecimal(shares?.formatted, shares?.decimals),
-    [baseToken, mode, shares]
+        : formatToDecimal(deposited?.formatted, deposited?.decimals),
+    [baseToken, deposited, mode]
   )
 
   const depositCalls = useMemo(() => {
     if (address && strategy) {
       try {
-        const approveToken0: Call = {
+        const approveBaseToken: Call = {
           contractAddress: strategy.asset || strategy.tokens[0],
           entrypoint: 'approve',
           calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken?.decimals)]
         }
 
-        const approveToken1: Call | null =
+        const approveQuoteToken: Call | null =
           strategy.type === 'Direct'
             ? {
                 contractAddress: strategy.tokens[1],
@@ -120,7 +105,7 @@ export default function Strategy() {
           calldata: [...serializeU256(amount, baseToken?.decimals), serializeAddress(address)]
         }
 
-        return [approveToken0, approveToken1, deposit].filter((x): x is Call => x !== null)
+        return [approveBaseToken, approveQuoteToken, deposit].filter((x): x is Call => x !== null)
       } catch (error) {
         console.error('Failed to generate call data', error)
       }
@@ -133,7 +118,11 @@ export default function Strategy() {
         const withdraw: Call = {
           contractAddress: strategy.address,
           entrypoint: 'redeem',
-          calldata: [...serializeU256(amount, shares?.decimals), serializeAddress(address), serializeAddress(address)]
+          calldata: [
+            ...serializeU256(amount, deposited?.decimals),
+            serializeAddress(address),
+            serializeAddress(address)
+          ]
         }
 
         return [withdraw].filter((x): x is Call => x !== null)
@@ -141,7 +130,7 @@ export default function Strategy() {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amount, shares?.decimals, strategy])
+  }, [address, amount, deposited, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
@@ -154,8 +143,8 @@ export default function Strategy() {
   )
 
   const disableCTA = useMemo(
-    () => !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : shares?.formatted),
-    [amount, baseToken, mode, shares]
+    () => !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : deposited?.formatted),
+    [amount, baseToken, deposited, mode]
   )
 
   const handleCTA = useCallback(async () => {
@@ -181,7 +170,7 @@ export default function Strategy() {
     return <AppLoader />
   }
 
-  if (strategyError || baseTokenError || quoteTokenError) {
+  if (strategyError) {
     return <ErrorPage />
   }
 
@@ -266,7 +255,7 @@ export default function Strategy() {
               Your deposit
             </MainText>
             <MainText gradient className='text-lg'>
-              {deposited ? formatCurrency(deposited.formatted) : 0}
+              {deposited ? formatCurrency(deposited.value) : 0}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
@@ -413,7 +402,7 @@ export default function Strategy() {
                     radius='sm'
                     variant='bordered'
                     onClick={() =>
-                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : shares?.formatted || '0')
+                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : deposited?.formatted || '0')
                     }
                     className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
                   >

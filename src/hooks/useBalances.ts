@@ -5,6 +5,49 @@ import { useMemo } from 'react'
 import { useBalances as fetchBalances, useDeposits as fetchDeposits } from '@/hooks/api'
 import { uint256 } from 'starknet'
 
+export const useBalance = (address: string | undefined, asset: string) => {
+  const { data: balances, isLoading } = fetchBalances(address)
+
+  return useMemo(() => {
+    let data
+    if (balances) {
+      const { balance, decimals } = balances[asset]
+      data = {
+        formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString(),
+        decimals
+      }
+    }
+
+    return {
+      data,
+      isLoading
+    }
+  }, [asset, balances, isLoading])
+}
+
+export const useBalances = (address: string | undefined) => {
+  const { data: balances, isLoading } = fetchBalances(address)
+
+  return useMemo(
+    () => ({
+      data: Object.entries(balances || {}).reduce(
+        (acc, it) => {
+          const [asset, { balance, decimals }] = it
+          acc[asset] = {
+            decimals,
+            formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString()
+          }
+
+          return acc
+        },
+        {} as Record<string, { decimals: number; formatted: string }>
+      ),
+      isLoading
+    }),
+    [balances, isLoading]
+  )
+}
+
 export const useDeposit = (address: string | undefined, strategyAddress: string | undefined) => {
   const { data: balances, isLoading } = fetchDeposits(address)
   const { strategies } = useStrategiesManager()
@@ -16,7 +59,8 @@ export const useDeposit = (address: string | undefined, strategyAddress: string 
       const balance = balances[strategyAddress]
       if (balance) {
         const { reserves, TVL } = strategy
-        data = { formatted: computeUserBalance(balance, reserves, TVL), decimals: 18 }
+        const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
+        data = { decimals: 18, formatted, value: computeUserBalance(balance, reserves, TVL) }
       }
     }
 
@@ -39,13 +83,18 @@ export const useDeposits = (address: string | undefined) => {
           const balance = balances[strategy.address]
           if (balance) {
             const { reserves, TVL } = strategy
-            acc[strategy.address] = { formatted: computeUserBalance(balance, reserves, TVL), decimals: 18 }
+            const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
+            acc[strategy.address] = {
+              decimals: 18,
+              formatted,
+              value: computeUserBalance(balance, reserves, TVL)
+            }
           }
         }
 
         return acc
       },
-      {} as Record<string, { decimals: number; formatted: string }>
+      {} as Record<string, { decimals: number; formatted: string; value: string }>
     )
 
     return {
@@ -53,47 +102,4 @@ export const useDeposits = (address: string | undefined) => {
       isLoading
     }
   }, [balances, isLoading, strategies])
-}
-
-export const useWalletBalance = (address: string | undefined, asset: string) => {
-  const { data: balances, isLoading } = fetchBalances(address)
-
-  return useMemo(() => {
-    let data
-    if (balances) {
-      const { balance, decimals } = balances[asset]
-      data = {
-        formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString(),
-        decimals
-      }
-    }
-
-    return {
-      data,
-      isLoading
-    }
-  }, [asset, balances, isLoading])
-}
-
-export const useWalletBalances = (address: string | undefined) => {
-  const { data: balances, isLoading } = fetchBalances(address)
-
-  return useMemo(
-    () => ({
-      data: Object.entries(balances || {}).reduce(
-        (acc, it) => {
-          const [asset, { balance, decimals }] = it
-          acc[asset] = {
-            decimals,
-            formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString()
-          }
-
-          return acc
-        },
-        {} as Record<string, { decimals: number; formatted: string }>
-      ),
-      isLoading
-    }),
-    [balances, isLoading]
-  )
 }

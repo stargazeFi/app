@@ -1,4 +1,4 @@
-export * from './api'
+export * from './useBalances'
 export * from './useDebounced'
 export * from './useDispatch'
 export * from './useStrategiesManager'
