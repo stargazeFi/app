@@ -14,7 +14,7 @@ export function useApiBaseUrl() {
 
   switch (chain.id) {
     case mainnet.id:
-      return 'https://api.stargaze.finance'
+      return 'https://api-dev-ksdyxyhlsa-uc.a.run.app' // 'https://api.stargaze.finance'
     case goerli.id:
       return 'https://api-dev-ksdyxyhlsa-uc.a.run.app' // 'https://api-dev.stargaze.finance'
   }
