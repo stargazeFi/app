@@ -130,7 +130,7 @@ const Strategy = ({
               {depositLoading ? (
                 <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
               ) : (
-                <MainText gradient>{deposit ? formatCurrency(deposit.value) : 0}</MainText>
+                <MainText gradient>{formatCurrency(deposit?.value || 0)}</MainText>
               )}
             </Box>
             <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>

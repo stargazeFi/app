@@ -12,7 +12,7 @@ import {
 } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
-import { useBalances, useDeposit, useStrategiesManager, useTransactionManager } from '@/hooks'
+import { useDeposit, useStrategiesManager, useTransactionManager } from '@/hooks'
 import { usePrices, useStrategies } from '@/hooks/api'
 import {
   DOCS_FEES_URL,
@@ -30,7 +30,7 @@ import {
 import { Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
 import { Button, Input } from '@nextui-org/react'
-import { useAccount, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
+import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
@@ -64,14 +64,28 @@ export default function Strategy() {
     [id, strategies]
   )
 
-  const { data: balances, refetch: refetchBalances } = useBalances(address)
-  const { data: deposited, refetch: refetchDeposits } = useDeposit(address, strategy?.address)
+  const { data: baseToken } = useBalance({
+    token: strategy?.type === 'LP' ? strategy?.asset : strategy?.tokens[0],
+    address,
+    enabled: !!address,
+    watch: true
+  })
 
-  const baseToken = useMemo(
-    () => (!strategy ? null : balances[strategy.type === 'LP' ? strategy.asset : strategy.tokens[0]]),
-    [balances, strategy]
-  )
-  const quoteToken = useMemo(() => strategy && balances[strategy.asset], [balances, strategy])
+  const { data: quoteToken } = useBalance({
+    token: strategy?.tokens[1],
+    address,
+    enabled: strategy?.type !== 'LP' && !!address,
+    watch: true
+  })
+
+  const { data: deposited } = useBalance({
+    token: strategy?.address,
+    address,
+    enabled: !!address,
+    watch: true
+  })
+
+  const { data: userDeposit } = useDeposit(address, strategy?.address)
 
   const available = useMemo(
     () =>
@@ -155,20 +169,15 @@ export default function Strategy() {
     try {
       const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : withdraw())
       addTransaction({
-        onSuccess: async () => {
-          await Promise.all([refetchDeposits(), refetchBalances()])
-        },
-        transaction: {
-          action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
-          hash,
-          strategyName: strategy!.name,
-          timestamp: Date.now()
-        }
+        action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
+        hash,
+        strategyName: strategy!.name,
+        timestamp: Date.now()
       })
     } catch (e) {
       console.error(e)
     }
-  }, [addTransaction, connect, deposit, isConnected, mode, refetchBalances, refetchDeposits, strategy, withdraw])
+  }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
 
   if (isFetching) {
     return <AppLoader />
@@ -259,7 +268,7 @@ export default function Strategy() {
               Your deposit
             </MainText>
             <MainText gradient className='text-lg'>
-              {deposited ? formatCurrency(deposited.value) : 0}
+              {formatCurrency(userDeposit?.value || 0)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
