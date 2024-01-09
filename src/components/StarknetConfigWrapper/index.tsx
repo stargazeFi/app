@@ -14,7 +14,7 @@ export default function StarknetConfigWrapper({ children }: { children: ReactNod
         new ArgentMobileConnector({
           dappName: 'Stargaze App',
           description: 'Web application for interacting with Stargaze protocol',
-          url: process.env.DB_ENV === 'production' ? 'https://app.stargaze.finance' : 'https://nyanya.stargaze.finance',
+          url: 'https://app.stargaze.finance',
           chainId: constants.NetworkName.SN_MAIN
         })
       ] as Connector[],

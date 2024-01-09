@@ -1,14 +1,23 @@
+import { useNetwork } from '@starknet-react/core'
+import { goerli, mainnet } from '@starknet-react/chains'
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Price, Strategy, TokenInfo } from '@/types'
 import { num, Uint256 } from 'starknet'
 
 export function useApiBaseUrl() {
-  return process.env.NEXT_PUBLIC__DEV
-    ? 'http://localhost:3000/api'
-    : process.env.NEXT_PUBLIC_ENV === 'dev'
-      ? 'https://nyanya.stargaze.finance/api'
-      : 'https://app.stargaze.finance/api'
+  const { chain } = useNetwork()
+
+  if (process.env.NEXT_PUBLIC___DEV_ENV) {
+    return 'http://localhost:8888'
+  }
+
+  switch (chain.id) {
+    case mainnet.id:
+      return 'https://api.stargaze.finance'
+    case goerli.id:
+      return 'https://api-dev-ksdyxyhlsa-uc.a.run.app' // 'https://api-dev.stargaze.finance'
+  }
 }
 
 const useDataApi = <TQueryFnData = unknown>({

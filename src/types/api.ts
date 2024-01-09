@@ -4,11 +4,6 @@ export type Protocol = 'sithswap' | 'ekubo' | 'jediswap'
 
 export type StrategyType = 'LP' | 'Direct'
 
-export type Balances = {
-  address: string
-  balances: Record<string, Uint256>
-}
-
 export type Price = {
   address: string
   ticker: string
