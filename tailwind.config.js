@@ -11,6 +11,15 @@ module.exports = {
     }
   },
   plugins: [
+    function ({ addVariant }) {
+      addVariant('child', '& > *')
+      addVariant('child-hover', '& > *:hover')
+      addVariant('hover-child', '&:hover > *')
+      addVariant('is-not-first-child', '&:not(:first-child)')
+      addVariant('is-not-last-child', '&:not(:last-child)')
+      addVariant('not-first-child', '& > :not(:first-child)')
+      addVariant('not-last-child', '& > :not(:last-child)')
+    },
     nextui({
       layout: {
         spacingUnit: 4, // in px

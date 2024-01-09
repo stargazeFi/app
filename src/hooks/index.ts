@@ -1,2 +1,5 @@
+export * from './api'
 export * from './useDebounced'
-export * from './useScrollDirection'
+export * from './useDispatch'
+export * from './useStrategiesManager'
+export * from './useTransactionManager'

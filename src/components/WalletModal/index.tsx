@@ -1,20 +1,10 @@
-import { useEffect, useState } from 'react'
-import {
-  Button,
-  Image,
-  Link,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  useDisclosure
-} from '@nextui-org/react'
-import { useAccount, useConnect, useDisconnect } from '@starknet-react/core'
+import { useTransactionManager } from '@/hooks'
+import { useEffect, useMemo, useState } from 'react'
+import { Image, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
+import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
-import { Box } from '@/components/Layout'
-import { MainText } from '@/components/Text'
-import { shortenAddress } from '@/misc/format'
+import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
+import { explorerContractURL, explorerTransactionURL, formatEpochToTime, shortenAddress } from '@/misc'
 
 const CONNECTOR_METADATA: {
   [id: string]: { name: string; logo: string }
@@ -38,8 +28,13 @@ export default function WalletModal() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
+  const { chain } = useNetwork()
+
+  const { clearTransactions, transactions } = useTransactionManager()
 
   const [copied, setCopied] = useState(false)
+
+  const explorerLink = useMemo(() => explorerContractURL(address, chain), [address, chain])
 
   useEffect(() => {
     if (copied) {
@@ -51,9 +46,14 @@ export default function WalletModal() {
 
   return (
     <>
-      <Button onClick={onOpen} radius='sm' variant='bordered' className='border border-gray-500'>
-        <MainText size='md'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
-      </Button>
+      <MainButton onClick={onOpen}>
+        <MainText className='text-white'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
+        {chain.testnet && (
+          <div className='ml-2 flex items-center bg-black'>
+            <MainText className='text-xs text-amber-200'>Testnet</MainText>
+          </div>
+        )}
+      </MainButton>
       <Modal
         backdrop='blur'
         hideCloseButton
@@ -62,7 +62,7 @@ export default function WalletModal() {
         onOpenChange={onOpenChange}
         classNames={{
           body: 'py-6',
-          base: 'border border-gray-800 bg-black/75 text-[#a8b0d3]',
+          base: 'border border-gray-800 bg-black/60 text-[#a8b0d3]',
           header: 'gradient-border-b',
           footer: 'gradient-border-t'
         }}
@@ -71,17 +71,19 @@ export default function WalletModal() {
           {(onClose) => (
             <>
               <ModalHeader className='flex flex-col gap-1'>
-                <MainText heading size='2xl'>
+                <MainText gradient heading className='text-2xl'>
                   {isConnected ? 'Your account' : 'Connect your wallet'}
                 </MainText>
               </ModalHeader>
               <ModalBody>
                 {isConnected ? (
-                  <Box>
-                    <MainText size='xl'>{shortenAddress(address as string, 12)}</MainText>
-                    <div className='flex w-[85%] flex-col'>
-                      <div className='mb-2 flex justify-between'>
-                        <MainText heading size='sm'>
+                  <Box col center>
+                    <MainText gradient className='text-lg'>
+                      {shortenAddress(address as string, 12)}
+                    </MainText>
+                    <Box col className='w-[85%]'>
+                      <Box spaced className='mb-2'>
+                        <MainText gradient heading className='text-sm'>
                           Connected with {connector!.name}
                         </MainText>
                         <button
@@ -91,19 +93,19 @@ export default function WalletModal() {
                             onClose()
                           }}
                         >
-                          <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                          <Box center className='mr-1 h-4 w-4 pb-0.5'>
                             <Logout fontSize='inherit' color='error' />
-                          </div>
-                          <MainText size='sm' heading className='text-red-600'>
+                          </Box>
+                          <MainText heading className='text-sm text-red-600 transition ease-in-out hover:text-red-500'>
                             Disconnect
                           </MainText>
                         </button>
-                      </div>
-                      <Link href={`https://starkscan.co/search/${address}`} target='_blank' rel='noopener noreferrer'>
-                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                      </Box>
+                      <Link href={explorerLink} target='_blank' rel='noopener noreferrer'>
+                        <Box center className='mr-1 h-4 w-4 pb-0.5'>
                           <Launch fontSize='inherit' className='text-gray-200' />
-                        </div>
-                        <MainText heading size='sm' className='self-start'>
+                        </Box>
+                        <MainText heading className='self-start'>
                           View on StarkScan
                         </MainText>
                       </Link>
@@ -116,37 +118,75 @@ export default function WalletModal() {
                           }
                         }}
                       >
-                        <div className='mr-1 flex h-4 w-4 items-center justify-center pb-0.5'>
+                        <Box className='mr-1 h-4 w-4 pb-0.5'>
                           {copied ? (
                             <Done fontSize='inherit' className='text-gray-200' />
                           ) : (
                             <ContentPaste fontSize='inherit' className='text-gray-200' />
                           )}
-                        </div>
-                        <MainText heading size='sm' className='self-start'>
+                        </Box>
+                        <MainText heading className='self-start'>
                           {copied ? 'Copied!' : 'Copy address to clipboard'}
                         </MainText>
                       </Link>
-                    </div>
-                    <MainText heading size='2xl' className='mb-2 mt-6'>
-                      Recent transactions
+                    </Box>
+                    <MainText gradient heading className='mb-2 mt-6 text-2xl'>
+                      Recent transactions{' '}
+                      {transactions.length ? (
+                        <button onClick={clearTransactions}>
+                          <MainText
+                            heading
+                            className='ml-2 text-sm text-red-600 transition ease-in-out hover:text-red-500'
+                          >
+                            (Clear)
+                          </MainText>
+                        </button>
+                      ) : (
+                        ''
+                      )}
                     </MainText>
-                    <span className='font-body text-xs text-amber-50 text-opacity-50'>
-                      Transactions you send from the app will appear here.
-                    </span>
+                    {!transactions.length ? (
+                      <span className='font-body text-xs text-amber-50 text-opacity-50'>
+                        Transactions you send from the app will appear here.
+                      </span>
+                    ) : (
+                      <div className='mt-2 max-h-[400px] w-full overflow-scroll'>
+                        {transactions.map((transaction, index) => (
+                          <GrayElement key={index} col className='w-full is-not-first-child:mt-6'>
+                            <MainText heading gradient className='text-start text-xl'>
+                              {transaction.action}
+                            </MainText>
+                            <MainText className='text-start text-sm'>Strategy: {transaction.strategyName}</MainText>
+                            <MainText className='text-start text-sm'>
+                              {formatEpochToTime(transaction.timestamp)}
+                            </MainText>
+                            <Link
+                              href={explorerTransactionURL(transaction.hash, chain)}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              <MainText heading className='self-start'>
+                                View details
+                              </MainText>
+                              <Box center className='ml-1 h-4 w-4 pb-0.5'>
+                                <Launch fontSize='inherit' className='text-blue-500' />
+                              </Box>
+                            </Link>
+                          </GrayElement>
+                        ))}
+                      </div>
+                    )}
                   </Box>
                 ) : (
                   connectors.map((connector, index) => (
-                    <Button
+                    <MainButton
                       key={index}
-                      radius='sm'
                       isDisabled={!connector.available()}
-                      variant='bordered'
                       onClick={() => {
                         connect({ connector })
                         onClose()
                       }}
-                      className='border border-gray-800 p-8'
+                      className='p-8'
                       startContent={
                         <div className='mr-2'>
                           <Image
@@ -158,20 +198,18 @@ export default function WalletModal() {
                         </div>
                       }
                     >
-                      <MainText className='text-white' size='md'>
-                        Connect with {CONNECTOR_METADATA[connector.id].name}
-                      </MainText>
-                    </Button>
+                      <MainText className='text-white'>Connect with {CONNECTOR_METADATA[connector.id].name}</MainText>
+                    </MainButton>
                   ))
                 )}
               </ModalBody>
               {!isConnected && (
                 <ModalFooter>
-                  <MainText size='xs'>
+                  <MainText className='text-xs'>
                     By connecting your wallet to the Stargaze Finance interface or interacting with the Stargaze Finance
-                    smart contracts, you acknowledge the experimental nature of the protocol and the potential for total
-                    loss of funds deposited, and hereby accept full liability for your usage of Stargaze Finance, and
-                    that no financial responsibility is placed on the protocol developers and contributors.
+                    contracts, you acknowledge the experimental nature of the protocol and the potential for total loss
+                    of funds deposited, and hereby accept full liability for your usage of Stargaze Finance, and that no
+                    financial responsibility is placed on the protocol developers and contributors.
                   </MainText>
                   {/* <MainText size='xs'>
                     By connecting a wallet, you agree to the Stargaze Finance{' '}
