@@ -12,7 +12,7 @@ import {
 } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
-import { useDeposit, useStrategiesManager, useTransactionManager } from '@/hooks'
+import { useBalances, useDeposit, useStrategiesManager, useTransactionManager } from '@/hooks'
 import { usePrices, useStrategies } from '@/hooks/api'
 import {
   DOCS_FEES_URL,
@@ -30,7 +30,7 @@ import {
 import { Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
 import { Button, Input } from '@nextui-org/react'
-import { useAccount, useBalance, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
+import { useAccount, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
@@ -64,28 +64,17 @@ export default function Strategy() {
     [id, strategies]
   )
 
-  const { data: baseToken } = useBalance({
-    token: strategy?.type === 'LP' ? strategy?.asset : strategy?.tokens[0],
-    address,
-    enabled: !!address,
-    watch: true
-  })
+  const { data: balances, refetch: refetchBalances } = useBalances(address)
+  const baseToken = useMemo(
+    () => strategy && balances[strategy.type === 'LP' ? strategy.asset : strategy.tokens[0]],
+    [balances, strategy]
+  )
+  const quoteToken = useMemo(() => strategy?.type === 'Virtual' && balances[strategy.tokens[1]], [balances, strategy])
+  const { data: deposited, refetch: refetchDeposit } = useDeposit(address, strategy?.address)
 
-  const { data: quoteToken } = useBalance({
-    token: strategy?.tokens[1],
-    address,
-    enabled: strategy?.type !== 'LP' && !!address,
-    watch: true
-  })
-
-  const { data: deposited } = useBalance({
-    token: strategy?.address,
-    address,
-    enabled: !!address,
-    watch: true
-  })
-
-  const { data: userDeposit } = useDeposit(address, strategy?.address)
+  const refetch = useCallback(async () => {
+    return await Promise.all([refetchBalances(), refetchDeposit()])
+  }, [refetchBalances, refetchDeposit])
 
   const available = useMemo(
     () =>
@@ -96,27 +85,26 @@ export default function Strategy() {
   )
 
   const depositCalls = useMemo(() => {
-    if (address && strategy) {
+    if (address && baseToken && strategy) {
       try {
         const approveBaseToken: Call = {
           contractAddress: strategy.asset || strategy.tokens[0],
           entrypoint: 'approve',
-          calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken?.decimals)]
+          calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken.decimals)]
         }
 
-        const approveQuoteToken: Call | null =
-          strategy.type === 'Direct'
-            ? {
-                contractAddress: strategy.tokens[1],
-                entrypoint: 'approve',
-                calldata: [serializeAddress(strategy.address), ...serializeU256(amount, quoteToken?.decimals)]
-              }
-            : null
+        const approveQuoteToken: Call | null = quoteToken
+          ? {
+              contractAddress: strategy.tokens[1],
+              entrypoint: 'approve',
+              calldata: [serializeAddress(strategy.address), ...serializeU256(amount, quoteToken.decimals)]
+            }
+          : null
 
         const deposit: Call = {
           contractAddress: strategy.address,
           entrypoint: 'deposit',
-          calldata: [...serializeU256(amount, baseToken?.decimals), serializeAddress(address)]
+          calldata: [...serializeU256(amount, baseToken.decimals), serializeAddress(address)]
         }
 
         return [approveBaseToken, approveQuoteToken, deposit].filter((x): x is Call => x !== null)
@@ -168,7 +156,7 @@ export default function Strategy() {
 
     try {
       const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : withdraw())
-      addTransaction({
+      addTransaction(refetch, {
         action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
         hash,
         strategyName: strategy!.name,
@@ -177,7 +165,7 @@ export default function Strategy() {
     } catch (e) {
       console.error(e)
     }
-  }, [addTransaction, connect, deposit, isConnected, mode, strategy, withdraw])
+  }, [addTransaction, connect, deposit, isConnected, mode, refetch, strategy, withdraw])
 
   if (isFetching) {
     return <AppLoader />
@@ -268,7 +256,7 @@ export default function Strategy() {
               Your deposit
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatCurrency(userDeposit?.value || 0)}
+              {formatCurrency(deposited?.value || 0)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>

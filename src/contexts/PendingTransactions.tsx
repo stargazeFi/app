@@ -1,40 +1,74 @@
 import { useAppSelector, useDispatch } from '@/hooks'
+import { usePendingTransaction } from '@/hooks/api'
 import { toast } from '@/misc'
 import { PendingTransaction, removePendingTransaction, selectPendingTransactions } from '@/store/appSlice'
-import { useNetwork, useWaitForTransaction } from '@starknet-react/core'
-import { ReactNode, useEffect } from 'react'
-import { TransactionExecutionStatus } from 'starknet'
+import { useNetwork } from '@starknet-react/core'
+import { createContext, Dispatch, ReactNode, SetStateAction, useEffect, useState } from 'react'
 
-const PendingTransaction = ({ pendingTransaction }: { pendingTransaction: PendingTransaction }) => {
+interface PendingTransactionOnSuccess {
+  hash: string
+  refetch: () => Promise<unknown>
+}
+
+type PendingTransactionsContextState = {
+  pendingTransactionsRefetch: Array<PendingTransactionOnSuccess>
+  setPendingTransactionsRefetch: Dispatch<SetStateAction<PendingTransactionOnSuccess[]>>
+}
+
+export const PendingTransactionsContext = createContext<PendingTransactionsContextState>({
+  pendingTransactionsRefetch: [],
+  setPendingTransactionsRefetch: () => {}
+})
+
+const PendingTransaction = ({
+  pendingTransaction,
+  pendingTransactionsRefetch,
+  setPendingTransactionsRefetch
+}: {
+  pendingTransaction: PendingTransaction
+  pendingTransactionsRefetch: Array<PendingTransactionOnSuccess>
+  setPendingTransactionsRefetch: Dispatch<SetStateAction<PendingTransactionOnSuccess[]>>
+}) => {
+  const { data } = usePendingTransaction(pendingTransaction.hash)
   const dispatch = useDispatch()
   const { chain } = useNetwork()
-  const { data } = useWaitForTransaction({ hash: pendingTransaction.hash, watch: true })
 
   useEffect(() => {
-    if (data) {
-      const { execution_status } = data as {
-        block_number: number
-        execution_status: TransactionExecutionStatus
-      }
-
-      const type = execution_status === TransactionExecutionStatus.REJECTED ? 'error' : 'success'
-      toast({ action: pendingTransaction.action, chain, transactionHash: pendingTransaction.hash, type })
-      dispatch(removePendingTransaction({ hash: pendingTransaction.hash }))
+    if (data?.hash) {
+      pendingTransactionsRefetch
+        .find(({ hash }) => hash === pendingTransaction.hash)
+        ?.refetch()
+        .then(() => {
+          toast({ action: pendingTransaction.action, chain, transactionHash: pendingTransaction.hash, type: 'success' })
+          setPendingTransactionsRefetch((state) =>
+            state.splice(
+              pendingTransactionsRefetch.findIndex(({ hash }) => hash === pendingTransaction.hash),
+              1
+            )
+          )
+          dispatch(removePendingTransaction({ hash: pendingTransaction.hash }))
+        })
     }
-  }, [chain, data, dispatch, pendingTransaction])
+  }, [chain, data, dispatch, pendingTransaction, pendingTransactionsRefetch])
 
   return <div className='hidden' />
 }
 
 export const PendingTransactionsProvider = ({ children }: { children: ReactNode }) => {
+  const [pendingTransactionsRefetch, setPendingTransactionsRefetch] = useState<PendingTransactionOnSuccess[]>([])
   const pendingTransactions = useAppSelector(selectPendingTransactions)
 
   return (
-    <>
+    <PendingTransactionsContext.Provider value={{ pendingTransactionsRefetch, setPendingTransactionsRefetch }}>
       {pendingTransactions.map((pendingTransaction, index) => (
-        <PendingTransaction key={index} pendingTransaction={pendingTransaction} />
+        <PendingTransaction
+          key={index}
+          pendingTransactionsRefetch={pendingTransactionsRefetch}
+          pendingTransaction={pendingTransaction}
+          setPendingTransactionsRefetch={setPendingTransactionsRefetch}
+        />
       ))}
       {children}
-    </>
+    </PendingTransactionsContext.Provider>
   )
 }

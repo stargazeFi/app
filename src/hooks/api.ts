@@ -2,7 +2,7 @@ import { useNetwork } from '@starknet-react/core'
 import { goerli, mainnet } from '@starknet-react/chains'
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Price, Strategy, TokenInfo } from '@/types'
+import { PendingTransaction, Price, Strategy, TokenInfo } from '@/types'
 import { num, Uint256 } from 'starknet'
 
 export function useApiBaseUrl() {
@@ -77,6 +77,22 @@ export const useDeposits = (address: string | undefined) => {
   return useDataApi<Record<string, Uint256>>({
     path: `/deposits?address=${num.toStorageKey(address || 0n)}`,
     staleTime: 1000
+  })
+}
+
+export const usePendingTransaction = (hash: string) => {
+  return useDataApi<PendingTransaction>({
+    path: `/pending-transaction?hash=${hash}`,
+    refetchInterval: 2 * 1000,
+    staleTime: 2 * 1000
+  })
+}
+
+export const usePendingTransactions = () => {
+  return useDataApi<PendingTransaction[]>({
+    path: '/pending-transactions',
+    refetchInterval: 2 * 1000,
+    staleTime: 2 * 1000
   })
 }
 

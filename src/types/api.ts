@@ -2,7 +2,11 @@ import { Uint256 } from 'starknet'
 
 export type Protocol = 'sithswap' | 'ekubo' | 'jediswap'
 
-export type StrategyType = 'LP' | 'Direct'
+export type StrategyType = 'LP' | 'Virtual'
+
+export type PendingTransaction = {
+  hash: string | null
+}
 
 export type Price = {
   address: string
