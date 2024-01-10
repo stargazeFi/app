@@ -25,6 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel='icon' type='image/png' sizes='192x192' href='/favicon/android-chrome-192x192.png' />
         <link rel='icon' type='image/png' sizes='512x512' href='/favicon/android-chrome-512x512.png' />
         <link rel='apple-touch-icon' type='image/png' href='/favicon/apple-touch-icon.png' />
+        <title>Stargaze Finance</title>
       </Head>
       <NextUIProvider>
         <main className='text-foreground dark'>
