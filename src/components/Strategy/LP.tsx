@@ -5,8 +5,8 @@ import { Call } from 'starknet'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
 import { Box, Container, DarkElement, MainButton, MainText } from '@/components/Layout'
 import { useBalances, useDeposit } from '@/hooks'
-import { parseLPAmounts, poolLiquidityURL, serializeAddress, serializeU256 } from '@/misc'
-import { Amount } from '@/types'
+import { parseAmount, poolLiquidityURL, serializeAddress, serializeU256 } from '@/misc'
+import { Amounts } from '@/types'
 
 export const LP = ({ strategy }: StrategyProps) => {
   const { address } = useAccount()
@@ -18,12 +18,12 @@ export const LP = ({ strategy }: StrategyProps) => {
     return await Promise.all([refetchBalances(), refetchDeposit()])
   }, [refetchBalances, refetchDeposit])
 
-  const [displayAmount, setDisplayAmount] = useState<Amount>({})
+  const [displayAmount, setDisplayAmount] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
   const base = useMemo(() => balances[strategy.asset!], [balances, strategy])
-  const amounts = useMemo(
-    () => parseLPAmounts(displayAmount.base, (mode === 'deposit' ? base : deposited)?.decimals),
+  const amount = useMemo(
+    () => parseAmount(displayAmount.base, (mode === 'deposit' ? base : deposited)?.decimals),
     [base, deposited, displayAmount, mode]
   )
 
@@ -35,24 +35,24 @@ export const LP = ({ strategy }: StrategyProps) => {
   const depositCalls = useMemo(() => {
     if (address) {
       try {
-        const approveBaseToken: Call = {
-          contractAddress: strategy.asset || strategy.tokens[0],
+        const approveBase: Call = {
+          contractAddress: strategy.asset!,
           entrypoint: 'approve',
-          calldata: [serializeAddress(strategy.address), ...serializeU256(amounts)]
+          calldata: [serializeAddress(strategy.address), ...serializeU256(amount)]
         }
 
         const deposit: Call = {
           contractAddress: strategy.address,
           entrypoint: 'deposit',
-          calldata: [...serializeU256(amounts), serializeAddress(address)]
+          calldata: [...serializeU256(amount), serializeAddress(address)]
         }
 
-        return [approveBaseToken, deposit]
+        return [approveBase, deposit]
       } catch (error) {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, strategy])
+  }, [address, amount, strategy])
 
   const withdrawCalls = useMemo(() => {
     if (address) {
@@ -60,7 +60,7 @@ export const LP = ({ strategy }: StrategyProps) => {
         const withdraw: Call = {
           contractAddress: strategy.address,
           entrypoint: 'redeem',
-          calldata: [...serializeU256(amounts), serializeAddress(address), serializeAddress(address)]
+          calldata: [...serializeU256(amount), serializeAddress(address), serializeAddress(address)]
         }
 
         return [withdraw]
@@ -68,7 +68,7 @@ export const LP = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, strategy])
+  }, [address, amount, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
@@ -125,7 +125,7 @@ export const LP = ({ strategy }: StrategyProps) => {
             </Box>
             <Box center className='mt-6'>
               <MainButton isDisabled={disableCTA} onClick={handleCTA} className='w-full p-6'>
-                <MainText className='capitalize text-white'>{!address ? mode : 'Connect wallet'}</MainText>
+                <MainText className='capitalize text-white'>{address ? mode : 'Connect wallet'}</MainText>
               </MainButton>
             </Box>
             <Footer strategy={strategy} />

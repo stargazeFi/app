@@ -1,41 +1,99 @@
 import { useCallback, useMemo, useState } from 'react'
 import { OpenInNew } from '@mui/icons-material'
-import { useAccount, useContractWrite } from '@starknet-react/core'
+import { useAccount, useContractRead, useContractWrite, useNetwork } from '@starknet-react/core'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
 import { Box, Container, DarkElement, MainButton, MainText } from '@/components/Layout'
 import { useBalances, useDeposit } from '@/hooks'
-import { poolLiquidityURL } from '@/misc'
-import { Amount } from '@/types'
+import { parseAmount, poolLiquidityURL, serializeAddress, serializeU128, serializeU256 } from '@/misc'
+import { ekubo } from '@/protocols'
+import { Amounts } from '@/types'
+import { Call } from 'starknet'
 
 export const Ekubo = ({ strategy }: StrategyProps) => {
-  const { address, isConnected } = useAccount()
+  const { address } = useAccount()
+  const { chain } = useNetwork()
 
   const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(address)
   const { data: deposited, isLoading: depositLoading, refetch: refetchDeposit } = useDeposit(address, strategy.address)
+
+  const poolKey = useMemo(
+    () => ({
+      token0: strategy.tokens[0],
+      token1: strategy.tokens[1],
+      fee: strategy.position!.poolKey.fee,
+      tick_spacing: strategy.position!.poolKey.tickSpacing,
+      extension: strategy.position!.poolKey.extension
+    }),
+    [strategy]
+  )
+
+  const { data: poolPrice } = useContractRead({
+    abi: ekubo.abis.core,
+    address: ekubo.addresses.core(chain.network),
+    functionName: 'get_pool_price',
+    args: [poolKey],
+    watch: true
+  })
 
   const refetch = useCallback(async () => {
     return await Promise.all([refetchBalances(), refetchDeposit()])
   }, [refetchBalances, refetchDeposit])
 
-  const [displayAmounts, setDisplayAmounts] = useState<Amount>({})
+  const [displayAmounts, setDisplayAmounts] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
   const base = useMemo(() => balances[strategy.tokens[0]], [balances, strategy])
   const quote = useMemo(() => balances[strategy.tokens[1]], [balances, strategy])
-  // const amounts = useMemo(() => parseRangeAmounts(), [])
+  const amounts = useMemo(
+    () => ekubo.math.parseAmounts(base, quote, displayAmounts, strategy, poolPrice),
+    [base, displayAmounts, poolPrice, quote, strategy]
+  )
 
   const disableCTA = useMemo(() => {
-    const { base: b, quote: q } = displayAmounts
+    const { base: b, quote: q } = amounts
     if (mode === 'deposit') {
       return !Number(b) || !Number(q) || Number(b) > Number(base.formatted) || Number(q) > Number(quote.formatted)
     } else {
       return !Number(b) || Number(b) > Number(deposited?.formatted)
     }
-  }, [base, deposited, displayAmounts, mode, quote])
+  }, [amounts, base, deposited, mode, quote])
 
   const depositCalls = useMemo(() => {
-    return []
-  }, [])
+    if (address) {
+      const baseAmount = parseAmount(amounts.base, base?.decimals)
+      const quoteAmount = parseAmount(amounts.quote, quote?.decimals)
+      const minLiquidity = ((amounts.maxLiquidity! * 99n) / 100n).toString()
+
+      try {
+        const approveBase: Call = {
+          contractAddress: strategy.tokens[0],
+          entrypoint: 'approve',
+          calldata: [serializeAddress(strategy.address), ...serializeU256(baseAmount)]
+        }
+
+        const approveQuote: Call = {
+          contractAddress: strategy.tokens[1],
+          entrypoint: 'approve',
+          calldata: [serializeAddress(strategy.address), ...serializeU256(quoteAmount)]
+        }
+
+        const deposit: Call = {
+          contractAddress: strategy.address,
+          entrypoint: 'deposit',
+          calldata: [
+            serializeU128(baseAmount),
+            serializeU128(quoteAmount),
+            serializeU128(minLiquidity),
+            serializeAddress(address)
+          ]
+        }
+
+        return [approveBase, approveQuote, deposit]
+      } catch (error) {
+        console.error('Failed to generate call data', error)
+      }
+    }
+  }, [address, amounts, base, quote, strategy])
 
   const withdrawCalls = useMemo(() => {
     return []
@@ -72,7 +130,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
           </Box>
           <Box col className='pt-2'>
             <AmountInputField
-              amount={displayAmounts.base}
+              amount={amounts?.base}
               balance={base}
               deposit={deposited}
               isLoading={mode === 'deposit' ? balancesLoading : depositLoading}
@@ -83,7 +141,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
             />
             {mode === 'deposit' && (
               <AmountInputField
-                amount={displayAmounts.quote}
+                amount={amounts?.quote}
                 balance={quote}
                 deposit={deposited}
                 isLoading={balancesLoading}
@@ -110,7 +168,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
             )}
             <Box center className='mt-6'>
               <MainButton isDisabled={disableCTA} onClick={handleCTA} className='w-full p-6'>
-                <MainText className='capitalize text-white'>{isConnected ? mode : 'Connect wallet'}</MainText>
+                <MainText className='capitalize text-white'>{address ? mode : 'Connect wallet'}</MainText>
               </MainButton>
             </Box>
             <Footer strategy={strategy} />

@@ -1,7 +1,8 @@
 import Decimal from 'decimal.js-light'
-import { Amount, Balance, Strategy } from '@/types'
+import { Amounts, Balance, Strategy } from '@/types'
+import { Result } from 'starknet'
 
-// const Q128 = new Decimal(2).pow(128)
+const Q128 = new Decimal(2).pow(128)
 const TICK_SIZE = new Decimal('1.000001')
 const SQRT_TICK_SIZE = TICK_SIZE.sqrt()
 
@@ -170,55 +171,56 @@ const amountsFromSpecifiedAmount = ({
   }
 }
 
-const currentPrice = (strategy: Strategy) => strategy.APY
-/*
+const computePrice = (sqrtRatio: bigint, strategy: Strategy) =>
   BigInt(strategy.tokens[0]) > BigInt(strategy.tokens[1])
-    ? new Decimal(1).div(new Decimal(typedPoolInfo.sqrt_ratio.toString()).div(Q128).pow(2))
-    : new Decimal(typedPoolInfo.sqrt_ratio.toString()).div(Q128).pow(2)
-*/
+    ? new Decimal(1).div(new Decimal(sqrtRatio.toString()).div(Q128).pow(2))
+    : new Decimal(sqrtRatio.toString()).div(Q128).pow(2)
 
-export const computeAmounts = ({
-  baseToken,
-  displayAmount,
-  quoteToken,
-  strategy
-}: {
-  baseToken: Balance
-  displayAmount: Amount
-  quoteToken: Balance
-  strategy: Strategy
-}) => {
-  const sqrtPriceLower = SQRT_TICK_SIZE.pow(strategy.range![0])
-  const sqrtPriceUpper = SQRT_TICK_SIZE.pow(strategy.range![1])
+export const parseAmounts = (
+  baseToken: Balance,
+  quoteToken: Balance,
+  displayAmounts: Amounts,
+  strategy: Strategy,
+  poolPrice?: Result
+) => {
+  let amounts: Amounts = { base: '0', quote: '0', maxLiquidity: 0n }
 
-  if ('base' in displayAmount) {
-    const { quote, maxLiquidity } = amountsFromSpecifiedAmount({
-      amount: {
-        base: new Decimal(Number(displayAmount.base)).mul(new Decimal(10).pow(baseToken.decimals)).toInteger()
-      },
-      sqrtPrice: new Decimal(currentPrice(strategy)).sqrt(),
-      sqrtPriceLower,
-      sqrtPriceUpper
-    })
+  if (poolPrice) {
+    const sqrtPriceLower = SQRT_TICK_SIZE.pow(strategy.position!.range[0].toString())
+    const sqrtPriceUpper = SQRT_TICK_SIZE.pow(strategy.position!.range[1].toString())
+    const currentPrice = computePrice((poolPrice as { sqrt_ratio: bigint }).sqrt_ratio, strategy)
 
-    return {
-      maxLiquidity: BigInt(maxLiquidity.toFixed(0, Decimal.ROUND_DOWN)),
-      base: displayAmount.base,
-      quote: quote.div(new Decimal(10).pow(quoteToken.decimals)).toFixed(quoteToken.decimals, Decimal.ROUND_DOWN)
-    }
-  } else {
-    const { base, maxLiquidity } = amountsFromSpecifiedAmount({
-      amount: {
-        quote: new Decimal(Number(displayAmount.quote)).mul(new Decimal(10).pow(quoteToken.decimals)).toInteger()
-      },
-      sqrtPrice: new Decimal(currentPrice(strategy)).sqrt(),
-      sqrtPriceLower,
-      sqrtPriceUpper
-    })
-    return {
-      maxLiquidity: BigInt(maxLiquidity.toFixed(0, Decimal.ROUND_DOWN)),
-      base: base.div(new Decimal(10).pow(baseToken.decimals)).toFixed(baseToken.decimals, Decimal.ROUND_DOWN),
-      quote: displayAmount.quote
+    if ('base' in displayAmounts && !isNaN(Number(displayAmounts.base))) {
+      const { quote, maxLiquidity } = amountsFromSpecifiedAmount({
+        amount: {
+          base: new Decimal(Number(displayAmounts.base)).mul(new Decimal(10).pow(baseToken.decimals)).toInteger()
+        },
+        sqrtPrice: new Decimal(currentPrice).sqrt(),
+        sqrtPriceLower,
+        sqrtPriceUpper
+      })
+
+      amounts = {
+        maxLiquidity: BigInt(maxLiquidity.toFixed(0, Decimal.ROUND_DOWN)),
+        base: displayAmounts.base,
+        quote: quote.div(new Decimal(10).pow(quoteToken.decimals)).toFixed(quoteToken.decimals, Decimal.ROUND_DOWN)
+      }
+    } else if ('quote' in displayAmounts && !isNaN(Number(displayAmounts.quote))) {
+      const { base, maxLiquidity } = amountsFromSpecifiedAmount({
+        amount: {
+          quote: new Decimal(Number(displayAmounts.quote)).mul(new Decimal(10).pow(quoteToken.decimals)).toInteger()
+        },
+        sqrtPrice: new Decimal(currentPrice).sqrt(),
+        sqrtPriceLower,
+        sqrtPriceUpper
+      })
+      amounts = {
+        maxLiquidity: BigInt(maxLiquidity.toFixed(0, Decimal.ROUND_DOWN)),
+        base: base.div(new Decimal(10).pow(baseToken.decimals)).toFixed(baseToken.decimals, Decimal.ROUND_DOWN),
+        quote: displayAmounts.quote
+      }
     }
   }
+
+  return amounts
 }

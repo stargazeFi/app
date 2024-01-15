@@ -1,5 +1,5 @@
 import { useStrategiesManager } from '@/hooks/useStrategiesManager'
-import { computeUserBalance } from '@/misc/maths'
+import { computeUserBalance } from '@/misc'
 import { Balances, Deposits } from '@/types'
 import BigNumber from 'bignumber.js'
 import { useMemo } from 'react'

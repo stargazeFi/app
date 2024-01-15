@@ -3,7 +3,7 @@ import { Button, Input, Skeleton } from '@nextui-org/react'
 import { Box, MainText } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
 import { formatToDecimal } from '@/misc'
-import { Amount, Balance, Strategy } from '@/types'
+import { Amounts, Balance, Strategy } from '@/types'
 
 interface AmountInputFieldProps {
   amount?: string
@@ -11,7 +11,7 @@ interface AmountInputFieldProps {
   deposit?: Balance
   isLoading: boolean
   mode: 'deposit' | 'withdraw'
-  setDisplayAmount: Dispatch<SetStateAction<Amount>>
+  setDisplayAmount: Dispatch<SetStateAction<Amounts>>
   strategy: Strategy
   type: 'base' | 'quote'
 }

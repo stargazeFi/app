@@ -1,6 +1,7 @@
-export interface Amount {
+export interface Amounts {
   base?: string
   quote?: string
+  maxLiquidity?: bigint
 }
 
 export interface Balance {

@@ -14,14 +14,23 @@ export type Price = {
   lastUpdated: number
 }
 
+interface EkuboPosition {
+  poolKey: {
+    fee: bigint
+    tickSpacing: bigint
+    extension: string
+  }
+  range: Array<bigint>
+}
+
 export type Strategy = {
   name: string
   address: string
   asset?: string
   assetDecimals?: number
-  range?: Array<number>
   type: StrategyType
   protocol: Protocol
+  position?: EkuboPosition
   protocolTVL: string
   tokens: Array<string>
   description: string

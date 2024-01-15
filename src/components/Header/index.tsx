@@ -1,6 +1,6 @@
 import { useAppSelector } from '@/hooks'
 import { selectPendingTransactions } from '@/store/appSlice'
-import { useNetwork } from '@starknet-react/core'
+import { useAccount, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
 import { AnalyticsOutlined, MonetizationOnOutlined } from '@mui/icons-material'
@@ -10,6 +10,7 @@ import { useRouter } from 'next/router'
 import { goerli } from '@starknet-react/chains'
 
 export default function Header() {
+  const { isConnected } = useAccount()
   const { chain } = useNetwork()
   const { pathname } = useRouter()
   const pendingTransactions = useAppSelector(selectPendingTransactions)
@@ -22,7 +23,7 @@ export default function Header() {
 
   return (
     <>
-      {chain.id !== goerli.id && (
+      {isConnected && chain.id !== goerli.id && (
         <Box center className='h-8 w-full bg-red-900'>
           <MainText>Stargaze is currently in alpha, please switch network to Goerli</MainText>
         </Box>
