@@ -7,15 +7,15 @@ import { InvokeFunctionResponse } from 'starknet'
 export const useHandleCTA = ({
   deposit,
   mode,
+  redeem,
   refetch,
-  strategy,
-  withdraw
+  strategy
 }: {
   deposit: (args?: ContractWriteVariables | undefined) => Promise<InvokeFunctionResponse>
-  mode: 'deposit' | 'withdraw'
+  mode: 'deposit' | 'redeem'
+  redeem: (args?: ContractWriteVariables | undefined) => Promise<InvokeFunctionResponse>
   refetch: () => Promise<unknown>
   strategy: Strategy
-  withdraw: (args?: ContractWriteVariables | undefined) => Promise<InvokeFunctionResponse>
 }) => {
   const { isConnected } = useAccount()
   const { connect } = useConnect()
@@ -27,7 +27,7 @@ export const useHandleCTA = ({
     }
 
     try {
-      const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : withdraw())
+      const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : redeem())
       addTransaction(refetch, {
         action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
         hash,
@@ -35,5 +35,5 @@ export const useHandleCTA = ({
         timestamp: Date.now()
       })
     } catch (e) {}
-  }, [addTransaction, connect, deposit, isConnected, mode, refetch, strategy, withdraw])
+  }, [addTransaction, connect, deposit, isConnected, mode, redeem, refetch, strategy])
 }

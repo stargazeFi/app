@@ -40,7 +40,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   }, [refetchBalances, refetchDeposit])
 
   const [displayAmounts, setDisplayAmounts] = useState<Amounts>({})
-  const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
+  const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
 
   const base = useMemo(() => balances[strategy.tokens[0]], [balances, strategy])
   const quote = useMemo(() => balances[strategy.tokens[1]], [balances, strategy])
@@ -54,6 +54,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
     if (mode === 'deposit') {
       return !Number(b) || !Number(q) || Number(b) > Number(base.formatted) || Number(q) > Number(quote.formatted)
     } else {
+      console.log(b, deposited?.formatted)
       return !Number(b) || Number(b) > Number(deposited?.formatted)
     }
   }, [amounts, base, deposited, mode, quote])
@@ -95,14 +96,27 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
     }
   }, [address, amounts, base, quote, strategy])
 
-  const withdrawCalls = useMemo(() => {
-    return []
-  }, [])
+  const redeemCalls = useMemo(() => {
+    if (address) {
+      const shares = parseAmount(amounts.base, deposited?.decimals)
+      try {
+        const redeem: Call = {
+          contractAddress: strategy.address,
+          entrypoint: 'redeem',
+          calldata: [...serializeU256(shares), serializeAddress(address), serializeAddress(address)]
+        }
+
+        return [redeem]
+      } catch (error) {
+        console.error('Failed to generate call data', error)
+      }
+    }
+  }, [address, amounts, deposited, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
-  const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
+  const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })
 
-  const handleCTA = useHandleCTA({ deposit, mode, refetch, strategy, withdraw })
+  const handleCTA = useHandleCTA({ deposit, mode, redeem, refetch, strategy })
 
   return (
     <Container>
@@ -121,9 +135,9 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
             </Box>
             <Box
               center
-              className={`flex-1 cursor-pointer border-b ${mode === 'withdraw' ? 'border-white' : 'border-gray-700'}`}
+              className={`flex-1 cursor-pointer border-b ${mode === 'redeem' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('withdraw')} className='h-[4.5rem] w-full'>
+              <button onClick={() => setMode('redeem')} className='h-[4.5rem] w-full'>
                 <MainText>WITHDRAW</MainText>
               </button>
             </Box>

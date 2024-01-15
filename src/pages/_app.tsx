@@ -32,20 +32,20 @@ export default function App({ Component, pageProps }: AppProps) {
           <QueryClientProvider client={queryClient}>
             <ReduxProvider store={store}>
               <StarknetConfigWrapper>
-                <TokensProvider>
-                  <PendingTransactionsProvider>
-                    <ToastContainer
-                      position='bottom-right'
-                      autoClose={3000}
-                      newestOnTop
-                      pauseOnFocusLoss
-                      draggable={false}
-                      pauseOnHover={false}
-                    />
-                    <Header />
+                <PendingTransactionsProvider>
+                  <ToastContainer
+                    position='bottom-right'
+                    autoClose={3000}
+                    newestOnTop
+                    pauseOnFocusLoss
+                    draggable={false}
+                    pauseOnHover={false}
+                  />
+                  <Header />
+                  <TokensProvider>
                     <Component {...pageProps} />
-                  </PendingTransactionsProvider>
-                </TokensProvider>
+                  </TokensProvider>
+                </PendingTransactionsProvider>
               </StarknetConfigWrapper>
             </ReduxProvider>
           </QueryClientProvider>

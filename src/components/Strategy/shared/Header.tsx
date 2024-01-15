@@ -41,7 +41,10 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
           <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
             <MainText>{strategy.protocol}</MainText>
           </Box>
-          <Box center className='ml-2 w-fit rounded bg-purple-700 px-2 uppercase'>
+          <Box
+            center
+            className={`ml-2 w-fit rounded ${strategy.type === 'LP' ? 'bg-purple-700' : 'bg-green-700'} px-2 uppercase`}
+          >
             <MainText>{strategy.type}</MainText>
           </Box>
         </Box>

@@ -19,7 +19,7 @@ export const LP = ({ strategy }: StrategyProps) => {
   }, [refetchBalances, refetchDeposit])
 
   const [displayAmount, setDisplayAmount] = useState<Amounts>({})
-  const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
+  const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
 
   const base = useMemo(() => balances[strategy.asset!], [balances, strategy])
   const amount = useMemo(
@@ -54,16 +54,16 @@ export const LP = ({ strategy }: StrategyProps) => {
     }
   }, [address, amount, strategy])
 
-  const withdrawCalls = useMemo(() => {
+  const redeemCalls = useMemo(() => {
     if (address) {
       try {
-        const withdraw: Call = {
+        const redeem: Call = {
           contractAddress: strategy.address,
           entrypoint: 'redeem',
           calldata: [...serializeU256(amount), serializeAddress(address), serializeAddress(address)]
         }
 
-        return [withdraw]
+        return [redeem]
       } catch (error) {
         console.error('Failed to generate call data', error)
       }
@@ -71,9 +71,9 @@ export const LP = ({ strategy }: StrategyProps) => {
   }, [address, amount, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
-  const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
+  const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })
 
-  const handleCTA = useHandleCTA({ deposit, mode, refetch, strategy, withdraw })
+  const handleCTA = useHandleCTA({ deposit, mode, redeem, refetch, strategy })
 
   return (
     <Container>
@@ -92,9 +92,9 @@ export const LP = ({ strategy }: StrategyProps) => {
             </Box>
             <Box
               center
-              className={`flex-1 cursor-pointer border-b ${mode === 'withdraw' ? 'border-white' : 'border-gray-700'}`}
+              className={`flex-1 cursor-pointer border-b ${mode === 'redeem' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('withdraw')} className='h-[4.5rem] w-full'>
+              <button onClick={() => setMode('redeem')} className='h-[4.5rem] w-full'>
                 <MainText>WITHDRAW</MainText>
               </button>
             </Box>

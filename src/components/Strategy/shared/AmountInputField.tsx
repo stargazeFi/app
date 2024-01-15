@@ -10,7 +10,7 @@ interface AmountInputFieldProps {
   balance?: Balance
   deposit?: Balance
   isLoading: boolean
-  mode: 'deposit' | 'withdraw'
+  mode: 'deposit' | 'redeem'
   setDisplayAmount: Dispatch<SetStateAction<Amounts>>
   strategy: Strategy
   type: 'base' | 'quote'
