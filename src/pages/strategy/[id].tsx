@@ -1,3 +1,45 @@
+import { useEffect, useMemo } from 'react'
+import { useRouter } from 'next/router'
+import AppLoader from '@/components/AppLoader'
+import ErrorPage from '@/components/ErrorPage'
+import { Ekubo, LP } from '@/components/Strategy'
+import { useStrategiesManager } from '@/hooks'
+import { useStrategies } from '@/hooks/api'
+
+export default function Strategy() {
+  const router = useRouter()
+  const { id } = router.query
+
+  const { data, isError, isLoading } = useStrategies()
+  const { strategies, storeStrategies } = useStrategiesManager()
+
+  const isFetching = useMemo(() => !strategies.length && isLoading, [isLoading, strategies])
+
+  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
+
+  const strategy = useMemo(() => strategies?.find(({ address }) => id === address), [id, strategies])
+
+  if (isFetching) {
+    return <AppLoader />
+  }
+
+  if (isError) {
+    return <ErrorPage />
+  }
+
+  if (!strategy) {
+    return <ErrorPage errMessage='Invalid strategy.' />
+  }
+
+  switch (strategy.type) {
+    case 'Range':
+      return <Ekubo strategy={strategy} />
+    default:
+      return <LP strategy={strategy} />
+  }
+}
+
+/*
 import AppLoader from '@/components/AppLoader'
 import ErrorPage from '@/components/ErrorPage'
 import {
@@ -27,62 +69,60 @@ import {
   serializeAddress,
   serializeU256
 } from '@/misc'
-import { Strategy, TransactionType } from '@/types'
+import { Amount, computeAmount } from '@/misc/maths'
+import { Balance, Deposit, Strategy, TransactionType } from '@/types'
 import { ArrowBack, HelpOutline, Link as LinkIcon, OpenInNew } from '@mui/icons-material'
-import { Button, Input } from '@nextui-org/react'
+import { Button, Input, Skeleton } from '@nextui-org/react'
 import { useAccount, useConnect, useContractWrite, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Call } from 'starknet'
-import { format } from 'timeago.js'
+
+
+
+
 
 export default function Strategy() {
   const { address, isConnected } = useAccount()
   const { connect } = useConnect()
   const { chain } = useNetwork()
   const { addTransaction } = useTransactionManager()
-  const router = useRouter()
 
   const tokensList = useContext(TokenContext)
 
-  const { id } = router.query
 
-  const [amount, setAmount] = useState('0')
+  const [displayAmount, setDisplayAmount] = useState<Amount>({ base: '0', quote: '0' })
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit')
 
   const { data: prices } = usePrices()
-  const { data, isError: strategyError, isLoading } = useStrategies()
-  const { strategies, storeStrategies } = useStrategiesManager()
 
-  const isFetching = useMemo(() => !strategies.length && isLoading, [isLoading, strategies])
 
-  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
-  const strategy: Strategy | undefined = useMemo(
-    () => strategies?.find(({ address }) => id === address),
-    [id, strategies]
-  )
 
-  const { data: balances, refetch: refetchBalances } = useBalances(address)
+  useEffect(() => setDisplayAmount({ base: '0', quote: '0' }), [mode])
+
+  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(address)
   const baseToken = useMemo(
-    () => strategy && balances[strategy.type === 'LP' ? strategy.asset : strategy.tokens[0]],
+    () => strategy && balances[strategy.type === 'LP' ? strategy.asset! : strategy.tokens[0]],
     [balances, strategy]
   )
-  const quoteToken = useMemo(() => strategy?.type === 'Virtual' && balances[strategy.tokens[1]], [balances, strategy])
-  const { data: deposited, refetch: refetchDeposit } = useDeposit(address, strategy?.address)
+  const quoteToken = useMemo(
+    () => (strategy?.type === 'Range' ? balances[strategy.tokens[1]] : undefined),
+    [balances, strategy]
+  )
+  const { data: deposited, isLoading: depositLoading, refetch: refetchDeposit } = useDeposit(address, strategy?.address)
+
+  const amounts = useMemo(
+    () => computeAmount({ baseToken, deposited, displayAmount, quoteToken, mode, strategy }),
+    [baseToken, deposited, displayAmount, mode, quoteToken, strategy]
+  )
+
+  console.log(displayAmount, amounts)
 
   const refetch = useCallback(async () => {
     return await Promise.all([refetchBalances(), refetchDeposit()])
   }, [refetchBalances, refetchDeposit])
-
-  const available = useMemo(
-    () =>
-      mode === 'deposit'
-        ? formatToDecimal(baseToken?.formatted, baseToken?.decimals)
-        : formatToDecimal(deposited?.formatted, deposited?.decimals),
-    [baseToken, deposited, mode]
-  )
 
   const depositCalls = useMemo(() => {
     if (address && baseToken && strategy) {
@@ -90,21 +130,22 @@ export default function Strategy() {
         const approveBaseToken: Call = {
           contractAddress: strategy.asset || strategy.tokens[0],
           entrypoint: 'approve',
-          calldata: [serializeAddress(strategy.address), ...serializeU256(amount, baseToken.decimals)]
+          calldata: [serializeAddress(strategy.address), ...serializeU256(amounts.base || '0')]
         }
 
         const approveQuoteToken: Call | null = quoteToken
           ? {
               contractAddress: strategy.tokens[1],
               entrypoint: 'approve',
-              calldata: [serializeAddress(strategy.address), ...serializeU256(amount, quoteToken.decimals)]
+              calldata: [serializeAddress(strategy.address), ...serializeU256(amounts.quote || '0')]
             }
           : null
 
+        // TODO ADD FOR RANGE
         const deposit: Call = {
           contractAddress: strategy.address,
           entrypoint: 'deposit',
-          calldata: [...serializeU256(amount, baseToken.decimals), serializeAddress(address)]
+          calldata: [...serializeU256(amounts.base || '0'), serializeAddress(address)]
         }
 
         return [approveBaseToken, approveQuoteToken, deposit].filter((x): x is Call => x !== null)
@@ -112,19 +153,16 @@ export default function Strategy() {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amount, baseToken, quoteToken, strategy])
+  }, [address, amounts, baseToken, quoteToken, strategy])
 
+  // TODO ADD FOR RANGE
   const withdrawCalls = useMemo(() => {
     if (address && strategy) {
       try {
         const withdraw: Call = {
           contractAddress: strategy.address,
           entrypoint: 'redeem',
-          calldata: [
-            ...serializeU256(amount, deposited?.decimals),
-            serializeAddress(address),
-            serializeAddress(address)
-          ]
+          calldata: [...serializeU256(amounts.base || '0'), serializeAddress(address), serializeAddress(address)]
         }
 
         return [withdraw].filter((x): x is Call => x !== null)
@@ -132,7 +170,7 @@ export default function Strategy() {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amount, deposited, strategy])
+  }, [address, amounts, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: withdraw } = useContractWrite({ calls: withdrawCalls })
@@ -144,10 +182,19 @@ export default function Strategy() {
     [prices]
   )
 
-  const disableCTA = useMemo(
-    () => !Number(amount) || Number(amount) > Number(mode === 'deposit' ? baseToken?.formatted : deposited?.formatted),
-    [amount, baseToken, deposited, mode]
-  )
+  const disableCTA = useMemo(() => {
+    const { base, quote } = displayAmount
+    if (strategy?.type === 'LP') {
+      return !Number(base) || Number(base) > Number(mode === 'deposit' ? baseToken?.formatted : deposited?.formatted)
+    } else {
+      return (
+        !Number(base) ||
+        !Number(quote) ||
+        Number(base) > Number(mode === 'deposit' ? baseToken?.formatted : deposited?.formatted) ||
+        Number(quote) > Number(quoteToken?.formatted)
+      )
+    }
+  }, [baseToken, deposited, displayAmount, mode, quoteToken, strategy])
 
   const handleCTA = useCallback(async () => {
     if (!isConnected) {
@@ -167,17 +214,7 @@ export default function Strategy() {
     }
   }, [addTransaction, connect, deposit, isConnected, mode, refetch, strategy, withdraw])
 
-  if (isFetching) {
-    return <AppLoader />
-  }
 
-  if (strategyError) {
-    return <ErrorPage />
-  }
-
-  if (!strategy) {
-    return <ErrorPage errMessage='Invalid strategy.' />
-  }
 
   return (
     <Container>
@@ -191,11 +228,9 @@ export default function Strategy() {
           <Box center>
             <Box center className='w-[64px]'>
               <TokenIcon address={strategy.tokens[0]} size={40} />
-              {strategy.type === 'LP' && (
-                <Box className='z-20 -ml-3'>
-                  <TokenIcon address={strategy.tokens[1]} size={40} />
-                </Box>
-              )}
+              <Box className='z-20 -ml-3'>
+                <TokenIcon address={strategy.tokens[1]} size={40} />
+              </Box>
             </Box>
             <MainText heading className='ml-2 pt-1 text-4xl'>
               {strategy.name}
@@ -255,9 +290,13 @@ export default function Strategy() {
             <MainText heading className='text-xl font-light'>
               Your deposit
             </MainText>
-            <MainText gradient className='text-lg'>
-              {formatCurrency(deposited?.value || 0)}
-            </MainText>
+            {depositLoading ? (
+              <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
+            ) : (
+              <MainText gradient className='text-lg'>
+                {formatCurrency(deposited?.value || 0)}
+              </MainText>
+            )}
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
             <MainText heading className='text-xl font-light'>
@@ -369,55 +408,32 @@ export default function Strategy() {
               </button>
             </Box>
           </Box>
-          <Box col className='pt-6'>
-            <Box className='justify-end px-2'>
-              <MainText className='text-xs'>Available: {available}</MainText>
-            </Box>
-            <Box spaced className='mt-2'>
-              <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-                <TokenIcon address={strategy.tokens[0]} size={28} />
-                {strategy.type === 'LP' && (
-                  <Box className='z-20 -ml-2'>
-                    <TokenIcon address={strategy.tokens[1]} size={28} />
-                  </Box>
-                )}
-              </Box>
-              <Input
-                autoComplete='off'
-                size='sm'
-                variant='bordered'
-                placeholder='0'
-                value={amount}
-                classNames={{
-                  input: 'text-amber-50 text-md mr-6',
-                  inputWrapper: 'bg-black/60 border border-gray-500'
-                }}
-                onChange={(e) => {
-                  const { value } = e.target
-                  if (!isNaN(Number(value))) {
-                    setAmount(value)
-                  }
-                }}
-                endContent={
-                  <Button
-                    radius='sm'
-                    variant='bordered'
-                    onClick={() =>
-                      setAmount(mode === 'deposit' ? baseToken?.formatted || '0' : deposited?.formatted || '0')
-                    }
-                    className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
-                  >
-                    <MainText heading gradient>
-                      MAX
-                    </MainText>
-                  </Button>
-                }
+          <Box col className='pt-2'>
+            <AmountInputField
+              amount={amounts?.base || '0'}
+              balance={baseToken}
+              deposit={deposited}
+              isLoading={mode === 'deposit' ? balancesLoading : depositLoading}
+              mode={mode}
+              setDisplayAmount={setDisplayAmount}
+              strategy={strategy}
+              type='base'
+            />
+            {strategy.type === 'Range' && mode === 'deposit' && (
+              <AmountInputField
+                amount={amounts?.quote || '0'}
+                balance={quoteToken}
+                isLoading={mode === 'deposit' ? balancesLoading : depositLoading}
+                mode={mode}
+                setDisplayAmount={setDisplayAmount}
+                strategy={strategy}
+                type='quote'
               />
-            </Box>
+            )}
             {strategy.type === 'LP' && (
               <Box className='mt-2 w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
                 <a
-                  href={poolLiquidityURL(strategy.protocol, strategy.asset, strategy.tokens, mode)}
+                  href={poolLiquidityURL(strategy.protocol, strategy.asset!, strategy.tokens, mode)}
                   target='_blank'
                   rel='noopener noreferrer'
                   className='flex items-center'
@@ -489,3 +505,4 @@ export default function Strategy() {
     </Container>
   )
 }
+*/
