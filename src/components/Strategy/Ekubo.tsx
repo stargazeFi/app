@@ -54,7 +54,6 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
     if (mode === 'deposit') {
       return !Number(b) || !Number(q) || Number(b) > Number(base.formatted) || Number(q) > Number(quote.formatted)
     } else {
-      console.log(b, deposited?.formatted)
       return !Number(b) || Number(b) > Number(deposited?.formatted)
     }
   }, [amounts, base, deposited, mode, quote])
