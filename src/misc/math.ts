@@ -9,9 +9,9 @@ export const parseAmount = (amount: string | undefined, decimals: number | undef
   return new BigNumber(amount).multipliedBy(new BigNumber(10).pow(decimals)).toString()
 }
 
-export const computeUserBalance = (balance: Uint256, reserves: Uint256, TVL: string) => {
+export const computeUserDeposit = (balance: Uint256, totalShares: Uint256, TVL: string) => {
   const b = new BigNumber(uint256.uint256ToBN(balance).toString())
-  const r = new BigNumber(uint256.uint256ToBN(reserves).toString())
+  const r = new BigNumber(uint256.uint256ToBN(totalShares).toString())
 
   return r.isZero() ? '0' : b.multipliedBy(TVL).dividedBy(r).toString()
 }

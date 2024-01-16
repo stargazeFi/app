@@ -1,5 +1,5 @@
 import { useStrategiesManager } from '@/hooks/useStrategiesManager'
-import { computeUserBalance } from '@/misc'
+import { computeUserDeposit } from '@/misc'
 import { Balances, Deposits } from '@/types'
 import BigNumber from 'bignumber.js'
 import { useMemo } from 'react'
@@ -58,9 +58,9 @@ export const useDeposit = (address: string | undefined, strategyAddress: string 
     if (balances && strategyAddress && strategy) {
       const balance = balances[strategyAddress]
       if (balance) {
-        const { reserves, TVL } = strategy
+        const { totalShares, TVL } = strategy
         const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
-        data = { decimals: 18, formatted, value: computeUserBalance(balance, reserves, TVL) }
+        data = { decimals: 18, formatted, value: computeUserDeposit(balance, totalShares, TVL) }
       }
     }
 
@@ -82,12 +82,12 @@ export const useDeposits = (address: string | undefined) => {
       if (balances && strategy) {
         const balance = balances[strategy.address]
         if (balance) {
-          const { reserves, TVL } = strategy
+          const { totalShares, TVL } = strategy
           const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
           acc[strategy.address] = {
             decimals: 18,
             formatted,
-            value: computeUserBalance(balance, reserves, TVL)
+            value: computeUserDeposit(balance, totalShares, TVL)
           }
         }
       }

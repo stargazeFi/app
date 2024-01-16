@@ -9,44 +9,45 @@ export type PendingTransaction = {
 
 export type Price = {
   address: string
-  ticker: string
-  price: number
   lastUpdated: number
+  price: number
+  ticker: string
 }
 
 interface EkuboPosition {
+  bounds: Array<bigint>
   poolKey: {
     fee: bigint
     tickSpacing: bigint
     extension: string
   }
-  range: Array<bigint>
 }
 
 export type Strategy = {
-  name: string
   address: string
   asset?: string
   assetDecimals?: number
-  type: StrategyType
-  protocol: Protocol
+  cursorUpdate: bigint
+  daily: number
+  depositFee: number
+  description: string
+  lastUpdated: bigint
+  name: string
+  performanceFee: number
   position?: EkuboPosition
+  protocol: Protocol
   protocolTVL: string
   tokens: Array<string>
-  description: string
-  depositFee: number
+  totalShares: Uint256
+  type: StrategyType
   withdrawalFee: number
-  performanceFee: number
-  daily: number
   APY: number
   TVL: string
-  reserves: Uint256
-  lastUpdated: bigint
 }
 
 export type TokenInfo = {
-  name: string
-  symbol: string
   decimals: number
   l2_token_address: string
+  name: string
+  symbol: string
 }

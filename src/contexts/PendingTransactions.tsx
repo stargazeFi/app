@@ -49,7 +49,7 @@ const PendingTransaction = ({
           dispatch(removePendingTransaction({ hash: pendingTransaction.hash }))
         })
     }
-  }, [chain, data, dispatch, pendingTransaction, pendingTransactionsRefetch])
+  }, [chain, data, dispatch, pendingTransaction, pendingTransactionsRefetch, setPendingTransactionsRefetch])
 
   return <div className='hidden' />
 }
