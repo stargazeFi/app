@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { OpenInNew } from '@mui/icons-material'
 import { useAccount, useContractWrite } from '@starknet-react/core'
 import { Call } from 'starknet'
@@ -21,6 +21,8 @@ export const LP = ({ strategy }: StrategyProps) => {
   const [displayAmount, setDisplayAmount] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
 
+  useEffect(() => setDisplayAmount({}), [mode])
+
   const base = useMemo(() => balances[strategy.asset!], [balances, strategy])
   const amount = useMemo(
     () => parseAmount(displayAmount.base, (mode === 'deposit' ? base : deposited)?.decimals),
@@ -33,7 +35,7 @@ export const LP = ({ strategy }: StrategyProps) => {
   }, [base, deposited, displayAmount, mode])
 
   const depositCalls = useMemo(() => {
-    if (address) {
+    if (mode === 'deposit' && address) {
       try {
         const approveBase: Call = {
           contractAddress: strategy.asset!,
@@ -55,7 +57,7 @@ export const LP = ({ strategy }: StrategyProps) => {
   }, [address, amount, strategy])
 
   const redeemCalls = useMemo(() => {
-    if (address) {
+    if (mode === 'redeem' && address) {
       try {
         const redeem: Call = {
           contractAddress: strategy.address,

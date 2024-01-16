@@ -15,10 +15,10 @@ export type Price = {
 }
 
 interface EkuboPosition {
-  bounds: Array<bigint>
+  bounds: Array<string>
   poolKey: {
-    fee: bigint
-    tickSpacing: bigint
+    fee: string
+    tickSpacing: string
     extension: string
   }
 }

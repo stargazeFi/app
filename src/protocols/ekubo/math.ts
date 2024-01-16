@@ -186,8 +186,8 @@ export const parseAmounts = (
   let amounts: Amounts = { base: '0', quote: '0', maxLiquidity: 0n }
 
   if (poolPrice) {
-    const sqrtPriceLower = SQRT_TICK_SIZE.pow(strategy.position!.bounds[0].toString())
-    const sqrtPriceUpper = SQRT_TICK_SIZE.pow(strategy.position!.bounds[1].toString())
+    const sqrtPriceLower = SQRT_TICK_SIZE.pow(BigInt(strategy.position!.bounds[0]).toString())
+    const sqrtPriceUpper = SQRT_TICK_SIZE.pow(BigInt(strategy.position!.bounds[1]).toString())
     const currentPrice = computePrice((poolPrice as { sqrt_ratio: bigint }).sqrt_ratio, strategy)
 
     if ('base' in displayAmounts && !isNaN(Number(displayAmounts.base))) {

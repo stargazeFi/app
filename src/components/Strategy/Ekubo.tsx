@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { OpenInNew } from '@mui/icons-material'
 import { useAccount, useContractRead, useContractWrite, useNetwork } from '@starknet-react/core'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
@@ -16,16 +16,11 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(address)
   const { data: deposited, isLoading: depositLoading, refetch: refetchDeposit } = useDeposit(address, strategy.address)
 
-  const poolKey = useMemo(
-    () => ({
-      token0: strategy.tokens[0],
-      token1: strategy.tokens[1],
-      fee: strategy.position!.poolKey.fee,
-      tick_spacing: strategy.position!.poolKey.tickSpacing,
-      extension: strategy.position!.poolKey.extension
-    }),
-    [strategy]
-  )
+  const poolKey = useMemo(() => {
+    const [token0, token1] = strategy.tokens
+    const { extension, fee, tickSpacing: tick_spacing } = strategy.position!.poolKey
+    return { token0, token1, fee, tick_spacing, extension }
+  }, [strategy])
 
   const { data: poolPrice } = useContractRead({
     abi: ekubo.abis.core,
@@ -41,6 +36,8 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
 
   const [displayAmounts, setDisplayAmounts] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
+
+  useEffect(() => setDisplayAmounts({}), [mode])
 
   const base = useMemo(() => balances[strategy.tokens[0]], [balances, strategy])
   const quote = useMemo(() => balances[strategy.tokens[1]], [balances, strategy])
@@ -59,7 +56,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   }, [amounts, base, deposited, mode, quote])
 
   const depositCalls = useMemo(() => {
-    if (address) {
+    if (mode === 'deposit' && address) {
       const baseAmount = parseAmount(amounts.base, base?.decimals)
       const quoteAmount = parseAmount(amounts.quote, quote?.decimals)
       const minLiquidity = ((amounts.maxLiquidity! * 99n) / 100n).toString()
@@ -96,8 +93,9 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   }, [address, amounts, base, quote, strategy])
 
   const redeemCalls = useMemo(() => {
-    if (address) {
+    if (mode === 'redeem' && address) {
       const shares = parseAmount(amounts.base, deposited?.decimals)
+
       try {
         const redeem: Call = {
           contractAddress: strategy.address,

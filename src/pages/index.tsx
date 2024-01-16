@@ -93,7 +93,7 @@ const Strategy = ({
                 </MainText>
                 <Box>
                   <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
-                    <Image src={`assets/partners/${protocol}.svg`} width={80} height={20} />
+                    <Image src={`/assets/partners/${protocol}.svg`} width={80} height={20} />
                   </Box>
                   <Box
                     center
@@ -161,7 +161,7 @@ export default function Strategies() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState('')
   const [ordered, setOrdered] = useState<Order>('decreasing')
-  const [sorted, setSorted] = useState<Sort>('TVL')
+  const [sorted, setSorted] = useState<Sort>('deposited')
 
   const { address } = useAccount()
 

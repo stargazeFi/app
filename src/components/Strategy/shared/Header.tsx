@@ -1,11 +1,12 @@
+import React from 'react'
+import { useRouter } from 'next/router'
+import { format } from 'timeago.js'
 import { Box, DarkElement, MainText, Tooltip } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
 import { formatCurrency, formatPercentage } from '@/misc'
 import { Deposit, Strategy } from '@/types'
 import { ArrowBack, HelpOutline } from '@mui/icons-material'
-import { Skeleton } from '@nextui-org/react'
-import { useRouter } from 'next/router'
-import { format } from 'timeago.js'
+import { Image, Skeleton } from '@nextui-org/react'
 
 interface HeaderProps {
   deposited?: Deposit
@@ -38,8 +39,8 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
           </Box>
         </Box>
         <Box center>
-          <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
-            <MainText>{strategy.protocol}</MainText>
+          <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
+            <Image src={`/assets/partners/${strategy.protocol}.svg`} width={80} height={20} />
           </Box>
           <Box
             center
