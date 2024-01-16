@@ -7,6 +7,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Image,
   Input,
   Pagination,
   Skeleton,
@@ -16,13 +17,13 @@ import { Close, HelpOutline, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from
 import ErrorPage from '@/components/ErrorPage'
 import { Box, Container, DarkElement, MainText, Tooltip } from '@/components/Layout'
 import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc'
-import { useBalance, useDeposit, useDeposits, useStrategiesManager } from '@/hooks'
+import { useBalances, useDeposits, useStrategiesManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
-import { Strategy } from '@/types'
+import { Balance, Deposit, Strategy } from '@/types'
 import Link from 'next/link'
 
 type Order = 'decreasing' | 'increasing'
-type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL' | 'stargazeTVL'
+type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL'
 
 const RESULTS_PER_PAGE = 7
 
@@ -35,17 +36,18 @@ const FILTERS: { sort: Sort; flex: string }[] = [
 ]
 
 const Strategy = ({
+  balance,
+  deposit,
   index,
-  userAddress,
-  strategy: { name, protocol, asset, type, APY, daily, tokens, address, TVL, protocolTVL }
+  loading,
+  strategy: { name, protocol, type, APY, daily, tokens, address, TVL, protocolTVL }
 }: {
+  balance: Balance
+  deposit: Deposit
   index: number
-  userAddress: string | undefined
+  loading: { balance: boolean; deposit: boolean }
   strategy: Strategy
 }) => {
-  const { data: balance, isLoading: balanceLoading } = useBalance(userAddress, asset)
-  const { data: deposit, isLoading: depositLoading } = useDeposit(userAddress, address)
-
   const TVLComponent = useCallback(
     ({ className }: { className: string }) => {
       return (
@@ -77,7 +79,7 @@ const Strategy = ({
         <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-800/50 lg:flex-row'>
           <Box className='flex-[1]'>
             <Box center>
-              <Box center className='w-[64px]'>
+              <Box center className='w-[72px]'>
                 <TokenIcon address={tokens[0]} size={40} />
                 {tokens[1] && (
                   <Box className='z-20 -ml-3'>
@@ -90,12 +92,12 @@ const Strategy = ({
                   {name}
                 </MainText>
                 <Box>
-                  <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
-                    <MainText className='text-xs'>{protocol}</MainText>
+                  <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
+                    <Image src={`assets/partners/${protocol}.svg`} width={80} height={20} />
                   </Box>
                   <Box
                     center
-                    className={`ml-2 w-fit rounded ${
+                    className={`ml-2 h-6 w-fit rounded ${
                       type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
                     } px-2 py-1 uppercase`}
                   >
@@ -107,13 +109,13 @@ const Strategy = ({
             <TVLComponent className='lg:hidden' />
           </Box>
           <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
-            <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
-              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-                Wallet
-              </MainText>
-              {type === 'LP' && (
+            {type === 'LP' ? (
+              <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
+                <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
+                  Wallet
+                </MainText>
                 <Box>
-                  {balanceLoading ? (
+                  {loading.balance ? (
                     <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
                   ) : (
                     <MainText gradient className='text-lg'>
@@ -121,19 +123,21 @@ const Strategy = ({
                     </MainText>
                   )}
                 </Box>
-              )}
-            </Box>
+              </Box>
+            ) : (
+              <div className={`ml-6 hidden lg:flex ${FILTERS[0].flex}`} />
+            )}
             <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 Deposited
               </MainText>
-              {depositLoading ? (
+              {loading.deposit ? (
                 <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
               ) : (
                 <MainText gradient>{formatCurrency(deposit?.value || 0)}</MainText>
               )}
             </Box>
-            <Box col className={`ml-6 items-end justify-end ${FILTERS[2].flex} lg:flex-row`}>
+            <Box col className={`ml-6 ${type === 'LP' ? 'items-end' : ''} justify-end ${FILTERS[2].flex} lg:flex-row`}>
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 APY
               </MainText>
@@ -157,7 +161,7 @@ export default function Strategies() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState('')
   const [ordered, setOrdered] = useState<Order>('decreasing')
-  const [sorted, setSorted] = useState('TVL')
+  const [sorted, setSorted] = useState<Sort>('TVL')
 
   const { address } = useAccount()
 
@@ -165,6 +169,7 @@ export default function Strategies() {
   const { strategies, storeStrategies } = useStrategiesManager()
   useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
+  const { data: balances, isLoading: balancesLoading } = useBalances(address)
   const { data: deposits, isLoading: depositsLoading } = useDeposits(address)
 
   const stargazeTVL = useMemo(() => strategies.reduce((acc, it) => acc + Number(it.TVL), 0), [strategies])
@@ -190,9 +195,20 @@ export default function Strategies() {
             tokens[0].match(new RegExp(filter, 'i')) ||
             (tokens[1] || '').match(new RegExp(filter, 'i'))
         )
-        // @ts-expect-error ts bitching for no reason
-        .sort((a, b) => (ordered === 'increasing' ? a[sorted] - b[sorted] : b[sorted] - a[sorted])),
-    [filter, ordered, sorted, strategies]
+        .sort((a, b) => {
+          const [lhs, rhs] = [ordered === 'increasing' ? a : b, ordered === 'increasing' ? b : a]
+          switch (sorted) {
+            case 'deposited':
+              return Number(deposits[lhs.address]?.formatted || 0) - Number(deposits[rhs.address]?.formatted || 0)
+            case 'wallet':
+              return Number(balances[lhs.address]?.formatted || 0) - Number(balances[rhs.address]?.formatted || 0)
+            case 'TVL':
+              return Number(lhs.TVL) - Number(rhs.TVL)
+            default:
+              return lhs[sorted] - rhs[sorted]
+          }
+        }),
+    [balances, deposits, filter, ordered, sorted, strategies]
   )
 
   const totalPages = useMemo(
@@ -360,7 +376,14 @@ export default function Strategies() {
             displayedStrategies
               .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
               .map((strategy, index) => (
-                <Strategy key={index} index={index} userAddress={address} strategy={strategy} />
+                <Strategy
+                  key={index}
+                  balance={balances[strategy.address]}
+                  deposit={deposits[strategy.address]}
+                  index={index}
+                  loading={{ balance: balancesLoading, deposit: depositsLoading }}
+                  strategy={strategy}
+                />
               ))
           ) : (
             <>

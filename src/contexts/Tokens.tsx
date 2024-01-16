@@ -57,7 +57,7 @@ export const TokensProvider = ({ children }: { children: ReactNode }) => {
   if (!contextItems) {
     return (
       <Container>
-        <Box center className='h-[100vh]'>
+        <Box center className='h-[70vh]'>
           <Spinner size='lg' />
         </Box>
       </Container>

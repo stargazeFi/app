@@ -1,16 +1,17 @@
 import { useStrategiesManager } from '@/hooks/useStrategiesManager'
-import { computeUserBalance } from '@/misc/maths'
+import { computeUserDeposit } from '@/misc'
+import { Balances, Deposits } from '@/types'
 import BigNumber from 'bignumber.js'
 import { useMemo } from 'react'
 import { useBalances as fetchBalances, useDeposits as fetchDeposits } from '@/hooks/api'
 import { uint256 } from 'starknet'
 
-export const useBalance = (address: string | undefined, asset: string) => {
+export const useBalance = (address: string | undefined, asset: string | undefined) => {
   const { data: balances, isLoading, refetch } = fetchBalances(address)
 
   return useMemo(() => {
     let data
-    if (balances && balances[asset]) {
+    if (balances && asset && balances[asset]) {
       const { balance, decimals } = balances[asset]
       data = {
         formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString(),
@@ -31,18 +32,15 @@ export const useBalances = (address: string | undefined) => {
 
   return useMemo(
     () => ({
-      data: Object.entries(balances || {}).reduce(
-        (acc, it) => {
-          const [asset, { balance, decimals }] = it
-          acc[asset] = {
-            decimals,
-            formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString()
-          }
+      data: Object.entries(balances || {}).reduce((acc, it) => {
+        const [asset, { balance, decimals }] = it
+        acc[asset] = {
+          decimals,
+          formatted: new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** decimals).toString()
+        }
 
-          return acc
-        },
-        {} as Record<string, { decimals: number; formatted: string }>
-      ),
+        return acc
+      }, {} as Balances),
       isLoading,
       refetch
     }),
@@ -60,9 +58,9 @@ export const useDeposit = (address: string | undefined, strategyAddress: string 
     if (balances && strategyAddress && strategy) {
       const balance = balances[strategyAddress]
       if (balance) {
-        const { reserves, TVL } = strategy
+        const { totalShares, TVL } = strategy
         const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
-        data = { decimals: 18, formatted, value: computeUserBalance(balance, reserves, TVL) }
+        data = { decimals: 18, formatted, value: computeUserDeposit(balance, totalShares, TVL) }
       }
     }
 
@@ -79,26 +77,23 @@ export const useDeposits = (address: string | undefined) => {
   const { strategies } = useStrategiesManager()
 
   return useMemo(() => {
-    const data = Object.entries(balances || {}).reduce(
-      (acc, it) => {
-        const strategy = strategies.find((strategy) => strategy.address === it[0])
-        if (balances && strategy) {
-          const balance = balances[strategy.address]
-          if (balance) {
-            const { reserves, TVL } = strategy
-            const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
-            acc[strategy.address] = {
-              decimals: 18,
-              formatted,
-              value: computeUserBalance(balance, reserves, TVL)
-            }
+    const data = Object.entries(balances || {}).reduce((acc, it) => {
+      const strategy = strategies.find((strategy) => strategy.address === it[0])
+      if (balances && strategy) {
+        const balance = balances[strategy.address]
+        if (balance) {
+          const { totalShares, TVL } = strategy
+          const formatted = new BigNumber(uint256.uint256ToBN(balance).toString()).dividedBy(10 ** 18).toString()
+          acc[strategy.address] = {
+            decimals: 18,
+            formatted,
+            value: computeUserDeposit(balance, totalShares, TVL)
           }
         }
+      }
 
-        return acc
-      },
-      {} as Record<string, { decimals: number; formatted: string; value: string }>
-    )
+      return acc
+    }, {} as Deposits)
 
     return {
       data,

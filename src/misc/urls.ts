@@ -7,7 +7,7 @@ export const explorerContractURL = (address: string | undefined, chain: Chain) =
 export const explorerTransactionURL = (address: string, chain: Chain) =>
   (chain.testnet ? 'https://testnet.starkscan.co/' : 'https://starkscan.co/') + 'tx/' + address
 
-export const poolLiquidityURL = (protocol: Protocol, address: string, tokens: string[], mode: 'deposit' | 'withdraw') =>
+export const poolLiquidityURL = (protocol: Protocol, address: string, tokens: string[], mode: 'deposit' | 'redeem') =>
   ({
     sithswap: `https://app.sithswap.com/${mode === 'deposit' ? 'add' : 'withdraw'}/${address}`,
     jediswap: `https://app.testnet.jediswap.xyz/#/${mode === 'deposit' ? 'add' : 'remove'}/${tokens[0]}/${tokens[1]}`,
