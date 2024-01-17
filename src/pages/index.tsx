@@ -106,8 +106,8 @@ const Strategy = ({
             <TVLComponent className='lg:hidden' />
           </Box>
           <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
-            {type === 'LP' ? (
-              <Box col className={`ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
+            {loading.balance || balance ? (
+              <Box col className={`is-first-child:ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
                 <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                   Wallet
                 </MainText>
@@ -115,16 +115,18 @@ const Strategy = ({
                   {loading.balance ? (
                     <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
                   ) : (
-                    <MainText gradient className='text-lg'>
-                      {balance ? formatToDecimal(balance.formatted, 8) : '0'}
-                    </MainText>
+                    balance && (
+                      <MainText gradient className='text-lg'>
+                        {formatToDecimal(balance.formatted, 8)}
+                      </MainText>
+                    )
                   )}
                 </Box>
               </Box>
             ) : (
-              <div className={`ml-6 hidden lg:flex ${FILTERS[0].flex}`} />
+              <div className={`${FILTERS[0].flex} hidden lg:flex`} />
             )}
-            <Box col className={`ml-6 items-start justify-end ${FILTERS[1].flex} lg:flex-row`}>
+            <Box col className={`is-first-child:ml-6 items-start justify-end lg:ml-6 ${FILTERS[1].flex} lg:flex-row`}>
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 Deposited
               </MainText>
@@ -134,7 +136,7 @@ const Strategy = ({
                 <MainText gradient>{formatCurrency(deposit?.value || 0)}</MainText>
               )}
             </Box>
-            <Box col className={`ml-6 ${type === 'LP' ? 'items-end' : ''} justify-end ${FILTERS[2].flex} lg:flex-row`}>
+            <Box col className={`ml-6 ${balance ? 'items-end' : ''} justify-end ${FILTERS[2].flex} lg:flex-row`}>
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 APY
               </MainText>
