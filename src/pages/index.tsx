@@ -1,13 +1,14 @@
 import { TokenIcon } from '@/components/TokenIcon'
 import { useAccount } from '@starknet-react/core'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import {
   Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Image,
   Input,
   Pagination,
   Skeleton,
@@ -20,7 +21,6 @@ import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc'
 import { useBalances, useDeposits, useStrategiesManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
 import { Balance, Deposit, Strategy } from '@/types'
-import Link from 'next/link'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL'
@@ -93,7 +93,7 @@ const Strategy = ({
                 </MainText>
                 <Box>
                   <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
-                    <Image src={`/assets/partners/${protocol}.svg`} width={80} height={20} />
+                    <Image alt={protocol} src={`/assets/partners/${protocol}.svg`} width={80} height={20} />
                   </Box>
                   <Box
                     center

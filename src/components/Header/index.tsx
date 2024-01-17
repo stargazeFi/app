@@ -2,7 +2,8 @@ import { useAppSelector } from '@/hooks'
 import { selectPendingTransactions } from '@/store/appSlice'
 import { useAccount, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
-import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
+import Image from 'next/image'
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
 import { AnalyticsOutlined, MonetizationOnOutlined } from '@mui/icons-material'
 import { Box, MainText } from '@/components/Layout'
 import WalletModal from '@/components/WalletModal'
@@ -31,7 +32,7 @@ export default function Header() {
       <Navbar position='static' isBlurred={false} maxWidth='xl' className='mb-10 bg-transparent'>
         <NavbarBrand>
           <Link href='https://stargaze.finance'>
-            <Image src='/assets/brand/logo.svg' width={40} height={40} alt='' />
+            <Image src='/assets/brand/logo.svg' width={40} height={40} alt='stargaze_logo' />
           </Link>
         </NavbarBrand>
         <NavbarContent justify='center' className='flex gap-10 xl:gap-20'>

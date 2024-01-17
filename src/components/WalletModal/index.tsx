@@ -1,6 +1,7 @@
 import { useTransactionManager } from '@/hooks'
 import { useEffect, useMemo, useState } from 'react'
-import { Image, Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
+import Image from 'next/image'
+import { Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from '@nextui-org/react'
 import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
 import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
