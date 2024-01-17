@@ -10,7 +10,6 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Input,
-  Pagination,
   Skeleton,
   Spinner
 } from '@nextui-org/react'
@@ -24,8 +23,6 @@ import { Balance, Deposit, Strategy } from '@/types'
 
 type Order = 'decreasing' | 'increasing'
 type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL'
-
-const RESULTS_PER_PAGE = 7
 
 const FILTERS: { sort: Sort; flex: string }[] = [
   { sort: 'wallet', flex: 'flex-[4]' },
@@ -158,7 +155,6 @@ const Strategy = ({
 }
 
 export default function Strategies() {
-  const [currentPage, setCurrentPage] = useState(1)
   const [filter, setFilter] = useState('')
   const [ordered, setOrdered] = useState<Order>('decreasing')
   const [sorted, setSorted] = useState<Sort>('deposited')
@@ -209,11 +205,6 @@ export default function Strategies() {
           }
         }),
     [balances, deposits, filter, ordered, sorted, strategies]
-  )
-
-  const totalPages = useMemo(
-    () => Math.ceil(displayedStrategies.length / RESULTS_PER_PAGE),
-    [displayedStrategies.length]
   )
 
   const isFetching = useMemo(() => !strategies.length && strategiesLoading, [strategies, strategiesLoading])
@@ -296,11 +287,9 @@ export default function Strategies() {
               }}
               onChange={(e) => {
                 setFilter(e.target.value)
-                setCurrentPage(1)
               }}
               onClear={() => {
                 setFilter('')
-                setCurrentPage(1)
               }}
             />
           </div>
@@ -373,18 +362,16 @@ export default function Strategies() {
           {isFetching ? (
             <Spinner size='lg' className='my-10' />
           ) : displayedStrategies.length ? (
-            displayedStrategies
-              .slice(RESULTS_PER_PAGE * (currentPage - 1), RESULTS_PER_PAGE * currentPage)
-              .map((strategy, index) => (
-                <Strategy
-                  key={index}
-                  balance={balances[strategy.address]}
-                  deposit={deposits[strategy.address]}
-                  index={index}
-                  loading={{ balance: balancesLoading, deposit: depositsLoading }}
-                  strategy={strategy}
-                />
-              ))
+            displayedStrategies.map((strategy, index) => (
+              <Strategy
+                key={index}
+                balance={balances[strategy.address]}
+                deposit={deposits[strategy.address]}
+                index={index}
+                loading={{ balance: balancesLoading, deposit: depositsLoading }}
+                strategy={strategy}
+              />
+            ))
           ) : (
             <>
               <MainText gradient heading className='text-2xl'>
@@ -399,25 +386,6 @@ export default function Strategies() {
           )}
         </Box>
       </DarkElement>
-
-      {totalPages !== 1 && (
-        <Box center className='mt-6 pr-6 lg:justify-end'>
-          <Pagination
-            page={currentPage}
-            onChange={setCurrentPage}
-            variant='bordered'
-            showControls
-            total={totalPages}
-            initialPage={1}
-            classNames={{
-              prev: `${currentPage === 1 ? 'child:text-transparent' : 'child:text-white'}`,
-              next: `${currentPage === totalPages ? 'child:text-transparent' : 'child:text-white'}`,
-              item: 'border border-gray-700 text-white !bg-transparent hover:border-gray-500',
-              cursor: 'bg-transparent border border-white'
-            }}
-          />
-        </Box>
-      )}
     </Container>
   )
 }
