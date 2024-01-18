@@ -1,8 +1,8 @@
 import { useDimensions } from '@/hooks/useDimensions'
 import { formatCurrency } from '@/misc'
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { VictoryAxis, VictoryChart, VictoryLine, VictoryTooltip, VictoryVoronoiContainer } from 'victory'
-import { ButtonGroup } from '@nextui-org/react'
+import { VictoryArea, VictoryAxis, VictoryChart, VictoryTooltip, VictoryVoronoiContainer } from 'victory'
+import { ButtonGroup, Spinner } from '@nextui-org/react'
 import { Box, DarkElement, MainButton, MainText } from '@/components/Layout'
 import { useAnalytics } from '@/hooks/api'
 import { theme } from '@/styles/charts'
@@ -15,10 +15,10 @@ interface AnalyticsProps {
 }
 
 export const Analytics = ({ strategy }: AnalyticsProps) => {
-  const { data: analytics } = useAnalytics(strategy.address)
+  const { data: analytics, isLoading } = useAnalytics(strategy.address)
 
-  const ref = useRef<HTMLHeadingElement>(null)
   const [metrics, setMetrics] = useState<Metric>('tvl')
+  const ref = useRef<HTMLHeadingElement>(null)
 
   const { height, width } = useDimensions(ref)
 
@@ -54,42 +54,49 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
         </ButtonGroup>
       </Box>
       <div className='gradient-border-b my-6 h-[1px] w-full' />
-      <Box ref={ref} className='h-[250px] w-full'>
-        <VictoryChart
-          containerComponent={
-            <VictoryVoronoiContainer
-              labels={({ datum }) => {
-                const date = new Date(Number(datum.x)).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true
-                })
-                const data = formatCurrency(datum.y)
+      <Box center ref={ref} className='h-[250px] w-full'>
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          <VictoryChart
+            animate={{ onLoad: { duration: 500 } }}
+            containerComponent={
+              <VictoryVoronoiContainer
+                labels={({ datum }) => {
+                  const date = new Date(Number(datum.x)).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                  })
+                  const data = formatCurrency(datum.y)
 
-                return `${date}\n${metrics === 'price' ? 'Price' : metrics.toUpperCase()}: ${data}`
-              }}
-              labelComponent={<VictoryTooltip dy={-5} constrainToVisibleArea />}
+                  return `${date}\n${metrics === 'price' ? 'Price' : metrics.toUpperCase()}: ${data}`
+                }}
+                labelComponent={<VictoryTooltip dy={-5} constrainToVisibleArea />}
+              />
+            }
+            height={height}
+            width={width}
+            padding={{ top: 10, bottom: 25, left: 70, right: 20 }}
+            theme={theme}
+          >
+            <VictoryAxis
+              animate={false}
+              tickFormat={(value, index) => (!((index + 2) % 4) ? getXAxisLabel(value) : null)}
+              tickValues={data.map(({ x }) => x)}
             />
-          }
-          height={height}
-          width={width}
-          padding={{ top: 10, bottom: 25, left: 50, right: 20 }}
-          theme={theme}
-        >
-          <VictoryAxis
-            tickFormat={(value, index) => (!((index + 2) % 4) ? getXAxisLabel(value) : null)}
-            tickValues={data.map(({ x }) => x)}
-          />
-          <VictoryAxis
-            dependentAxis
-            tickFormat={(value, index) => (!(index % 3) ? formatCurrency(value) : null)}
-            tickValues={data.map(({ y }) => y)}
-          />
-          <VictoryLine data={data} interpolation='monotoneX' />
-        </VictoryChart>
+            <VictoryAxis
+              animate={false}
+              dependentAxis
+              tickFormat={(value, index) => (!(index % 3) ? formatCurrency(value) : null)}
+              tickValues={data.map(({ y }) => y)}
+            />
+            <VictoryArea data={data} interpolation='monotoneX' />
+          </VictoryChart>
+        )}
       </Box>
     </DarkElement>
   )

@@ -19,7 +19,10 @@ export const theme: VictoryThemeDefinition = {
   area: {
     style: {
       data: {
-        fill: gray900
+        fill: 'rgb(31 41 55 / 0.8)',
+        opacity: 1,
+        stroke: gray900,
+        strokeWidth: 0.5
       },
       labels: baseLabelStyles
     }
@@ -67,7 +70,7 @@ export const theme: VictoryThemeDefinition = {
   voronoi: {
     style: {
       flyout: {
-        fill: 'rgb(31 41 55 / 0.8)',
+        fill: '#111',
         pointerEvents: 'none'
       }
     }
