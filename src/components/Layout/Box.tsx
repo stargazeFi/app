@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { ForwardedRef, forwardRef } from 'react'
 
 export type BoxProps = {
   center?: boolean
@@ -8,17 +8,23 @@ export type BoxProps = {
   spaced?: boolean
 }
 
-export const Box = ({ children, center, col, className = '', spaced }: BoxProps) => {
-  let style = 'flex'
-  if (col) {
-    style += ' flex-col'
-  }
+export const Box = forwardRef(
+  ({ children, center, col, className = '', spaced }: BoxProps, ref: ForwardedRef<HTMLDivElement | null>) => {
+    let style = 'flex'
+    if (col) {
+      style += ' flex-col'
+    }
 
-  if (center) {
-    style += ' items-center justify-center'
-  } else if (spaced) {
-    style += ' justify-between'
-  }
+    if (center) {
+      style += ' items-center justify-center'
+    } else if (spaced) {
+      style += ' justify-between'
+    }
 
-  return <div className={style + ' ' + className}>{children}</div>
-}
+    return (
+      <div ref={ref} className={style + ' ' + className}>
+        {children}
+      </div>
+    )
+  }
+)

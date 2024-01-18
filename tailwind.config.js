@@ -7,7 +7,7 @@ module.exports = {
     extend: {},
     fontFamily: {
       heading: ['Bebas Neue', 'sans-serif'],
-      body: ['Sapce Mono', 'monospace']
+      body: ['Space Mono', 'monospace']
     }
   },
   plugins: [

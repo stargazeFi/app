@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { PendingTransaction, Price, Strategy, TokenInfo } from '@/types'
+import { Analytics, PendingTransaction, Price, Strategy, TokenInfo } from '@/types'
 import { num, Uint256 } from 'starknet'
 
 export function useApiBaseUrl() {
@@ -63,6 +63,13 @@ const useDataApi = <TQueryFnData = unknown>({
     refetchOnMount: 'always',
     staleTime,
     enabled: Boolean(baseUrl && path)
+  })
+}
+
+export const useAnalytics = (address: string | undefined) => {
+  return useDataApi<Analytics>({
+    path: `/analytics?address=${num.toStorageKey(address || 0n)}`,
+    staleTime: 1000
   })
 }
 

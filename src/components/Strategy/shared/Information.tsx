@@ -1,4 +1,5 @@
 import { Box, DarkElement, GrayElement, MainText, SecondaryText } from '@/components/Layout'
+import { Analytics } from '@/components/Strategy'
 import { TokenIcon } from '@/components/TokenIcon'
 import { TokenContext } from '@/contexts'
 import { usePrices } from '@/hooks/api'
@@ -49,17 +50,7 @@ export const Information = ({ strategy }: InformationProps) => {
         </Box>
       </DarkElement>
 
-      <DarkElement col className='mt-2 h-fit'>
-        <Box spaced className='w-full'>
-          <MainText heading className='pt-1 text-2xl'>
-            Historical Rate
-          </MainText>
-        </Box>
-        <div className='gradient-border-b my-6 h-[1px] w-full' />
-        <Box center className='h-[100px] justify-start'>
-          <SecondaryText>Coming soon</SecondaryText>
-        </Box>
-      </DarkElement>
+      <Analytics strategy={strategy} />
 
       <DarkElement col className='mt-2 h-fit'>
         <Box spaced className='w-full'>

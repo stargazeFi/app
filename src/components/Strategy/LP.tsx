@@ -80,7 +80,7 @@ export const LP = ({ strategy }: StrategyProps) => {
   return (
     <Container>
       <Header strategy={strategy} deposited={deposited} depositLoading={depositLoading} />
-      <Box className='mt-2 flex-col-reverse md:flex-row'>
+      <Box className='mt-2 flex-col-reverse lg:flex-row'>
         <Information strategy={strategy} />
         <DarkElement col spaced className='mb-2 h-fit flex-[2] md:mb-0 md:ml-2'>
           <Box className='-mx-6 -mt-6'>

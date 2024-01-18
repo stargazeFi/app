@@ -3,11 +3,17 @@ import { Uint256 } from 'starknet'
 export type Protocol = 'sithswap' | 'ekubo' | 'jediswap'
 export type StrategyType = 'LP' | 'Range'
 
-export type PendingTransaction = {
+export interface Analytics {
+  address: string
+  price: Record<number, string>
+  tvl: Record<number, string>
+}
+
+export interface PendingTransaction {
   hash: string | null
 }
 
-export type Price = {
+export interface Price {
   address: string
   lastUpdated: number
   price: number
@@ -23,7 +29,7 @@ interface EkuboPosition {
   }
 }
 
-export type Strategy = {
+export interface Strategy {
   address: string
   asset?: string
   assetDecimals?: number
@@ -45,7 +51,7 @@ export type Strategy = {
   TVL: string
 }
 
-export type TokenInfo = {
+export interface TokenInfo {
   decimals: number
   l2_token_address: string
   name: string
