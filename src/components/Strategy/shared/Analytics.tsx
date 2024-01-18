@@ -43,11 +43,15 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
           Historical Rate
         </MainText>
         <ButtonGroup>
-          <MainButton onClick={() => setMetrics('tvl')} className={`${metrics === 'tvl' && 'bg-gray-700'}`}>
+          <MainButton onClick={() => setMetrics('tvl')} size='sm' className={`${metrics === 'tvl' && 'bg-gray-700'}`}>
             TVL
           </MainButton>
           {strategy.type === 'LP' && (
-            <MainButton onClick={() => setMetrics('price')} className={`${metrics === 'price' && 'bg-gray-700'}`}>
+            <MainButton
+              onClick={() => setMetrics('price')}
+              size='sm'
+              className={`${metrics === 'price' && 'bg-gray-700'}`}
+            >
               Price
             </MainButton>
           )}
