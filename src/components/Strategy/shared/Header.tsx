@@ -75,7 +75,7 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
               APY
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(strategy.APY)}
+              {formatPercentage(0)}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
@@ -83,7 +83,7 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
               Daily
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(strategy.daily)}
+              {formatPercentage(0)}
             </MainText>
           </Box>
         </DarkElement>

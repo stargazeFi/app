@@ -34,7 +34,6 @@ export interface Strategy {
   asset?: string
   assetDecimals?: number
   cursorUpdate: bigint
-  daily: number
   depositFee: number
   description: string
   lastUpdated: bigint
@@ -47,7 +46,6 @@ export interface Strategy {
   totalShares: Uint256
   type: StrategyType
   withdrawalFee: number
-  APY: number
   TVL: string
 }
 
