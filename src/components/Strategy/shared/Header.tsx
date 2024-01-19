@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { format } from 'timeago.js'
 import { Box, DarkElement, MainText, Tooltip } from '@/components/Layout'
 import { TokenIcon } from '@/components/TokenIcon'
-import { formatCurrency, formatPercentage } from '@/misc'
+import { formatCurrency } from '@/misc'
 import { Deposit, Strategy } from '@/types'
 import { ArrowBack, HelpOutline } from '@mui/icons-material'
 import { Skeleton } from '@nextui-org/react'
@@ -75,7 +75,7 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
               APY
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(0)}
+              {strategy.APY}
             </MainText>
           </Box>
           <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
@@ -83,7 +83,7 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
               Daily
             </MainText>
             <MainText gradient className='text-lg'>
-              {formatPercentage(0)}
+              {strategy.dailyAPY}
             </MainText>
           </Box>
         </DarkElement>

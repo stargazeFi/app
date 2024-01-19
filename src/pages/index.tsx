@@ -37,7 +37,7 @@ const Strategy = ({
   deposit,
   index,
   loading,
-  strategy: { name, protocol, type, tokens, address, TVL, protocolTVL }
+  strategy: { name, protocol, type, tokens, address, TVL, protocolTVL, APY, dailyAPY }
 }: {
   balance: Balance
   deposit: Deposit
@@ -140,13 +140,13 @@ const Strategy = ({
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 APY
               </MainText>
-              <MainText gradient>{formatPercentage(0)}</MainText>
+              <MainText gradient>{APY}</MainText>
             </Box>
             <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
               <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
                 Daily
               </MainText>
-              <MainText gradient>{formatPercentage(0)}</MainText>
+              <MainText gradient>{dailyAPY}</MainText>
             </Box>
             <TVLComponent className='hidden lg:flex' />
           </Box>
@@ -202,8 +202,10 @@ export default function Strategies() {
               return Number(balances[lhs.address]?.formatted || 0) - Number(balances[rhs.address]?.formatted || 0)
             case 'TVL':
               return Number(lhs.TVL) - Number(rhs.TVL)
+            case 'daily':
+              return Number(lhs.dailyAPY.slice(0, -1)) - Number(rhs.dailyAPY.slice(0, -1))
             default:
-              return 0
+              return Number(lhs.APY.slice(0, -1)) - Number(rhs.APY.slice(0, -1))
           }
         }),
     [balances, deposits, filter, ordered, sorted, strategies]

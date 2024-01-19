@@ -46,6 +46,8 @@ export interface Strategy {
   totalShares: Uint256
   type: StrategyType
   withdrawalFee: number
+  APY: string
+  dailyAPY: string
   TVL: string
 }
 
