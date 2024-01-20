@@ -1,6 +1,6 @@
 import { Box, DarkElement, GrayElement, MainText, SecondaryText } from '@/components/Layout'
 import { Analytics } from '@/components/Strategy'
-import { TokenIcon } from '@/components/TokenIcon'
+import { Icon } from 'src/components/Tokens'
 import { TokenContext } from '@/contexts'
 import { usePrices } from '@/hooks/api'
 import { explorerContractURL, formatTokenPrice, getTokenDescription, getTokenName } from '@/misc'
@@ -67,7 +67,7 @@ export const Information = ({ strategy }: InformationProps) => {
               <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
                 <Box spaced className='w-full'>
                   <Box center>
-                    <TokenIcon address={address} size={30} className='z-20' />
+                    <Icon address={address} size={30} className='z-20' />
                     <MainText className='mx-4'>{getTokenName(address, tokensList)}</MainText>
                     {price && (
                       <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>

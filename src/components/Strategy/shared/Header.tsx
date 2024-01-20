@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { format } from 'timeago.js'
 import { Box, DarkElement, MainText, Tooltip } from '@/components/Layout'
-import { TokenIcon } from '@/components/TokenIcon'
+import { Icon } from 'src/components/Tokens'
 import { formatCurrency } from '@/misc'
 import { Deposit, Strategy } from '@/types'
 import { ArrowBack, HelpOutline } from '@mui/icons-material'
@@ -28,10 +28,10 @@ export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => 
             </button>
           </Box>
           <Box center>
-            <Box center className='w-[64px]'>
-              <TokenIcon address={strategy.tokens[0]} size={40} />
+            <Box center className='w-[80px]'>
+              <Icon address={strategy.tokens[0]} size={40} />
               <Box className='z-20 -ml-3'>
-                <TokenIcon address={strategy.tokens[1]} size={40} />
+                <Icon address={strategy.tokens[1]} size={40} />
               </Box>
             </Box>
             <MainText heading className='ml-2 pt-1 text-4xl'>

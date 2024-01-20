@@ -1,7 +1,7 @@
 import { useMemo, Dispatch, SetStateAction } from 'react'
 import { Button, Input, Skeleton } from '@nextui-org/react'
 import { Box, MainText } from '@/components/Layout'
-import { TokenIcon } from '@/components/TokenIcon'
+import { Icon } from 'src/components/Tokens'
 import { formatToDecimal } from '@/misc'
 import { Amounts, Balance, Strategy } from '@/types'
 
@@ -46,10 +46,10 @@ export const AmountInputField = ({
       <Box spaced className='mt-2'>
         {mode === 'deposit' && (
           <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-            <TokenIcon address={strategy.tokens[type === 'base' ? 0 : 1]} size={28} />
+            <Icon address={strategy.tokens[type === 'base' ? 0 : 1]} size={28} />
             {strategy.type === 'LP' && (
               <Box className='z-20 -ml-2'>
-                <TokenIcon address={strategy.tokens[1]} size={28} />
+                <Icon address={strategy.tokens[1]} size={28} />
               </Box>
             )}
           </Box>

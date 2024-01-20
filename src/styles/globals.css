@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'VCR';
+  src: url('/fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -15,7 +20,7 @@ html {
 body {
   font-family: 'Ubuntu', sans-serif;
   min-height: 100vh;
-  background-image: url('/assets/general/bg-space.jpg'), linear-gradient(to bottom, #000000a0, #000000f0);
+  background-image: url('/assets/general/bg-space.webp'), linear-gradient(to right, #396268, #396268), linear-gradient(to right, #070000e0, #070000e0);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -39,7 +44,7 @@ body {
   width: 100%;
   border-width: 1px;
   border-style: solid;
-  border-image: linear-gradient(to bottom, #66666620, #666666a0, #66666620) 0 1;
+  border-image: linear-gradient(to bottom, #66666600, #666666a0, #66666600) 0 1;
 }
 
 .gradient-dark-element:after {
@@ -51,23 +56,23 @@ body {
   width: 100%;
   border-width: 1px;
   border-style: solid;
-  border-image: linear-gradient(to right, #66666620, #666666a0, #66666620) 1 0;
+  border-image: linear-gradient(to right, #66666600, #666666a0, #66666600) 1 0;
 }
 
 .gradient-border-h {
   border-width: 2px;
   border-style: solid;
-  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 1 0;
+  border-image: linear-gradient(to right, #FF634700, #FF6347, #FF7F00, #FFD700, #FFD70000) 1 0;
 }
 
 .gradient-border-b {
   border-width: 2px;
   border-style: solid;
-  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 0 0 1;
+  border-image: linear-gradient(to right, #FF634700, #FF6347, #FF7F00, #FFD700, #FFD70000) 0 0 1;
 }
 
 .gradient-border-t {
   border-width: 2px;
   border-style: solid;
-  border-image: linear-gradient(to right, #2b46f000, #2b46f0, #00aaff, #87cbf0, #87cbf000) 1 0 0;
+  border-image: linear-gradient(to right, #FF634700, #FF6347, #FF7F00, #FFD700, #FFD70000) 1 0 0;
 }

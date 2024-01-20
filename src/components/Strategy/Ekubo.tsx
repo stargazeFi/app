@@ -90,7 +90,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, base, quote, strategy])
+  }, [address, amounts, base, quote, mode, strategy])
 
   const redeemCalls = useMemo(() => {
     if (mode === 'redeem' && address) {
@@ -108,7 +108,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, deposited, strategy])
+  }, [address, amounts, deposited, mode, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })

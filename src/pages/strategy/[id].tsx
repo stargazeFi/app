@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/router'
-import ErrorPage from '@/components/ErrorPage'
+import { ErrorPage } from '@/components/ErrorPage'
 import { Ekubo, LP } from '@/components/Strategy'
 import { useStrategiesManager } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
@@ -21,7 +21,7 @@ export default function Strategy() {
   }
 
   if (!strategy) {
-    return <ErrorPage errMessage='Invalid strategy.' />
+    return <ErrorPage errMessage='Strategy not found.' />
   }
 
   switch (strategy.type) {

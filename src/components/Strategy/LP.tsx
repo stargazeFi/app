@@ -54,7 +54,7 @@ export const LP = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amount, strategy])
+  }, [address, amount, mode, strategy])
 
   const redeemCalls = useMemo(() => {
     if (mode === 'redeem' && address) {
@@ -70,7 +70,7 @@ export const LP = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amount, strategy])
+  }, [address, amount, mode, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })

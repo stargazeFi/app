@@ -2,9 +2,7 @@ import { useAppSelector } from '@/hooks'
 import { selectPendingTransactions } from '@/store/appSlice'
 import { useAccount, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
-import { AnalyticsOutlined, MonetizationOnOutlined } from '@mui/icons-material'
+import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
 import { Box, MainText } from '@/components/Layout'
 import WalletModal from '@/components/WalletModal'
 import { useRouter } from 'next/router'
@@ -17,9 +15,8 @@ export default function Header() {
   const pendingTransactions = useAppSelector(selectPendingTransactions)
 
   const routes = [
-    { url: '/', name: 'Strategies', icon: <MonetizationOnOutlined className='text-gray-200' /> },
-    { url: '/analytics', name: 'Analytics', icon: <AnalyticsOutlined className='text-gray-200' /> }
-    // { url: '/dashboard', name: 'Dashboard' }
+    { url: '/', name: 'STRATEGIES' },
+    { url: '/portfolio', name: 'PORTFOLIO' }
   ]
 
   return (
@@ -29,36 +26,37 @@ export default function Header() {
           <MainText>Stargaze is currently in alpha, please switch network to Goerli</MainText>
         </Box>
       )}
-      <Navbar position='static' isBlurred={false} maxWidth='xl' className='mb-10 bg-transparent'>
+      <Navbar className='gradient-dark-element !sticky z-50 mb-10 rounded-xl bg-main/20' maxWidth='full'>
         <NavbarBrand>
           <Link href='https://stargaze.finance'>
-            <Image src='/assets/brand/logo.svg' width={40} height={40} alt='stargaze_logo' />
+            <Image src='/assets/brand/logo.svg' width={40} height={40} alt='' />
           </Link>
         </NavbarBrand>
         <NavbarContent justify='center' className='flex gap-10 xl:gap-20'>
-          {routes.map(({ url, name, icon }, index) => (
-            <NavbarItem key={index} className={pathname !== url ? 'cursor-pointer' : ''} isActive={pathname === url}>
-              <Link href={pathname === url ? '' : url}>
-                <Box center>
-                  {icon}
-                  <MainText gradient className='ml-2'>
+          {routes.map(({ url, name }, index) => {
+            const isActive = pathname === url
+
+            return (
+              <NavbarItem key={index} className={!isActive ? 'cursor-pointer' : ''} isActive={isActive}>
+                <Link href={isActive ? '' : url}>
+                  <MainText heading gradient withHover={!isActive} className={isActive ? 'text-white' : ''}>
                     {name}
                   </MainText>
-                </Box>
-              </Link>
-            </NavbarItem>
-          ))}
+                </Link>
+              </NavbarItem>
+            )
+          })}
         </NavbarContent>
         <NavbarContent justify='end'>
           {!!pendingTransactions.length && (
             <Box center className='relative rounded-3xl border border-gray-500 bg-black/60 p-0.5'>
               <MainText className='absolute'>{pendingTransactions.length}</MainText>
-              <Spinner />
+              <Spinner color='warning' />
             </Box>
           )}
           <WalletModal />
           <Box center className='rounded-md bg-red-900 px-3 py-1.5'>
-            <MainText className='text-xs'>Alpha v0.4.0</MainText>
+            <MainText className='text-xs'>Alpha v0.3.0</MainText>
           </Box>
         </NavbarContent>
       </Navbar>

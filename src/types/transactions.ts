@@ -1,6 +1,6 @@
 export enum TransactionType {
-  StrategyDeposit = 'Deposit in strategy',
-  StrategyRedeem = 'Redeem from strategy'
+  StrategyDeposit = 'DEPOSIT IN STRATEGY',
+  StrategyRedeem = 'REDEEM FROM STRATEGY'
 }
 
 export interface StrategyDeposit {
