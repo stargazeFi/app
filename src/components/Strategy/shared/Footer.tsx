@@ -1,4 +1,4 @@
-import { Box, GrayElement, MainText, SecondaryText, Tooltip } from '@/components/Layout'
+import { Box, DarkElement, MainText, SecondaryText, Tooltip } from '@/components/Layout'
 import { DOCS_FEES_URL, formatPercentage } from '@/misc'
 import { Strategy } from '@/types'
 import { HelpOutline } from '@mui/icons-material'
@@ -10,40 +10,46 @@ interface FooterProps {
 
 export const Footer = ({ strategy }: FooterProps) => {
   return (
-    <GrayElement col className='mt-6'>
+    <DarkElement col className='mt-6'>
       <Box spaced>
         <Box center>
           <MainText className='text-lg text-gray-300' heading>
-            Deposit Fee
+            DEPOSIT FEE
           </MainText>
-          <Box className='ml-2 pb-1 text-small'>
+          <Box className='ml-2 text-small'>
             <Tooltip content='Charged by the underlying protocol, not Stargaze'>
               <HelpOutline fontSize='inherit' className='text-gray-300' />
             </Tooltip>
           </Box>
         </Box>
-        <MainText className='text-sm'>{formatPercentage(strategy.depositFee)}</MainText>
+        <MainText heading className='text-sm'>
+          {formatPercentage(strategy.depositFee)}
+        </MainText>
       </Box>
       <Box spaced>
         <Box center>
           <MainText className='text-lg text-gray-300' heading>
-            Withdrawal Fee
+            WITHDRAWAL FEE
           </MainText>
-          <Box className='ml-2 pb-1 text-small'>
+          <Box className='ml-2 text-small'>
             <Tooltip content='Charged by the underlying protocol, not Stargaze'>
               <HelpOutline fontSize='inherit' className='text-gray-300' />
             </Tooltip>
           </Box>
         </Box>
-        <MainText className='text-sm'>{formatPercentage(strategy.withdrawalFee)}</MainText>
+        <MainText heading className='text-sm'>
+          {formatPercentage(strategy.withdrawalFee)}
+        </MainText>
       </Box>
       <Box spaced className='mt-4'>
         <Box center>
           <MainText className='text-lg text-gray-300' heading>
-            Performance Fee
+            PERFORMANCE FEE
           </MainText>
         </Box>
-        <MainText className='text-sm'>{formatPercentage(strategy.performanceFee)}</MainText>
+        <MainText heading className='text-sm'>
+          {formatPercentage(strategy.performanceFee)}
+        </MainText>
       </Box>
       <SecondaryText>
         Stargaze Finance charges a performance fee on withdrawal. To learn more about the performance fee, you can refer
@@ -53,6 +59,6 @@ export const Footer = ({ strategy }: FooterProps) => {
         </Link>
         .
       </SecondaryText>
-    </GrayElement>
+    </DarkElement>
   )
 }

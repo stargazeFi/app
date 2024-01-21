@@ -1,10 +1,10 @@
-import { ReactNode, createContext, useMemo } from 'react'
+import { ReactNode, createContext, useMemo, useCallback } from 'react'
 import { Spinner } from '@nextui-org/react'
 import { Box, Container } from '@/components/Layout'
 import { useTokens, usePrices } from '@/hooks/api'
 import { TokenInfo } from '@/types'
 
-const DESCRIPTIONS: { [_: string]: string } = {
+const DESCRIPTIONS: Record<string, string> = {
   '0x012d537dc323c439dc65c976fad242d5610d27cfb5f31689a0a319b8be7f3d56':
     'Wrapped Bitcoin (WBTC) is the first ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.',
   '0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac':
@@ -33,28 +33,68 @@ const DESCRIPTIONS: { [_: string]: string } = {
     'sfrxETH is a ERC-4626 vault designed to accrue the staking yield of the Frax ETH validators. At any time, frxETH can be exchanged for sfrxETH by depositing it into the sfrxETH vault, which allows users to earn staking yield on their frxETH. Over time, as validators accrue staking yield, an equivalent amount of frxETH is minted and added to the vault, allowing users to redeem their sfrxETH for an greater amount of frxETH than they deposited.'
 }
 
-export type TokenContextItem = TokenInfo & {
+export type TokenContextInfo = TokenInfo & {
   description: string
   price: number
 }
 
-export const TokenContext = createContext<TokenContextItem[]>([])
+type TokenContextState = {
+  colors: (item: string) => { background: string; border: string }
+  getTokenDescription: (address: string) => string | undefined
+  getTokenName: (address: string) => string | undefined
+  getTokenSymbol: (address: string) => string | undefined
+  tokens: Array<TokenContextInfo>
+}
+
+export const TokenContext = createContext<TokenContextState>({
+  colors: () => ({ background: '', border: '' }),
+  getTokenDescription: () => '',
+  getTokenName: () => '',
+  getTokenSymbol: () => '',
+  tokens: []
+})
 
 export const TokensProvider = ({ children }: { children: ReactNode }) => {
-  const { data: tokens } = useTokens()
+  const { data } = useTokens()
   const { data: prices } = usePrices()
 
-  const contextItems: TokenContextItem[] | undefined = useMemo(
+  const tokens: TokenContextInfo[] = useMemo(
     () =>
-      tokens?.map((token) => ({
+      data?.map((token) => ({
         ...token,
         description: DESCRIPTIONS[token.l2_token_address],
         price: (prices?.find(({ ticker }) => ticker === token.symbol) || { price: 0 }).price
-      })),
-    [prices, tokens]
+      })) || [],
+    [data, prices]
   )
 
-  if (!contextItems) {
+  const colors = useCallback((item: string) => {
+    switch (item) {
+      case 'USDC':
+        return { background: 'bg-usdc/10', border: 'border-usdc' }
+      case 'WBTC':
+        return { background: 'bg-wbtc/10', border: 'border-wbtc' }
+      default:
+        return { background: 'bg-eth/10', border: 'border-eth' }
+    }
+  }, [])
+
+  const getTokenDescription = useCallback(
+    (address: string) => tokens.find(({ l2_token_address }) => l2_token_address === address)?.description,
+    [tokens]
+  )
+
+  const getTokenName = useCallback(
+    (address: string) => tokens.find(({ l2_token_address }) => l2_token_address === address)?.name,
+    [tokens]
+  )
+
+  const getTokenSymbol = useCallback(
+    (address: string) => tokens.find(({ l2_token_address }) => l2_token_address === address)?.symbol,
+    [tokens]
+  )
+
+  if (!tokens) {
     return (
       <Container>
         <Box center className='h-[70vh]'>
@@ -64,5 +104,17 @@ export const TokensProvider = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  return <TokenContext.Provider value={contextItems}>{children}</TokenContext.Provider>
+  return (
+    <TokenContext.Provider
+      value={{
+        colors,
+        getTokenDescription,
+        getTokenName,
+        getTokenSymbol,
+        tokens
+      }}
+    >
+      {children}
+    </TokenContext.Provider>
+  )
 }

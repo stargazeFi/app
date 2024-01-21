@@ -1,14 +1,13 @@
 import { useDimensions } from '@/hooks/useDimensions'
-import { formatCurrency } from '@/misc'
+import { formatCurrency, formatEpochToShortDate } from '@/misc'
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { VictoryArea, VictoryAxis, VictoryChart, VictoryTooltip, VictoryVoronoiContainer } from 'victory'
+import { Area, ComposedChart, CartesianGrid, Tooltip, XAxis, YAxis, Line } from 'recharts'
 import { ButtonGroup, Spinner } from '@nextui-org/react'
-import { Box, DarkElement, MainButton, MainText } from '@/components/Layout'
+import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
 import { useAnalytics } from '@/hooks/api'
-import { theme } from '@/styles/charts'
 import { Strategy } from '@/types'
 
-type Metric = 'price' | 'tvl'
+type Timeframe = 'hourly' | 'daily'
 
 interface AnalyticsProps {
   strategy: Strategy
@@ -17,91 +16,173 @@ interface AnalyticsProps {
 export const Analytics = ({ strategy }: AnalyticsProps) => {
   const { data: analytics, isLoading } = useAnalytics(strategy.address)
 
-  const [metrics, setMetrics] = useState<Metric>('tvl')
+  const [timeframe, setTimeframe] = useState<Timeframe>('hourly')
   const ref = useRef<HTMLHeadingElement>(null)
 
   const { height, width } = useDimensions(ref)
 
-  const getXAxisLabel = useCallback((timestamp: string) => {
-    const date = new Date(Number(timestamp))
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    })
-  }, [])
+  const getXAxisLabel = useCallback(
+    (timestamp: string) => {
+      const date = new Date(Number(timestamp))
+      return timeframe === 'hourly'
+        ? date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          })
+        : date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            hour12: true
+          })
+    },
+    [timeframe]
+  )
 
   const data = useMemo(() => {
-    const elements = analytics?.[metrics] || []
-    return Object.entries(elements).map(([timestamp, price]) => ({ x: timestamp, y: price }))
-  }, [analytics, metrics])
+    const dataSet = !analytics
+      ? []
+      : Object.entries(analytics.tvl).reduce(
+          (data, it) => {
+            const [timestamp, tvl] = it as unknown as [number, string]
+            data.push({ timestamp, tvl: Number(tvl) })
+            if (strategy.type === 'LP') {
+              data[data.length - 1].price = Number(analytics.price[timestamp])
+            }
+
+            return data
+          },
+          [] as Array<{ timestamp: number; price?: number; tvl: number }>
+        )
+
+    if (timeframe === 'hourly') {
+      return dataSet.slice(Math.max(0, dataSet.length - 25), dataSet.length)
+    } else {
+      return dataSet.filter((_, index) => {
+        return !((index - (dataSet.length % 12)) % 12)
+      })
+    }
+  }, [analytics, strategy, timeframe])
+
+  const domain = useCallback((values: Array<number>) => {
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const range = maxValue - minValue
+    const scale = Math.pow(10, Math.floor(Math.log10(range)) - 1) || 1
+    const roundedMinValue = Math.floor(minValue / scale) * scale
+    return [roundedMinValue.toString(), 'auto']
+  }, [])
 
   return (
-    <DarkElement col className='mt-2 h-fit'>
+    <GrayElement col className='mt-4 h-fit p-6'>
       <Box spaced className='w-full'>
         <MainText heading className='pt-1 text-2xl'>
-          Historical Rate
+          HISTORICAL RATE
         </MainText>
         <ButtonGroup>
-          <MainButton onClick={() => setMetrics('tvl')} size='sm' className={`${metrics === 'tvl' && 'bg-gray-700'}`}>
-            TVL
+          <MainButton
+            onClick={() => setTimeframe('daily')}
+            size='sm'
+            className={`${timeframe === 'daily' && 'bg-gray-700'}`}
+          >
+            <MainText heading>DAILY</MainText>
           </MainButton>
-          {strategy.type === 'LP' && (
-            <MainButton
-              onClick={() => setMetrics('price')}
-              size='sm'
-              className={`${metrics === 'price' && 'bg-gray-700'}`}
-            >
-              Price
-            </MainButton>
-          )}
+          <MainButton
+            onClick={() => setTimeframe('hourly')}
+            size='sm'
+            className={`${timeframe === 'hourly' && 'bg-gray-700'}`}
+          >
+            <MainText heading>HOURLY</MainText>
+          </MainButton>
         </ButtonGroup>
       </Box>
-      <div className='gradient-border-b my-6 h-[1px] w-full' />
+      <div className={`gradient-${strategy.type.toLowerCase()}-b my-6 h-[1px] w-full`} />
       <Box center ref={ref} className='h-[250px] w-full'>
         {isLoading ? (
           <Spinner />
         ) : (
-          <VictoryChart
-            animate={{ onLoad: { duration: 500 } }}
-            containerComponent={
-              <VictoryVoronoiContainer
-                labels={({ datum }) => {
-                  const date = new Date(Number(datum.x)).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true
-                  })
-                  const data = formatCurrency(datum.y)
-
-                  return `${date}\n${metrics === 'price' ? 'Price' : metrics.toUpperCase()}: ${data}`
-                }}
-                labelComponent={<VictoryTooltip dy={-5} constrainToVisibleArea />}
-              />
-            }
-            height={height}
+          <ComposedChart
             width={width}
-            padding={{ top: 10, bottom: 25, left: 70, right: 20 }}
-            theme={theme}
+            height={height}
+            data={data}
+            margin={{
+              top: 10,
+              right: 30,
+              left: 30,
+              bottom: 0
+            }}
           >
-            <VictoryAxis
-              animate={false}
-              tickFormat={(value, index) => (!((index + 2) % 4) ? getXAxisLabel(value) : null)}
-              tickValues={data.map(({ x }) => x)}
+            <CartesianGrid stroke='#404040' strokeDasharray='3 3' />
+
+            <XAxis
+              dataKey='timestamp'
+              interval={0}
+              tick={({ x, y, payload }) => {
+                const className =
+                  (timeframe === 'hourly' && (payload.index + 2) % 4) ||
+                  (timeframe === 'daily' && (!payload.index || payload.index === data.length - 1))
+                    ? 'hidden'
+                    : ''
+
+                return (
+                  <text x={x} y={y} dy={20} fontFamily='VCR' textAnchor='middle' fill='#ddd' className={className}>
+                    {getXAxisLabel(payload.value)}
+                  </text>
+                )
+              }}
             />
-            <VictoryAxis
-              animate={false}
-              dependentAxis
-              tickFormat={(value, index) => (!(index % 3) ? formatCurrency(value) : null)}
-              tickValues={data.map(({ y }) => y)}
+
+            <YAxis
+              yAxisId='tvl'
+              dataKey='tvl'
+              domain={domain(data.map(({ tvl }) => tvl))}
+              interval={0}
+              stroke='#707070'
+              strokeDasharray='0'
+              tick={({ x, y, payload }) => {
+                return (
+                  <text x={x} y={y} dx={-40} dy={5} fontFamily='VCR' textAnchor='middle' fill='#777'>
+                    {formatCurrency(payload.value)}
+                  </text>
+                )
+              }}
             />
-            <VictoryArea data={data} interpolation='monotoneX' />
-          </VictoryChart>
+            <Area yAxisId='tvl' type='monotone' dataKey='tvl' stroke='#777' fill='#555' />
+
+            {strategy.type === 'LP' && (
+              <>
+                <YAxis yAxisId='price' dataKey='price' hide domain={domain(data.map(({ price }) => price!))} />
+                <Line yAxisId='price' dot={false} type='monotone' dataKey='price' stroke='#60a5fa' />
+              </>
+            )}
+
+            <Tooltip
+              content={(props) => {
+                const [tvl, price] = props.payload as Array<any>
+
+                return (
+                  <GrayElement col className='items-start rounded-xl border-1 border-gray-500 p-3'>
+                    {tvl && (
+                      <>
+                        <MainText>{formatEpochToShortDate(tvl.payload.timestamp)}</MainText>
+                        <MainText gradient heading className='text-amber-50'>
+                          TVL: {formatCurrency(tvl.payload.tvl)}
+                        </MainText>
+                        {price && (
+                          <MainText heading className='text-blue-400'>
+                            Price: {formatCurrency(price.payload.price)}
+                          </MainText>
+                        )}
+                      </>
+                    )}
+                  </GrayElement>
+                )
+              }}
+            />
+          </ComposedChart>
         )}
       </Box>
-    </DarkElement>
+    </GrayElement>
   )
 }

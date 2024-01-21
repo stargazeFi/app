@@ -4,9 +4,30 @@ import { nextui } from '@nextui-org/react'
 module.exports = {
   content: ['./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      dropShadow: {
+        lp: '0 0 20px rgb(38, 63, 169)',
+        range: '0 0 20px rgb(80, 56, 126)'
+      },
+      colors: {
+        white: '#ddd',
+        main: '#393939',
+        palette1: '#394546',
+        palette2: '#2d5055',
+        palette3: '#416a71',
+        palette4: '#5E9FFF',
+        // protocols
+        ekubo: '#4c1d95',
+        jediswap: '#3767ba',
+        sithswap: '#b24517',
+        // tokens
+        eth: '#687de3',
+        usdc: '#4b72be',
+        wbtc: '#d7985d'
+      }
+    },
     fontFamily: {
-      heading: ['Bebas Neue', 'sans-serif'],
+      heading: ['VCR', 'sans-serif'],
       body: ['Space Mono', 'monospace']
     }
   },

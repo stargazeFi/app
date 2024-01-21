@@ -1,395 +1,333 @@
-import { TokenIcon } from '@/components/TokenIcon'
-import { useAccount } from '@starknet-react/core'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
+import React, { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  Button,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Skeleton,
-  Spinner
-} from '@nextui-org/react'
-import { Close, HelpOutline, KeyboardArrowDown, KeyboardArrowUp, SwapVert } from '@mui/icons-material'
-import ErrorPage from '@/components/ErrorPage'
-import { Box, Container, DarkElement, MainText, Tooltip } from '@/components/Layout'
-import { formatPercentage, formatCurrency, formatToDecimal } from '@/misc'
-import { useBalances, useDeposits, useStrategiesManager } from '@/hooks'
-import { useStrategies } from '@/hooks/api'
-import { Balance, Deposit, Strategy } from '@/types'
+import { AppLoader } from '@/components/AppLoader'
+import { ErrorPage } from '@/components/ErrorPage'
+import { AssetFilter, ProtocolFilter, StrategyCard, StrategyFilter } from '@/components/Strategies'
+import { useBalances, useDeposits } from '@/hooks'
+import { useStrategies, useTokens } from '@/hooks/api'
+import { useAccount } from '@starknet-react/core'
+import { KeyboardArrowDown } from '@mui/icons-material'
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger } from '@nextui-org/react'
+import { Box, Container, MainButton, MainText } from '@/components/Layout'
 
-type Order = 'decreasing' | 'increasing'
-type Sort = 'wallet' | 'deposited' | 'APY' | 'daily' | 'TVL'
-
-const FILTERS: { sort: Sort; flex: string }[] = [
-  { sort: 'wallet', flex: 'flex-[4]' },
-  { sort: 'deposited', flex: 'flex-[4]' },
-  { sort: 'APY', flex: 'flex-[3]' },
-  { sort: 'daily', flex: 'flex-[4]' },
-  { sort: 'TVL', flex: 'flex-[4]' }
-]
-
-const Strategy = ({
-  balance,
-  deposit,
-  index,
-  loading,
-  strategy: { name, protocol, type, tokens, address, TVL, protocolTVL, APY, dailyAPY }
-}: {
-  balance: Balance
-  deposit: Deposit
-  index: number
-  loading: { balance: boolean; deposit: boolean }
-  strategy: Strategy
-}) => {
-  const TVLComponent = useCallback(
-    ({ className }: { className: string }) => {
-      return (
-        <Box col className={`ml-6 items-end ${FILTERS[4].flex} ${className}`}>
-          <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-            TVL
-          </MainText>
-          <MainText gradient className='text-lg'>
-            {formatCurrency(TVL)}
-          </MainText>
-          <Box center>
-            <MainText className='text-sm text-gray-600'>{formatCurrency(protocolTVL)}</MainText>
-            <Box className='ml-2 pb-0.5 text-small'>
-              <Tooltip content='Pool TVL'>
-                <HelpOutline fontSize='inherit' className='text-gray-600' />
-              </Tooltip>
-            </Box>
-          </Box>
-        </Box>
-      )
-    },
-    [TVL, protocolTVL]
-  )
-
-  return (
-    <>
-      {index !== 0 && <div className='my-3 h-[0.1px] w-full bg-gray-700' />}
-      <Link href={`/strategy/${address}`}>
-        <Box col className='w-full cursor-pointer rounded p-2 hover:bg-gray-800/50 lg:flex-row'>
-          <Box className='flex-[1]'>
-            <Box center>
-              <Box center className='w-[72px]'>
-                <TokenIcon address={tokens[0]} size={40} />
-                {tokens[1] && (
-                  <Box className='z-20 -ml-3'>
-                    <TokenIcon address={tokens[1]} size={40} />
-                  </Box>
-                )}
-              </Box>
-              <Box col className='ml-4 items-start'>
-                <MainText gradient heading className='text-xl'>
-                  {name}
-                </MainText>
-                <Box>
-                  <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
-                    <Image alt={protocol} src={`/assets/partners/${protocol}.svg`} width={80} height={20} />
-                  </Box>
-                  <Box
-                    center
-                    className={`ml-2 h-6 w-fit rounded ${
-                      type === 'LP' ? 'bg-purple-700' : 'bg-green-700'
-                    } px-2 py-1 uppercase`}
-                  >
-                    <MainText className='text-xs'>{type}</MainText>
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-            <TVLComponent className='lg:hidden' />
-          </Box>
-          <Box className='mt-6 flex-[3] items-start lg:mt-0 lg:items-center lg:justify-center'>
-            {loading.balance || balance ? (
-              <Box col className={`is-first-child:ml-6 items-start justify-end lg:items-end ${FILTERS[0].flex}`}>
-                <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-                  Wallet
-                </MainText>
-                <Box>
-                  {loading.balance ? (
-                    <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
-                  ) : (
-                    balance && (
-                      <MainText gradient className='text-lg'>
-                        {formatToDecimal(balance.formatted, 8)}
-                      </MainText>
-                    )
-                  )}
-                </Box>
-              </Box>
-            ) : (
-              <div className={`${FILTERS[0].flex} hidden lg:flex`} />
-            )}
-            <Box col className={`is-first-child:ml-6 items-start justify-end lg:ml-6 ${FILTERS[1].flex} lg:flex-row`}>
-              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-                Deposited
-              </MainText>
-              {loading.deposit ? (
-                <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
-              ) : (
-                <MainText gradient>{formatCurrency(deposit?.value || 0)}</MainText>
-              )}
-            </Box>
-            <Box col className={`ml-6 ${balance ? 'items-end' : ''} justify-end ${FILTERS[2].flex} lg:flex-row`}>
-              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-                APY
-              </MainText>
-              <MainText gradient>{APY}</MainText>
-            </Box>
-            <Box col className={`ml-6 items-end justify-end ${FILTERS[3].flex} lg:flex-row`}>
-              <MainText heading className='text-xl font-light text-gray-600 lg:hidden'>
-                Daily
-              </MainText>
-              <MainText gradient>{dailyAPY}</MainText>
-            </Box>
-            <TVLComponent className='hidden lg:flex' />
-          </Box>
-        </Box>
-      </Link>
-    </>
-  )
-}
+type Sort = 'DEFAULT' | 'WALLET' | 'APY' | 'DAILY' | 'TVL'
+const SortOptions = ['DEFAULT', 'WALLET', 'APY', 'DAILY', 'TVL']
+export const ASSET_FILTER = new Set(['ETH', 'WBTC', 'USDC'])
+export const PROTOCOL_FILTER = new Set(['ekubo', 'jediswap', 'sithswap'])
+export const STRATEGY_FILTER = new Set(['LP', 'Range'])
 
 export default function Strategies() {
-  const [filter, setFilter] = useState('')
-  const [ordered, setOrdered] = useState<Order>('decreasing')
-  const [sorted, setSorted] = useState<Sort>('deposited')
-
   const { address } = useAccount()
 
-  const { data, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
-  const { strategies, storeStrategies } = useStrategiesManager()
-  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
+  const [assetFilter, setAssetFilter] = useState<typeof ASSET_FILTER>(new Set())
+  const [currentDropdown, setCurrentDropdown] = useState<'assets' | 'protocols' | 'strategies' | 'sort' | undefined>()
+  const [protocolFilter, setProtocolFilter] = useState<typeof PROTOCOL_FILTER>(new Set())
+  const [sorted, setSorted] = useState<Sort>('DEFAULT')
+  const [strategyFilter, setStrategyFilter] = useState<typeof STRATEGY_FILTER>(new Set())
 
-  const { data: balances, isLoading: balancesLoading } = useBalances(address)
-  const { data: deposits, isLoading: depositsLoading } = useDeposits(address)
+  const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
+  const { data: tokens } = useTokens()
 
-  const stargazeTVL = useMemo(() => strategies.reduce((acc, it) => acc + Number(it.TVL), 0), [strategies])
+  const { data: balances } = useBalances(address)
+  const { data: deposits } = useDeposits(address)
 
-  const portfolio = useMemo(
-    () => [
-      { title: 'Deposited', value: Object.values(deposits).reduce((acc, it) => acc + Number(it.value), 0) },
-      { title: 'Monthly Yield', value: 0 },
-      { title: 'Daily Yield', value: 0 },
-      { title: 'AVG. APY', value: 0 }
-    ],
-    [deposits]
+  const handleSave = useCallback(
+    () => (document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement).click(),
+    []
   )
 
   const displayedStrategies = useMemo(
     () =>
       (strategies || [])
-        .filter(
-          ({ name, protocol, tokens }) =>
-            !filter ||
-            name.match(new RegExp(filter, 'i')) ||
-            protocol.match(new RegExp(filter, 'i')) ||
-            tokens[0].match(new RegExp(filter, 'i')) ||
-            (tokens[1] || '').match(new RegExp(filter, 'i'))
-        )
-        .sort((a, b) => {
-          const [lhs, rhs] = [ordered === 'increasing' ? a : b, ordered === 'increasing' ? b : a]
+        .filter((strategy) => {
+          const a = tokens?.find(({ l2_token_address }) => strategy.tokens[0] === l2_token_address)
+          const b = tokens?.find(({ l2_token_address }) => strategy.tokens[1] === l2_token_address)
+          return (
+            (!assetFilter.size || !a || assetFilter.has(a.symbol) || !b || assetFilter.has(b.symbol)) &&
+            (!protocolFilter.size || protocolFilter.has(strategy.protocol)) &&
+            (!strategyFilter.size || strategyFilter.has(strategy.type))
+          )
+        })
+        .sort((lhs, rhs) => {
           switch (sorted) {
-            case 'deposited':
-              return Number(deposits[lhs.address]?.formatted || 0) - Number(deposits[rhs.address]?.formatted || 0)
-            case 'wallet':
-              return Number(balances[lhs.address]?.formatted || 0) - Number(balances[rhs.address]?.formatted || 0)
+            case 'WALLET':
+              return Number(balances[rhs.address]?.formatted || 0) - Number(balances[lhs.address]?.formatted || 0)
             case 'TVL':
-              return Number(lhs.TVL) - Number(rhs.TVL)
-            case 'daily':
-              return Number(lhs.dailyAPY.slice(0, -1)) - Number(rhs.dailyAPY.slice(0, -1))
+              return Number(rhs.TVL) - Number(lhs.TVL)
+            case 'DAILY':
+              return Number(rhs.dailyAPY.slice(0, -1)) - Number(lhs.dailyAPY.slice(0, -1))
+            case 'APY':
+              return Number(rhs.APY.slice(0, -1)) - Number(lhs.APY.slice(0, -1))
             default:
-              return Number(lhs.APY.slice(0, -1)) - Number(rhs.APY.slice(0, -1))
+              return Number(deposits[rhs.address]?.formatted || 0) - Number(deposits[lhs.address]?.formatted || 0)
           }
         }),
-    [balances, deposits, filter, ordered, sorted, strategies]
+    [assetFilter, balances, deposits, protocolFilter, sorted, strategies, strategyFilter, tokens]
   )
 
-  const isFetching = useMemo(() => !strategies.length && strategiesLoading, [strategies, strategiesLoading])
+  const isFetching = useMemo(() => strategiesLoading, [strategies, strategiesLoading])
 
   if (strategiesError) {
     return <ErrorPage />
   }
 
   return (
-    <Container>
-      <DarkElement col spaced className='md:flex-row'>
-        <Box col center className='md:items-start'>
-          <MainText gradient heading className='mb-2 text-2xl lg:text-3xl'>
-            Portfolio
-          </MainText>
-          <Box spaced className='w-full px-4 md:p-0'>
-            {portfolio.map(({ title, value }, index) => (
-              <Box key={index} col className='items-start md:mr-6'>
-                <MainText heading className='text-xl font-light text-gray-600'>
-                  {title}
-                </MainText>
-                {depositsLoading ? (
-                  <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
-                ) : (
-                  <MainText gradient className='text-xl'>
-                    {index !== 3 ? formatCurrency(value) : formatPercentage(value)}
+    <Container className='max-w-[1400px]'>
+      <Box center>
+        <Dropdown
+          type='menu'
+          closeOnSelect={false}
+          onClose={() => setCurrentDropdown(undefined)}
+          onOpenChange={() => setCurrentDropdown('strategies')}
+          placement='bottom-start'
+          shouldCloseOnInteractOutside={(e) => {
+            const ed = document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement
+            if (ed && ed !== e) ed.click()
+            return false
+          }}
+          classNames={{ content: 'p-0 bg-[#191919] border border-gray-800' }}
+        >
+          <DropdownTrigger aria-label='strategies'>
+            <Button radius='sm' className='border border-gray-900 bg-palette1/60'>
+              <Box center>
+                <MainText heading>STRATEGY</MainText>
+                {!!strategyFilter.size && (
+                  <MainText heading className='ml-2'>
+                    ({strategyFilter.size})
                   </MainText>
                 )}
+                <KeyboardArrowDown
+                  className={`-mr-2 ml-2 text-amber-50 ${
+                    currentDropdown === 'strategies' ? 'rotate-180' : ''
+                  } transition`}
+                />
               </Box>
-            ))}
-          </Box>
-        </Box>
-        <Box col center className='mt-6 md:mt-0 md:items-end'>
-          <MainText gradient heading className='mb-2 text-2xl lg:text-3xl'>
-            Stargaze
-          </MainText>
-          <Box className='w-full justify-evenly'>
-            <Box col className='items-start md:ml-6 md:items-end'>
-              <MainText heading className='text-xl font-light text-gray-600'>
-                TVL
-              </MainText>
-              {isFetching ? (
-                <Skeleton className='my-1 flex h-5 w-24 rounded-md' />
-              ) : (
-                <MainText gradient className='text-xl'>
-                  {formatCurrency(stargazeTVL)}
-                </MainText>
-              )}
-            </Box>
-            <Box col className='items-start md:ml-6 md:items-end'>
-              <MainText heading className='text-xl font-light text-gray-600'>
-                Strategies
-              </MainText>
-              {isFetching ? (
-                <Skeleton className='my-1 flex h-5 w-12 rounded-md' />
-              ) : (
-                <MainText gradient className='text-xl'>
-                  {strategies.length}
-                </MainText>
-              )}
-            </Box>
-          </Box>
-        </Box>
-      </DarkElement>
-
-      <DarkElement col spaced className='mt-2 p-6'>
-        <Box spaced className='w-full'>
-          <div className='max-w-sm flex-[1]'>
-            <Input
-              autoComplete='off'
-              size='sm'
-              variant='bordered'
-              placeholder='Search...'
-              isClearable
-              value={filter}
-              endContent={<Close className='text-gray-500' />}
-              classNames={{
-                input: 'text-amber-50 text-md mr-6',
-                inputWrapper: 'bg-black/60 border border-gray-500'
-              }}
-              onChange={(e) => {
-                setFilter(e.target.value)
-              }}
-              onClear={() => {
-                setFilter('')
-              }}
-            />
-          </div>
-          <Box className='ml-6 lg:hidden'>
-            <Dropdown
-              type='menu'
-              classNames={{
-                base: 'child:bg-black border border-gray-700 rounded-xl'
-              }}
-            >
-              <DropdownTrigger>
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label='strategies'
+            onAction={(strategy) =>
+              STRATEGY_FILTER.has(strategy as string) &&
+              setStrategyFilter((state) => {
+                const newState = new Set(state)
+                state.has(strategy as string) ? newState.delete(strategy as string) : newState.add(strategy as string)
+                return newState
+              })
+            }
+          >
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(STRATEGY_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <StrategyFilter filter={strategyFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
                 <Button
+                  onClick={handleSave}
                   radius='sm'
-                  variant='bordered'
-                  className='flex h-full items-center justify-center border border-gray-500 bg-black/60'
+                  className='flex w-full items-center justify-center bg-palette1/60'
                 >
-                  <MainText gradient>Sort by:</MainText>
-                  <MainText gradient heading className='text-lg'>
-                    {sorted}
+                  <MainText heading className='text-white'>
+                    SAVE
                   </MainText>
-                  <Box center>
-                    <KeyboardArrowDown fontSize='inherit' className='text-amber-50' />
-                  </Box>
                 </Button>
-              </DropdownTrigger>
-              <DropdownMenu onAction={(sorted) => setSorted(sorted as Sort)}>
-                {FILTERS.map(({ sort }) => (
-                  <DropdownItem key={sort} variant='bordered' className='border-none'>
-                    <MainText heading gradient className='text-lg'>
-                      {sort}
-                    </MainText>
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-          </Box>
-          <Box spaced className='hidden flex-[3] items-center lg:flex'>
-            {FILTERS.map(({ sort, flex }, index) => (
-              <Box key={index} className={`${flex} ml-6 justify-end`}>
-                <button
-                  className='flex cursor-pointer'
-                  onClick={() => {
-                    if (sorted !== sort) {
-                      setSorted(sort)
-                      setOrdered('decreasing')
-                    } else {
-                      setOrdered(ordered === 'increasing' ? 'decreasing' : 'increasing')
-                    }
-                  }}
-                >
-                  <MainText gradient heading className='text-xl'>
-                    {sort}
+              </DropdownItem>
+            </DropdownSection>
+          </DropdownMenu>
+        </Dropdown>
+
+        <Dropdown
+          type='menu'
+          closeOnSelect={false}
+          onClose={() => setCurrentDropdown(undefined)}
+          onOpenChange={() => setCurrentDropdown('protocols')}
+          placement='bottom-start'
+          shouldCloseOnInteractOutside={(e) => {
+            const ed = document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement
+            if (ed && ed !== e) ed.click()
+            return false
+          }}
+          classNames={{ content: 'p-0 bg-[#191919] border border-gray-800' }}
+        >
+          <DropdownTrigger aria-label='protocols' className='mx-2'>
+            <Button radius='sm' className='border border-gray-900 bg-palette1/60'>
+              <Box center>
+                <MainText heading>PROTOCOL</MainText>
+                {!!protocolFilter.size && (
+                  <MainText heading className='ml-2'>
+                    ({protocolFilter.size})
                   </MainText>
-                  <Box center className='ml-1 h-6'>
-                    {sorted !== sort ? (
-                      <SwapVert fontSize='inherit' className='text-amber-50' />
-                    ) : ordered === 'decreasing' ? (
-                      <KeyboardArrowDown fontSize='inherit' className='text-amber-50' />
-                    ) : (
-                      <KeyboardArrowUp fontSize='inherit' className='text-amber-50' />
-                    )}
-                  </Box>
-                </button>
+                )}
+                <KeyboardArrowDown
+                  className={`-mr-2 ml-2 text-amber-50 ${
+                    currentDropdown === 'protocols' ? 'rotate-180' : ''
+                  } transition`}
+                />
               </Box>
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label='protocols'
+            onAction={(protocol) =>
+              PROTOCOL_FILTER.has(protocol as string) &&
+              setProtocolFilter((state) => {
+                const newState = new Set(state)
+                state.has(protocol as string) ? newState.delete(protocol as string) : newState.add(protocol as string)
+                return newState
+              })
+            }
+          >
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(PROTOCOL_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <ProtocolFilter filter={protocolFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
+                <Button
+                  onClick={handleSave}
+                  radius='sm'
+                  className='flex w-full items-center justify-center bg-palette1/60'
+                >
+                  <MainText heading className='text-white'>
+                    SAVE
+                  </MainText>
+                </Button>
+              </DropdownItem>
+            </DropdownSection>
+          </DropdownMenu>
+        </Dropdown>
+
+        <Dropdown
+          type='menu'
+          closeOnSelect={false}
+          onClose={() => setCurrentDropdown(undefined)}
+          onOpenChange={() => setCurrentDropdown('assets')}
+          shouldCloseOnInteractOutside={(e) => {
+            const ed = document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement
+            if (ed && ed !== e) ed.click()
+            return false
+          }}
+          classNames={{ content: 'p-0 bg-[#191919] border border-gray-800' }}
+        >
+          <DropdownTrigger aria-label='assets'>
+            <Button radius='sm' className='border border-gray-900 bg-palette1/60'>
+              <MainText heading>ASSETS</MainText>
+              {!!assetFilter.size && <MainText heading>({assetFilter.size})</MainText>}
+              <KeyboardArrowDown
+                className={`-mr-2 text-amber-50 ${currentDropdown === 'assets' ? 'rotate-180' : ''} transition`}
+              />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label='assets'
+            onAction={(asset) =>
+              ASSET_FILTER.has(asset as string) &&
+              setAssetFilter((state) => {
+                const newState = new Set(state)
+                state.has(asset as string) ? newState.delete(asset as string) : newState.add(asset as string)
+                return newState
+              })
+            }
+          >
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(ASSET_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <AssetFilter filter={assetFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
+                <Button
+                  onClick={handleSave}
+                  radius='sm'
+                  className='flex w-full items-center justify-center bg-palette1/60'
+                >
+                  <MainText heading className='text-white'>
+                    SAVE
+                  </MainText>
+                </Button>
+              </DropdownItem>
+            </DropdownSection>
+          </DropdownMenu>
+        </Dropdown>
+
+        <Dropdown
+          type='menu'
+          onClose={() => setCurrentDropdown(undefined)}
+          onOpenChange={() => setCurrentDropdown('sort')}
+          placement='bottom-end'
+          shouldCloseOnInteractOutside={(e) => {
+            const ed = document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement
+            if (ed && ed !== e) ed.click()
+            return false
+          }}
+          classNames={{ content: 'p-0 bg-[#191919] border border-gray-800' }}
+        >
+          <DropdownTrigger aria-label='sort' className='ml-2'>
+            <Button radius='sm' className='border border-gray-900 bg-palette1/60'>
+              <MainText heading>{sorted === 'DEFAULT' ? 'SORT BY' : sorted}</MainText>
+              <KeyboardArrowDown
+                className={`-mr-2 text-amber-50 ${currentDropdown === 'sort' ? 'rotate-180' : ''} transition`}
+              />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu aria-label='sort' onAction={(sorted) => setSorted(sorted as Sort)}>
+            {SortOptions.map((sort) => (
+              <DropdownItem aria-label={sort} key={sort} variant='bordered' className='border-none'>
+                <MainText heading className='flex text-sm text-white'>
+                  {sort}
+                </MainText>
+              </DropdownItem>
             ))}
-          </Box>
-        </Box>
-        <div className='gradient-border-b my-6 h-[1px] w-full' />
-        <Box col>
-          {isFetching ? (
-            <Spinner size='lg' className='my-10' />
-          ) : displayedStrategies.length ? (
-            displayedStrategies.map((strategy, index) => (
-              <Strategy
-                key={index}
-                balance={balances[strategy.address]}
+          </DropdownMenu>
+        </Dropdown>
+
+        {(!!assetFilter.size || !!protocolFilter.size || !!strategyFilter.size) && (
+          <MainButton
+            onClick={() => {
+              setAssetFilter(new Set())
+              setProtocolFilter(new Set())
+              setStrategyFilter(new Set())
+            }}
+            className='ml-2'
+          >
+            <MainText heading>CLEAR FILTERS</MainText>
+          </MainButton>
+        )}
+      </Box>
+
+      {isFetching ? (
+        <AppLoader />
+      ) : displayedStrategies.length ? (
+        <Box center className='mt-8 flex-wrap'>
+          {displayedStrategies.map((strategy, index) => (
+            <Link key={index} href={`/strategy/${strategy.address}`}>
+              <StrategyCard
+                balance={balances[strategy?.asset || '']}
                 deposit={deposits[strategy.address]}
-                index={index}
-                loading={{ balance: balancesLoading, deposit: depositsLoading }}
                 strategy={strategy}
               />
-            ))
-          ) : (
-            <>
-              <MainText gradient heading className='text-2xl'>
-                No strategies found
-              </MainText>
-              <Box center className='mb-4'>
-                <MainText gradient className='text-sm'>
-                  Try clearing your filters or changing your search term.
-                </MainText>
-              </Box>
-            </>
-          )}
+            </Link>
+          ))}
         </Box>
-      </DarkElement>
+      ) : (
+        <Box center col className='h-[70vh]'>
+          <MainText gradient heading className='text-2xl'>
+            NO STRATEGY FOUND
+          </MainText>
+          <Box center className='mb-4'>
+            <MainText gradient className='text-sm'>
+              Try adjusting your filters.
+            </MainText>
+          </Box>
+        </Box>
+      )}
     </Container>
   )
 }

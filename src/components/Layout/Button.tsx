@@ -17,8 +17,7 @@ export const MainButton = ({ children, isDisabled, onClick, size = 'md', startCo
     onClick={onClick}
     size={size}
     startContent={startContent}
-    variant='bordered'
-    className={`flex items-center justify-center border border-gray-500 bg-black/60 ${className}`}
+    className={`flex items-center justify-center bg-palette1/60 ${className}`}
   >
     {children}
   </Button>

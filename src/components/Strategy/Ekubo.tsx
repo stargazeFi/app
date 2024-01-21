@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { OpenInNew } from '@mui/icons-material'
 import { useAccount, useContractRead, useContractWrite, useNetwork } from '@starknet-react/core'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
-import { Box, Container, DarkElement, MainButton, MainText } from '@/components/Layout'
+import { Box, Container, GrayElement, MainButton, MainText } from '@/components/Layout'
 import { useBalances, useDeposit } from '@/hooks'
 import { parseAmount, poolLiquidityURL, serializeAddress, serializeU128, serializeU256 } from '@/misc'
 import { ekubo } from '@/protocols'
@@ -90,7 +90,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, base, quote, strategy])
+  }, [address, amounts, base, quote, mode, strategy])
 
   const redeemCalls = useMemo(() => {
     if (mode === 'redeem' && address) {
@@ -108,7 +108,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
         console.error('Failed to generate call data', error)
       }
     }
-  }, [address, amounts, deposited, strategy])
+  }, [address, amounts, deposited, mode, strategy])
 
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })
@@ -117,25 +117,25 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
 
   return (
     <Container>
-      <Header deposited={deposited} depositLoading={depositLoading} strategy={strategy} />
-      <Box className='mt-2 flex-col-reverse lg:flex-row'>
+      <Header deposited={deposited} strategy={strategy} />
+      <Box className='mt-4 flex-col-reverse lg:flex-row'>
         <Information strategy={strategy} />
-        <DarkElement col spaced className='mb-2 h-fit flex-[2] md:mb-0 md:ml-2'>
+        <GrayElement col spaced className='mb-4 h-fit flex-[2] p-6 lg:ml-4'>
           <Box className='-mx-6 -mt-6'>
             <Box
               center
               className={`flex-1 cursor-pointer border-b ${mode === 'deposit' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('deposit')} className='h-[4.5rem] w-full'>
-                <MainText>DEPOSIT</MainText>
+              <button onClick={() => setMode('deposit')} className='h-[3rem] w-full'>
+                <MainText heading>DEPOSIT</MainText>
               </button>
             </Box>
             <Box
               center
               className={`flex-1 cursor-pointer border-b ${mode === 'redeem' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('redeem')} className='h-[4.5rem] w-full'>
-                <MainText>WITHDRAW</MainText>
+              <button onClick={() => setMode('redeem')} className='h-[3rem] w-full'>
+                <MainText heading>WITHDRAW</MainText>
               </button>
             </Box>
           </Box>
@@ -184,7 +184,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
             </Box>
             <Footer strategy={strategy} />
           </Box>
-        </DarkElement>
+        </GrayElement>
       </Box>
     </Container>
   )

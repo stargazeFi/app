@@ -29,13 +29,16 @@ interface ToastProps {
 export const toast = ({ action, chain, transactionHash, type = 'info' }: ToastProps) => {
   toastify[type](
     <Box col className='ml-4 items-start'>
-      <MainText heading gradient className='text-xl'>
-        {toastContent(action, type)}
+      <MainText heading className='text-lg text-white'>
+        {toastContent(action, type).toUpperCase()}
       </MainText>
       {transactionHash && (
         <Link href={explorerTransactionURL(transactionHash, chain)} target='_blank' rel='noopener noreferrer'>
           <MainText className='text-sm'>
-            Transaction hash: <u className='text-blue-600'>{shortenTxHash(transactionHash)}</u>
+            Transaction hash:{' '}
+            <MainText heading className='text-blue-600 underline'>
+              {shortenTxHash(transactionHash)}
+            </MainText>
           </MainText>
         </Link>
       )}
@@ -44,8 +47,8 @@ export const toast = ({ action, chain, transactionHash, type = 'info' }: ToastPr
       style: {
         border: '0.5px solid rgb(61, 61, 61)',
         borderRadius: '0.375rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        padding: '0.75rem',
+        backgroundColor: 'rgba(19, 19, 19, 0.8)',
+        padding: '0.75rem 1.5rem 0.75rem 0.75rem',
         width: '400px'
       }
     }

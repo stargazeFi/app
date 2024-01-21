@@ -1,7 +1,7 @@
 import { useMemo, Dispatch, SetStateAction } from 'react'
 import { Button, Input, Skeleton } from '@nextui-org/react'
 import { Box, MainText } from '@/components/Layout'
-import { TokenIcon } from '@/components/TokenIcon'
+import { Icon } from 'src/components/Tokens'
 import { formatToDecimal } from '@/misc'
 import { Amounts, Balance, Strategy } from '@/types'
 
@@ -40,16 +40,18 @@ export const AmountInputField = ({
         {isLoading ? (
           <Skeleton className='mb-0.5 flex h-3.5 w-48 rounded-md' />
         ) : (
-          <MainText className='text-xs'>Available: {available}</MainText>
+          <MainText heading className='text-sm text-white'>
+            Available: {available}
+          </MainText>
         )}
       </Box>
       <Box spaced className='mt-2'>
         {mode === 'deposit' && (
-          <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-black/60'>
-            <TokenIcon address={strategy.tokens[type === 'base' ? 0 : 1]} size={28} />
+          <Box center className='mr-2 w-[80px] rounded-xl border-[0.5px] border-gray-400 bg-transparent'>
+            <Icon address={strategy.tokens[type === 'base' ? 0 : 1]} size={28} />
             {strategy.type === 'LP' && (
               <Box className='z-20 -ml-2'>
-                <TokenIcon address={strategy.tokens[1]} size={28} />
+                <Icon address={strategy.tokens[1]} size={28} />
               </Box>
             )}
           </Box>
@@ -61,8 +63,8 @@ export const AmountInputField = ({
           placeholder='0'
           value={amount || '0'}
           classNames={{
-            input: 'text-amber-50 text-md mr-6',
-            inputWrapper: 'bg-black/60 border border-gray-500'
+            input: 'text-amber-50 text-md mr-6 font-heading',
+            inputWrapper: 'bg-transparent border border-gray-500'
           }}
           onChange={(e) => {
             const { value } = e.target
@@ -77,9 +79,9 @@ export const AmountInputField = ({
                   [type]: mode === 'deposit' ? balance?.formatted : deposit?.formatted
                 })
               }}
-              className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-black/60'
+              className='-mr-1 flex h-8 min-w-0 items-center justify-center border border-gray-500 bg-main/20'
             >
-              <MainText heading gradient>
+              <MainText heading className='text-white'>
                 MAX
               </MainText>
             </Button>
