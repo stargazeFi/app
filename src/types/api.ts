@@ -6,6 +6,7 @@ export type StrategyType = 'LP' | 'Range'
 export interface Analytics {
   address: string
   price: Record<number, string>
+  shareUnit: Record<number, string>
   tvl: Record<number, string>
 }
 

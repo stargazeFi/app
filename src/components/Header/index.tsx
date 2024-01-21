@@ -26,7 +26,7 @@ export default function Header() {
           <MainText>Stargaze is currently in alpha, please switch network to Goerli</MainText>
         </Box>
       )}
-      <Navbar className='gradient-dark-element !sticky z-50 mb-10 rounded-xl bg-main/20' maxWidth='full'>
+      <Navbar className='gradient-dark-element !sticky z-50 mb-10 bg-main/20' maxWidth='full'>
         <NavbarBrand>
           <Link href='https://stargaze.finance'>
             <Image src='/assets/brand/logo.svg' width={40} height={40} alt='' />

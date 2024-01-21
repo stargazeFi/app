@@ -5,7 +5,7 @@ import { Link, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisc
 import { useAccount, useConnect, useDisconnect, useNetwork } from '@starknet-react/core'
 import { ContentPaste, Done, Launch, Logout } from '@mui/icons-material'
 import { Box, MainButton, MainText, SecondaryText } from '@/components/Layout'
-import { explorerContractURL, explorerTransactionURL, formatEpochToTime, shortenAddress } from '@/misc'
+import { explorerContractURL, explorerTransactionURL, formatEpochToDate, shortenAddress } from '@/misc'
 
 const CONNECTOR_METADATA: {
   [id: string]: { name: string; logo: string }
@@ -193,7 +193,7 @@ export default function WalletModal() {
                               Strategy: {transaction.strategyName}
                             </MainText>
                             <MainText gradient className='text-start text-sm'>
-                              {formatEpochToTime(transaction.timestamp)}
+                              {formatEpochToDate(transaction.timestamp)}
                             </MainText>
                             <Link
                               href={explorerTransactionURL(transaction.hash, chain)}

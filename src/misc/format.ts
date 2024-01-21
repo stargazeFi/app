@@ -25,8 +25,8 @@ export const formatTokenPrice = (value: number | bigint) =>
     maximumFractionDigits: 2
   }).format(value)
 
-export const formatEpochToTime = (epoch: number): string =>
-  new Date(epoch).toLocaleString('en-US', {
+export const formatEpochToDate = (epoch: number | string): string =>
+  new Date(Number(epoch)).toLocaleString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -34,6 +34,15 @@ export const formatEpochToTime = (epoch: number): string =>
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
+  })
+
+export const formatEpochToShortDate = (epoch: number | string): string =>
+  new Date(Number(epoch)).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 
 export const formatPercentage = (value: number, decimals: number = 4) =>
