@@ -68,21 +68,21 @@ const useDataApi = <TQueryFnData = unknown>({
 
 export const useAnalytics = (address: string | undefined) => {
   return useDataApi<Analytics>({
-    path: `/analytics?address=${num.toStorageKey(address || 0n)}`,
+    path: address && `/analytics?address=${num.toStorageKey(address)}`,
     staleTime: 1000
   })
 }
 
 export const useBalances = (address: string | undefined) => {
   return useDataApi<Record<string, { balance: Uint256; decimals: number }>>({
-    path: `/balances?address=${num.toStorageKey(address || 0n)}`,
+    path: address && `/balances?address=${num.toStorageKey(address)}`,
     staleTime: 1000
   })
 }
 
 export const useDeposits = (address: string | undefined) => {
   return useDataApi<Record<string, Uint256>>({
-    path: `/deposits?address=${num.toStorageKey(address || 0n)}`,
+    path: address && `/deposits?address=${num.toStorageKey(address)}`,
     staleTime: 1000
   })
 }

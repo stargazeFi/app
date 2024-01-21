@@ -26,7 +26,7 @@ export default function Strategies() {
   const [strategyFilter, setStrategyFilter] = useState<typeof STRATEGY_FILTER>(new Set())
 
   const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
-  const { data: tokens } = useTokens()
+  const { data: tokens, isLoading: tokensLoading } = useTokens()
 
   const { data: balances } = useBalances(address)
   const { data: deposits } = useDeposits(address)
@@ -65,7 +65,7 @@ export default function Strategies() {
     [assetFilter, balances, deposits, protocolFilter, sorted, strategies, strategyFilter, tokens]
   )
 
-  const isFetching = useMemo(() => strategiesLoading, [strategies, strategiesLoading])
+  const isFetching = useMemo(() => strategiesLoading || tokensLoading, [strategiesLoading])
 
   if (strategiesError) {
     return <ErrorPage />
