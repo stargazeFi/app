@@ -1,24 +1,22 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { useAccount } from '@starknet-react/core'
 import { AppLoader } from '@/components/AppLoader'
 import { ErrorPage } from '@/components/ErrorPage'
 import { Box, Container } from '@/components/Layout'
 import { ActiveStrategy, Analytics, Header } from '@/components/Portfolio'
-import { useDeposits, useStrategiesManager } from '@/hooks'
+import { useDeposits } from '@/hooks'
 import { useStrategies } from '@/hooks/api'
 
 export default function Portfolio() {
   const { address } = useAccount()
 
   const { data: deposits, isLoading: depositsLoading } = useDeposits(address)
-  const { data, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
-  const { strategies, storeStrategies } = useStrategiesManager()
-  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
+  const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
 
   const activeStrategies = useMemo(
     () =>
-      strategies
+      (strategies || [])
         .filter(({ address }) => deposits[address]?.value)
         .sort((a, b) => Number(deposits[b.address].value) - Number(deposits[a.address].value)),
     [deposits, strategies]
@@ -37,10 +35,7 @@ export default function Portfolio() {
     [activeStrategies, deposits]
   )
 
-  const isFetching = useMemo(
-    () => (!strategies.length && strategiesLoading) || depositsLoading,
-    [depositsLoading, strategies.length, strategiesLoading]
-  )
+  const isFetching = useMemo(() => strategiesLoading || depositsLoading, [depositsLoading, strategiesLoading])
 
   if (strategiesError) {
     return <ErrorPage />

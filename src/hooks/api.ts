@@ -112,7 +112,8 @@ export const usePrices = () => {
 
 export const useStrategies = () => {
   return useDataApi<Strategy[]>({
-    path: '/strategies'
+    path: '/strategies',
+    staleTime: 60 * 1000
   })
 }
 

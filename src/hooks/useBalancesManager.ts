@@ -1,9 +1,8 @@
-import { useStrategiesManager } from '@/hooks/useStrategiesManager'
 import { computeUserDeposit } from '@/misc'
 import { Balances, Deposits } from '@/types'
 import BigNumber from 'bignumber.js'
 import { useMemo } from 'react'
-import { useBalances as fetchBalances, useDeposits as fetchDeposits } from '@/hooks/api'
+import { useBalances as fetchBalances, useDeposits as fetchDeposits, useStrategies } from '@/hooks/api'
 import { uint256 } from 'starknet'
 
 export const useBalance = (address: string | undefined, asset: string | undefined) => {
@@ -50,11 +49,11 @@ export const useBalances = (address: string | undefined) => {
 
 export const useDeposit = (address: string | undefined, strategyAddress: string | undefined) => {
   const { data: balances, isLoading, refetch } = fetchDeposits(address)
-  const { strategies } = useStrategiesManager()
+  const { data: strategies } = useStrategies()
 
   return useMemo(() => {
     let data
-    const strategy = strategies.find((strategy) => strategy.address === strategyAddress)
+    const strategy = strategies?.find((strategy) => strategy.address === strategyAddress)
     if (balances && strategyAddress && strategy) {
       const balance = balances[strategyAddress]
       if (balance) {
@@ -74,11 +73,11 @@ export const useDeposit = (address: string | undefined, strategyAddress: string 
 
 export const useDeposits = (address: string | undefined) => {
   const { data: balances, isLoading, refetch } = fetchDeposits(address)
-  const { strategies } = useStrategiesManager()
+  const { data: strategies } = useStrategies()
 
   return useMemo(() => {
     const data = Object.entries(balances || {}).reduce((acc, it) => {
-      const strategy = strategies.find((strategy) => strategy.address === it[0])
+      const strategy = strategies?.find((strategy) => strategy.address === it[0])
       if (balances && strategy) {
         const balance = balances[strategy.address]
         if (balance) {

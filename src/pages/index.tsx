@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AppLoader } from '@/components/AppLoader'
 import { ErrorPage } from '@/components/ErrorPage'
 import { AssetFilter, ProtocolFilter, StrategyCard, StrategyFilter } from '@/components/Strategies'
-import { useBalances, useDeposits, useStrategiesManager } from '@/hooks'
+import { useBalances, useDeposits } from '@/hooks'
 import { useStrategies, useTokens } from '@/hooks/api'
 import { useAccount } from '@starknet-react/core'
 import { KeyboardArrowDown } from '@mui/icons-material'
@@ -25,10 +25,8 @@ export default function Strategies() {
   const [sorted, setSorted] = useState<Sort>('DEFAULT')
   const [strategyFilter, setStrategyFilter] = useState<typeof STRATEGY_FILTER>(new Set())
 
-  const { data, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
+  const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
   const { data: tokens } = useTokens()
-  const { strategies, storeStrategies } = useStrategiesManager()
-  useEffect(() => data && storeStrategies(data), [data, storeStrategies])
 
   const { data: balances } = useBalances(address)
   const { data: deposits } = useDeposits(address)
@@ -40,7 +38,7 @@ export default function Strategies() {
 
   const displayedStrategies = useMemo(
     () =>
-      strategies
+      (strategies || [])
         .filter((strategy) => {
           const a = tokens?.find(({ l2_token_address }) => strategy.tokens[0] === l2_token_address)
           const b = tokens?.find(({ l2_token_address }) => strategy.tokens[1] === l2_token_address)
@@ -67,7 +65,7 @@ export default function Strategies() {
     [assetFilter, balances, deposits, protocolFilter, sorted, strategies, strategyFilter, tokens]
   )
 
-  const isFetching = useMemo(() => !strategies.length && strategiesLoading, [strategies, strategiesLoading])
+  const isFetching = useMemo(() => strategiesLoading, [strategies, strategiesLoading])
 
   if (strategiesError) {
     return <ErrorPage />

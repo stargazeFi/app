@@ -17,13 +17,6 @@ interface ClearTransactionHistoryPayload {
   }
 }
 
-interface StoreFetchedStrategiesPayload {
-  payload: {
-    chainId: string
-    strategies: Strategy[]
-  }
-}
-
 interface PersistentState {
   strategies: {
     [key: string]: Strategy[]
@@ -52,16 +45,10 @@ export const PersistentSlice = createSlice({
       state.transactionHistory = state.transactionHistory ?? {}
       const key = `${payload.chainId}-${payload.address}`
       state.transactionHistory[key] = []
-    },
-    storeFetchedStrategies(state, { payload }: StoreFetchedStrategiesPayload) {
-      state.strategies = state.strategies ?? {}
-      const key = payload.chainId
-      state.strategies[key] = payload.strategies
     }
   }
 })
 
-export const { addTransactionHistory, clearTransactionHistory, storeFetchedStrategies } = PersistentSlice.actions
-export const selectStrategies = (state: RootState) => state.persistent.strategies
+export const { addTransactionHistory, clearTransactionHistory } = PersistentSlice.actions
 export const selectTransactionHistory = (state: RootState) => state.persistent.transactionHistory
 export default PersistentSlice.reducer
