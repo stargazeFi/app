@@ -10,11 +10,11 @@ interface IconProps {
 }
 
 export const Icon = ({ address, className, size, symbol }: IconProps) => {
-  const tokens = useContext(TokenContext)
+  const { tokens } = useContext(TokenContext)
 
   const token = useMemo(() => tokens.find(({ l2_token_address }) => l2_token_address === address), [address, tokens])
   const icon = useMemo(() => {
-    return `/assets/tokens/${token?.symbol.toLowerCase() || symbol!.toLowerCase()}.svg`
+    return `/assets/tokens/${token?.symbol?.toLowerCase() || symbol?.toLowerCase()}.svg`
   }, [symbol, token])
 
   return (

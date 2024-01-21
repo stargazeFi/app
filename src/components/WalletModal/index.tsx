@@ -48,10 +48,14 @@ export default function WalletModal() {
   return (
     <>
       <MainButton onClick={onOpen}>
-        <MainText className='text-white'>{address ? shortenAddress(address) : 'Connect wallet'}</MainText>
+        <MainText heading className='text-white'>
+          {address ? shortenAddress(address) : 'Connect wallet'}
+        </MainText>
         {chain.testnet && (
           <div className='ml-2 flex items-center'>
-            <MainText className='text-xs text-amber-200'>Testnet</MainText>
+            <MainText heading className='text-amber-200'>
+              Testnet
+            </MainText>
           </div>
         )}
       </MainButton>
@@ -64,8 +68,8 @@ export default function WalletModal() {
         classNames={{
           body: 'py-6',
           base: 'border border-gray-800 bg-[#121212]',
-          header: 'gradient-border-b',
-          footer: 'gradient-border-t'
+          header: 'gradient-fire-b',
+          footer: 'gradient-fire-t'
         }}
       >
         <ModalContent>
@@ -79,7 +83,9 @@ export default function WalletModal() {
               <ModalBody>
                 {isConnected ? (
                   <Box col center>
-                    <MainText className='text-lg text-white'>{shortenAddress(address as string, 12)}</MainText>
+                    <MainText heading className='text-lg text-white'>
+                      {shortenAddress(address as string, 12)}
+                    </MainText>
                     <Box col className='w-[85%]'>
                       <Box spaced className='mb-2'>
                         <MainText className='text-sm text-white'>Connected with {connector!.name}</MainText>

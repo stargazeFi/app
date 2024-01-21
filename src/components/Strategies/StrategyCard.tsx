@@ -1,6 +1,7 @@
 import { Icon } from '@/components/Tokens'
+import { useColors } from '@/hooks'
 import { formatCurrency, formatToDecimal } from '@/misc'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Box, GrayElement, MainText } from '@/components/Layout'
 import { Balance, Deposit, Strategy } from '@/types'
 
@@ -15,60 +16,29 @@ export const StrategyCard = ({
   deposit,
   strategy: { name, protocol, tokens, type, APY, TVL, dailyAPY }
 }: StrategyCardProps) => {
-  const color = useMemo(() => {
-    switch (protocol) {
-      case 'ekubo':
-        return {
-          border: 'hover:border-violet-600',
-          header: 'from-violet-950/20 to-violet-800/20',
-          info: 'bg-ekubo',
-          protocol: 'bg-ekubo',
-          shadow: 'hover:shadow-range'
-        }
-      case 'sithswap':
-        return {
-          border: 'hover:border-blue-800',
-          header: 'from-blue-950/20 to-blue-800/20',
-          info: 'bg-blue-800',
-          protocol: 'bg-sithswap',
-          shadow: 'hover:shadow-lp'
-        }
-      default:
-        return {
-          border: 'hover:border-blue-800',
-          header: 'from-blue-950/20 to-blue-800/20',
-          info: 'bg-blue-800',
-          protocol: 'bg-jediswap',
-          shadow: 'hover:shadow-lp'
-        }
-    }
-  }, [protocol])
-
-  console.log(balance)
+  const { border, header, info, main, shadow } = useColors(protocol)
 
   return (
     <GrayElement
       col
-      className={`cursor-pointer !p-0 transition-all ${color.shadow} border-2 border-transparent ${color.border} m-3 w-[290px]`}
+      className={`cursor-pointer transition-all ${shadow} border-2 border-transparent ${border} m-3 w-[290px]`}
     >
-      <Box className={`relative rounded-t-small bg-gradient-to-r ${color.header} p-6 pb-12`}>
-        <Box className={`rounded-sm ${color.info} px-2 py-1`}>
+      <Box className={`relative rounded-t-small bg-gradient-to-r ${header} p-6 pb-12`}>
+        <Box center className={`rounded-sm ${info} px-2 py-1`}>
           <MainText heading className='text-sm text-white'>
             {type.toUpperCase()}
           </MainText>
         </Box>
-        <Box className={`mx-2 rounded-sm ${color.protocol} px-2 py-1`}>
+        <Box center className={`mx-2 rounded-sm ${main} px-2 py-1`}>
           <MainText heading className='text-sm text-white'>
             {protocol.toUpperCase()}
           </MainText>
         </Box>
         <Box center className='absolute -bottom-[22px] left-4 w-[88px]'>
           <Icon address={tokens[0]} size={44} />
-          {tokens[1] && (
-            <Box className='z-20 -ml-3'>
-              <Icon address={tokens[1]} size={44} />
-            </Box>
-          )}
+          <Box className='z-20 -ml-3'>
+            <Icon address={tokens[1]} size={44} />
+          </Box>
         </Box>
       </Box>
       <Box col className='items-start p-6 pt-12'>
@@ -82,7 +52,7 @@ export const StrategyCard = ({
           {APY}
         </MainText>
         <MainText gradient className='text-xs'>
-          Daily returns
+          Daily yield
         </MainText>
         <MainText heading className='text-md mb-2 text-white'>
           {dailyAPY}

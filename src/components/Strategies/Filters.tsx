@@ -54,9 +54,9 @@ export const AssetFilter = ({ filter, item }: AssetFilterProps) => {
 export const ProtocolFilter = ({ filter, item }: ProtocolFilterProps) => {
   const colors = useMemo(() => {
     switch (item) {
-      case 'EKUBO':
+      case 'ekubo':
         return { background: 'bg-ekubo/10', border: 'border-ekubo' }
-      case 'SITHSWAP':
+      case 'sithswap':
         return { background: 'bg-sithswap/10', border: 'border-sithswap' }
       default:
         return { background: 'bg-jediswap/10', border: 'border-jediswap' }
@@ -87,7 +87,7 @@ export const ProtocolFilter = ({ filter, item }: ProtocolFilterProps) => {
 export const StrategyFilter = ({ filter, item }: StrategyFilterProps) => {
   const colors = useMemo(() => {
     switch (item) {
-      case 'RANGE':
+      case 'Range':
         return { background: 'bg-violet-800/10', border: 'border-violet-800' }
       default:
         return { background: 'bg-blue-800/10', border: 'border-blue-800' }
@@ -105,7 +105,7 @@ export const StrategyFilter = ({ filter, item }: StrategyFilterProps) => {
     >
       <Box center>
         <MainText heading className='ml-4 flex text-white'>
-          {item}
+          {item.toUpperCase()}
         </MainText>
       </Box>
       <Box center className='pr-2'>

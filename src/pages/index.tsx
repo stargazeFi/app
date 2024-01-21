@@ -1,19 +1,20 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { AppLoader } from '@/components/AppLoader'
 import { ErrorPage } from '@/components/ErrorPage'
 import { AssetFilter, ProtocolFilter, StrategyCard, StrategyFilter } from '@/components/Strategies'
 import { useBalances, useDeposits, useStrategiesManager } from '@/hooks'
 import { useStrategies, useTokens } from '@/hooks/api'
 import { useAccount } from '@starknet-react/core'
 import { KeyboardArrowDown } from '@mui/icons-material'
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Spinner } from '@nextui-org/react'
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger } from '@nextui-org/react'
 import { Box, Container, MainButton, MainText } from '@/components/Layout'
 
 type Sort = 'DEFAULT' | 'WALLET' | 'APY' | 'DAILY' | 'TVL'
 const SortOptions = ['DEFAULT', 'WALLET', 'APY', 'DAILY', 'TVL']
 export const ASSET_FILTER = new Set(['ETH', 'WBTC', 'USDC'])
-export const PROTOCOL_FILTER = new Set(['EKUBO', 'JEDISWAP', 'SITHSWAP'])
-export const STRATEGY_FILTER = new Set(['LP', 'RANGE'])
+export const PROTOCOL_FILTER = new Set(['ekubo', 'jediswap', 'sithswap'])
+export const STRATEGY_FILTER = new Set(['LP', 'Range'])
 
 export default function Strategies() {
   const { address } = useAccount()
@@ -32,6 +33,11 @@ export default function Strategies() {
   const { data: balances } = useBalances(address)
   const { data: deposits } = useDeposits(address)
 
+  const handleSave = useCallback(
+    () => (document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement).click(),
+    []
+  )
+
   const displayedStrategies = useMemo(
     () =>
       strategies
@@ -40,7 +46,7 @@ export default function Strategies() {
           const b = tokens?.find(({ l2_token_address }) => strategy.tokens[1] === l2_token_address)
           return (
             (!assetFilter.size || !a || assetFilter.has(a.symbol) || !b || assetFilter.has(b.symbol)) &&
-            (!protocolFilter.size || protocolFilter.has(strategy.protocol.toUpperCase())) &&
+            (!protocolFilter.size || protocolFilter.has(strategy.protocol)) &&
             (!strategyFilter.size || strategyFilter.has(strategy.type))
           )
         })
@@ -68,7 +74,7 @@ export default function Strategies() {
   }
 
   return (
-    <Container>
+    <Container className='max-w-[1400px]'>
       <Box center>
         <Dropdown
           type='menu'
@@ -103,6 +109,7 @@ export default function Strategies() {
           <DropdownMenu
             aria-label='strategies'
             onAction={(strategy) =>
+              STRATEGY_FILTER.has(strategy as string) &&
               setStrategyFilter((state) => {
                 const newState = new Set(state)
                 state.has(strategy as string) ? newState.delete(strategy as string) : newState.add(strategy as string)
@@ -110,11 +117,26 @@ export default function Strategies() {
               })
             }
           >
-            {Array.from(STRATEGY_FILTER).map((item) => (
-              <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
-                <StrategyFilter filter={strategyFilter} item={item} />
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(STRATEGY_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <StrategyFilter filter={strategyFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
+                <Button
+                  onClick={handleSave}
+                  radius='sm'
+                  className='flex w-full items-center justify-center bg-palette1/60'
+                >
+                  <MainText heading className='text-white'>
+                    SAVE
+                  </MainText>
+                </Button>
               </DropdownItem>
-            ))}
+            </DropdownSection>
           </DropdownMenu>
         </Dropdown>
 
@@ -150,19 +172,35 @@ export default function Strategies() {
           </DropdownTrigger>
           <DropdownMenu
             aria-label='protocols'
-            onAction={(strategy) =>
+            onAction={(protocol) =>
+              PROTOCOL_FILTER.has(protocol as string) &&
               setProtocolFilter((state) => {
                 const newState = new Set(state)
-                state.has(strategy as string) ? newState.delete(strategy as string) : newState.add(strategy as string)
+                state.has(protocol as string) ? newState.delete(protocol as string) : newState.add(protocol as string)
                 return newState
               })
             }
           >
-            {Array.from(PROTOCOL_FILTER).map((item) => (
-              <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
-                <ProtocolFilter filter={protocolFilter} item={item} />
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(PROTOCOL_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <ProtocolFilter filter={protocolFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
+                <Button
+                  onClick={handleSave}
+                  radius='sm'
+                  className='flex w-full items-center justify-center bg-palette1/60'
+                >
+                  <MainText heading className='text-white'>
+                    SAVE
+                  </MainText>
+                </Button>
               </DropdownItem>
-            ))}
+            </DropdownSection>
           </DropdownMenu>
         </Dropdown>
 
@@ -190,6 +228,7 @@ export default function Strategies() {
           <DropdownMenu
             aria-label='assets'
             onAction={(asset) =>
+              ASSET_FILTER.has(asset as string) &&
               setAssetFilter((state) => {
                 const newState = new Set(state)
                 state.has(asset as string) ? newState.delete(asset as string) : newState.add(asset as string)
@@ -197,11 +236,26 @@ export default function Strategies() {
               })
             }
           >
-            {Array.from(ASSET_FILTER).map((item) => (
-              <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
-                <AssetFilter filter={assetFilter} item={item} />
+            <DropdownSection className='mb-0 mt-1'>
+              {Array.from(ASSET_FILTER).map((item) => (
+                <DropdownItem aria-label={item} key={item} variant='bordered' className='border-none'>
+                  <AssetFilter filter={assetFilter} item={item} />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            <DropdownSection className='mb-1'>
+              <DropdownItem aria-label='toggle' variant='bordered' className='border-none'>
+                <Button
+                  onClick={handleSave}
+                  radius='sm'
+                  className='flex w-full items-center justify-center bg-palette1/60'
+                >
+                  <MainText heading className='text-white'>
+                    SAVE
+                  </MainText>
+                </Button>
               </DropdownItem>
-            ))}
+            </DropdownSection>
           </DropdownMenu>
         </Dropdown>
 
@@ -251,11 +305,9 @@ export default function Strategies() {
       </Box>
 
       {isFetching ? (
-        <Box center className='h-[70vh]'>
-          <Spinner size='lg' />
-        </Box>
+        <AppLoader />
       ) : displayedStrategies.length ? (
-        <Box center className='mt-10 flex-wrap'>
+        <Box center className='mt-8 flex-wrap'>
           {displayedStrategies.map((strategy, index) => (
             <Link key={index} href={`/strategy/${strategy.address}`}>
               <StrategyCard

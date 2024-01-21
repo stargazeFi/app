@@ -1,115 +1,94 @@
-import React from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/router'
-import { format } from 'timeago.js'
-import { Box, DarkElement, MainText, Tooltip } from '@/components/Layout'
-import { Icon } from 'src/components/Tokens'
 import { formatCurrency } from '@/misc'
+import React, { useMemo } from 'react'
+import { Icon } from '@/components/Tokens'
+import { useColors } from '@/hooks'
 import { Deposit, Strategy } from '@/types'
-import { ArrowBack, HelpOutline } from '@mui/icons-material'
-import { Skeleton } from '@nextui-org/react'
+import { Box, GrayElement, MainText } from '@/components/Layout'
+import { format } from 'timeago.js'
 
 interface HeaderProps {
   deposited?: Deposit
-  depositLoading: boolean
   strategy: Strategy
 }
 
-export const Header = ({ deposited, depositLoading, strategy }: HeaderProps) => {
-  const router = useRouter()
+export const Header = ({ deposited, strategy }: HeaderProps) => {
+  const { header, info, main } = useColors(strategy.protocol)
+
+  const type = useMemo(() => {
+    switch (strategy.type) {
+      case 'Range':
+        return 'AUTOMATED RANGE REBALANCING'
+      default:
+        return 'LIQUIDITY MINING AUTOCOMPOUNDING'
+    }
+  }, [strategy.type])
 
   return (
-    <>
-      <Box spaced>
-        <Box center>
-          <Box className='mr-4 text-2xl'>
-            <button onClick={() => router.push('/')} className='flex items-center'>
-              <ArrowBack fontSize='inherit' className='text-gray-200' />
-            </button>
+    <GrayElement col>
+      <Box
+        col
+        className={`relative items-start rounded-t-small bg-gradient-to-r md:flex-row md:justify-between ${header} p-6 pb-12`}
+      >
+        <MainText heading className='text-3xl'>
+          {strategy.name}
+        </MainText>
+        <Box className='mt-4 md:m-0'>
+          <Box center className={`rounded-sm ${info} px-2 py-1`}>
+            <MainText heading className='text-white'>
+              {type}
+            </MainText>
           </Box>
-          <Box center>
-            <Box center className='w-[80px]'>
-              <Icon address={strategy.tokens[0]} size={40} />
-              <Box className='z-20 -ml-3'>
-                <Icon address={strategy.tokens[1]} size={40} />
-              </Box>
-            </Box>
-            <MainText heading className='ml-2 pt-1 text-4xl'>
-              {strategy.name}
+          <Box center className={`ml-4 rounded-sm ${main} px-2 py-1`}>
+            <MainText heading className='text-white'>
+              {strategy.protocol.toUpperCase()}
             </MainText>
           </Box>
         </Box>
-        <Box center>
-          <Box center className='h-6 w-fit rounded bg-gray-700 px-2 py-1'>
-            <Image alt={strategy.protocol} src={`/assets/partners/${strategy.protocol}.svg`} width={80} height={20} />
-          </Box>
-          <Box
-            center
-            className={`ml-2 w-fit rounded ${strategy.type === 'LP' ? 'bg-purple-700' : 'bg-green-700'} px-2 uppercase`}
-          >
-            <MainText>{strategy.type}</MainText>
+        <Box center className='absolute -bottom-[25px] left-3 w-[100px]'>
+          <Icon address={strategy.tokens[0]} size={50} />
+          <Box className='z-20 -ml-3'>
+            <Icon address={strategy.tokens[1]} size={50} />
           </Box>
         </Box>
       </Box>
-
-      <Box col className='mt-2 lg:flex-row'>
-        <DarkElement spaced className='flex-[3]'>
-          <Box col className='flex-1 items-start'>
-            <MainText heading className='text-xl font-light'>
-              TVL
-            </MainText>
-            <MainText gradient className='text-lg'>
+      <Box col className={`items-start rounded-t-small bg-gradient-to-r p-6 pt-12 lg:flex-row lg:justify-between`}>
+        <Box col spaced className='w-full md:flex-row lg:mt-0 lg:w-auto'>
+          <Box col className='items-start'>
+            <MainText gradient>Total Value Locked</MainText>
+            <MainText heading className='text-2xl text-white'>
               {formatCurrency(strategy.TVL)}
             </MainText>
-            <Box center>
-              <MainText className='text-sm text-gray-600'>{formatCurrency(strategy.protocolTVL)}</MainText>
-              <Box className='ml-2 pb-0.5 text-small'>
-                <Tooltip content='Pool TVL'>
-                  <HelpOutline fontSize='inherit' className='text-gray-600' />
-                </Tooltip>
-              </Box>
+          </Box>
+          <Box className='mt-6 md:mt-0'>
+            <Box col spaced className='items-start md:ml-10'>
+              <MainText gradient>Total Projected Yield (APY)</MainText>
+              <MainText heading className='text-2xl text-white'>
+                {strategy.APY}
+              </MainText>
+            </Box>
+            <Box col className='ml-10 items-end lg:items-start'>
+              <MainText gradient>Daily yield</MainText>
+              <MainText heading className='text-2xl text-white'>
+                {strategy.dailyAPY}
+              </MainText>
             </Box>
           </Box>
-          <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
-            <MainText heading className='text-xl font-light'>
-              APY
-            </MainText>
-            <MainText gradient className='text-lg'>
-              {strategy.APY}
-            </MainText>
-          </Box>
-          <Box col className='flex-1 items-start border-l border-gray-700 pl-6'>
-            <MainText heading className='text-xl font-light'>
-              Daily
-            </MainText>
-            <MainText gradient className='text-lg'>
-              {strategy.dailyAPY}
+        </Box>
+        <Box spaced className='mt-6 w-full lg:mt-0 lg:w-auto'>
+          <Box col className='mr-10 items-start'>
+            <MainText gradient>Your deposit</MainText>
+            <MainText heading className='text-2xl text-white'>
+              {!Number(deposited?.value) ? '---' : formatCurrency(deposited!.value)}
             </MainText>
           </Box>
-        </DarkElement>
-        <DarkElement spaced className='mt-2 flex-[2] lg:ml-2 lg:mt-0'>
-          <Box col className='flex-1 items-start lg:items-end lg:border-r lg:border-gray-700 lg:pr-6'>
-            <MainText heading className='text-xl font-light'>
-              Your deposit
-            </MainText>
-            {depositLoading ? (
-              <Skeleton className='my-1 flex h-5 w-20 rounded-md' />
-            ) : (
-              <MainText gradient className='text-lg'>
-                {formatCurrency(deposited?.value || 0)}
-              </MainText>
-            )}
-          </Box>
-          <Box col className='flex-1 items-start border-l border-gray-700 pl-6 lg:items-end lg:border-none'>
-            <MainText heading className='text-xl font-light'>
-              Last update
-            </MainText>
-            <MainText gradient className='text-lg'>
-              {format(Number(strategy.lastUpdated) * 1000)}
+          <Box col className='items-start'>
+            <MainText gradient>Last update</MainText>
+            <MainText heading className='text-2xl text-white'>
+              {format(Number(strategy.lastUpdated) * 1000).toUpperCase()}
             </MainText>
           </Box>
-        </DarkElement>
+        </Box>
       </Box>
-    </>
+    </GrayElement>
   )
 }

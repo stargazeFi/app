@@ -3,7 +3,7 @@ import { OpenInNew } from '@mui/icons-material'
 import { useAccount, useContractWrite } from '@starknet-react/core'
 import { Call } from 'starknet'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
-import { Box, Container, DarkElement, MainButton, MainText } from '@/components/Layout'
+import { Box, Container, GrayElement, MainButton, MainText } from '@/components/Layout'
 import { useBalances, useDeposit } from '@/hooks'
 import { parseAmount, poolLiquidityURL, serializeAddress, serializeU256 } from '@/misc'
 import { Amounts } from '@/types'
@@ -79,25 +79,25 @@ export const LP = ({ strategy }: StrategyProps) => {
 
   return (
     <Container>
-      <Header strategy={strategy} deposited={deposited} depositLoading={depositLoading} />
-      <Box className='mt-2 flex-col-reverse lg:flex-row'>
+      <Header strategy={strategy} deposited={deposited} />
+      <Box className='mt-4 flex-col-reverse lg:flex-row'>
         <Information strategy={strategy} />
-        <DarkElement col spaced className='mb-2 h-fit flex-[2] md:mb-0 md:ml-2'>
+        <GrayElement col spaced className='mb-4 h-fit flex-[2] p-6 lg:ml-4'>
           <Box className='-mx-6 -mt-6'>
             <Box
               center
               className={`flex-1 cursor-pointer border-b ${mode === 'deposit' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('deposit')} className='h-[4.5rem] w-full'>
-                <MainText>DEPOSIT</MainText>
+              <button onClick={() => setMode('deposit')} className='h-[3rem] w-full'>
+                <MainText heading>DEPOSIT</MainText>
               </button>
             </Box>
             <Box
               center
               className={`flex-1 cursor-pointer border-b ${mode === 'redeem' ? 'border-white' : 'border-gray-700'}`}
             >
-              <button onClick={() => setMode('redeem')} className='h-[4.5rem] w-full'>
-                <MainText>WITHDRAW</MainText>
+              <button onClick={() => setMode('redeem')} className='h-[3rem] w-full'>
+                <MainText heading>WITHDRAW</MainText>
               </button>
             </Box>
           </Box>
@@ -127,12 +127,14 @@ export const LP = ({ strategy }: StrategyProps) => {
             </Box>
             <Box center className='mt-6'>
               <MainButton isDisabled={disableCTA} onClick={handleCTA} className='w-full p-6'>
-                <MainText className='capitalize text-white'>{address ? mode : 'Connect wallet'}</MainText>
+                <MainText heading className='capitalize text-white'>
+                  {!address ? 'Connect wallet' : mode === 'redeem' ? 'WITHDRAW' : 'DEPOSIT'}
+                </MainText>
               </MainButton>
             </Box>
             <Footer strategy={strategy} />
           </Box>
-        </DarkElement>
+        </GrayElement>
       </Box>
     </Container>
   )

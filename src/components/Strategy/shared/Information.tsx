@@ -3,7 +3,7 @@ import { Analytics } from '@/components/Strategy'
 import { Icon } from 'src/components/Tokens'
 import { TokenContext } from '@/contexts'
 import { usePrices } from '@/hooks/api'
-import { explorerContractURL, formatTokenPrice, getTokenDescription, getTokenName } from '@/misc'
+import { explorerContractURL, formatTokenPrice } from '@/misc'
 import { Strategy } from '@/types'
 import { Link as LinkIcon, OpenInNew } from '@mui/icons-material'
 import { useNetwork } from '@starknet-react/core'
@@ -15,7 +15,7 @@ interface InformationProps {
 }
 
 export const Information = ({ strategy }: InformationProps) => {
-  const tokensList = useContext(TokenContext)
+  const { getTokenDescription, getTokenName } = useContext(TokenContext)
 
   const { chain } = useNetwork()
 
@@ -28,10 +28,10 @@ export const Information = ({ strategy }: InformationProps) => {
 
   return (
     <Box col className='flex-[3] lg:flex-[4]'>
-      <DarkElement col className='h-fit'>
+      <GrayElement col className='h-fit p-6'>
         <Box spaced className='w-full lg:flex-row'>
           <MainText heading className='pt-1 text-2xl'>
-            Strategy
+            STRATEGY
           </MainText>
           <Box center>
             <Link href={explorerContractURL(strategy.address, chain)} target='_blank' rel='noopener noreferrer'>
@@ -44,34 +44,38 @@ export const Information = ({ strategy }: InformationProps) => {
             </Link>
           </Box>
         </Box>
-        <div className='gradient-border-b my-6 h-[1px] w-full' />
+        <div className={`gradient-${strategy.type.toLowerCase()}-b my-6 h-[1px] w-full`} />
         <Box className='justify-start'>
           <SecondaryText>{strategy.description}</SecondaryText>
         </Box>
-      </DarkElement>
+      </GrayElement>
 
       <Analytics strategy={strategy} />
 
-      <DarkElement col className='mt-2 h-fit'>
+      <GrayElement col className='mt-4 h-fit p-6'>
         <Box spaced className='w-full'>
           <MainText heading className='pt-1 text-2xl'>
-            Asset Details
+            ASSET DETAILS
           </MainText>
         </Box>
-        <div className='gradient-border-b my-6 h-[1px] w-full' />
+        <div className={`gradient-${strategy.type.toLowerCase()}-b my-6 h-[1px] w-full`} />
         <Box col center className='justify-start'>
           {strategy.tokens.map((address, index) => {
             const price = tokenPrice(address)
 
             return (
-              <GrayElement col center key={index} className='w-full is-not-last-child:mb-6'>
-                <Box spaced className='w-full'>
+              <DarkElement col center key={index} className='w-full is-not-last-child:mb-6'>
+                <Box spaced className='w-full p-2 pb-0'>
                   <Box center>
                     <Icon address={address} size={30} className='z-20' />
-                    <MainText className='mx-4'>{getTokenName(address, tokensList)}</MainText>
+                    <MainText heading className='mx-4 text-xl'>
+                      {getTokenName(address)?.toUpperCase()}
+                    </MainText>
                     {price && (
-                      <Box center className='w-fit rounded bg-gray-700 px-2 uppercase'>
-                        <MainText className='text-sm'>{formatTokenPrice(price)}</MainText>
+                      <Box center className='w-fit rounded bg-gray-700 px-2 py-1 uppercase'>
+                        <MainText heading className='text-sm'>
+                          {formatTokenPrice(price)}
+                        </MainText>
                       </Box>
                     )}
                   </Box>
@@ -86,14 +90,14 @@ export const Information = ({ strategy }: InformationProps) => {
                     </Link>
                   </Box>
                 </Box>
-                <Box className='mt-2 w-full'>
-                  <SecondaryText className='mt-4'>{getTokenDescription(address, tokensList)}</SecondaryText>
+                <Box className='w-full p-2'>
+                  <SecondaryText className='mt-4'>{getTokenDescription(address)}</SecondaryText>
                 </Box>
-              </GrayElement>
+              </DarkElement>
             )
           })}
         </Box>
-      </DarkElement>
+      </GrayElement>
     </Box>
   )
 }

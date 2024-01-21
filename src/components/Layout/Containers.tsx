@@ -17,18 +17,13 @@ const maxWidth = {
 
 export const Container = ({ children, className = '', size = 'xxl' }: ContainerProps) => {
   return (
-    <div className={`mx-auto max-w-[1400px] px-4 pb-6 sm:px-6 lg:pb-24 ${maxWidth[size]} ${className}`}>{children}</div>
+    <div className={`mx-auto max-w-[1280px] px-4 pb-6 sm:px-6 lg:pb-24 ${maxWidth[size]} ${className}`}>{children}</div>
   )
 }
 
 export const DarkElement = ({ children, center, col, className = '', spaced }: BoxProps) => {
   return (
-    <Box
-      center={center}
-      col={col}
-      spaced={spaced}
-      className={`gradient-dark-element rounded-xl bg-black/60 p-6 ${className}`}
-    >
+    <Box center={center} col={col} spaced={spaced} className={`rounded-xl bg-palette1/20 p-3 ${className}`}>
       {children}
     </Box>
   )
@@ -36,7 +31,7 @@ export const DarkElement = ({ children, center, col, className = '', spaced }: B
 
 export const GrayElement = ({ children, center, col, className = '', spaced }: BoxProps) => {
   return (
-    <Box center={center} col={col} spaced={spaced} className={`rounded-lg bg-[#191919] p-3 ${className}`}>
+    <Box center={center} col={col} spaced={spaced} className={`rounded-lg bg-[#191919] ${className}`}>
       {children}
     </Box>
   )

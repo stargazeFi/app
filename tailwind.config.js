@@ -5,9 +5,9 @@ module.exports = {
   content: ['./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      boxShadow: {
-        lp: '0 0 15px 1px rgb(38, 63, 169)',
-        range: '0 0 15px 1px rgb(80, 56, 126)'
+      dropShadow: {
+        lp: '0 0 20px rgb(38, 63, 169)',
+        range: '0 0 20px rgb(80, 56, 126)'
       },
       colors: {
         white: '#ddd',

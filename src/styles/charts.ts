@@ -3,7 +3,7 @@ import { VictoryThemeDefinition } from 'victory'
 const gray700 = '#aaa'
 const gray900 = '#ccc'
 
-const fontFamily = 'Bebas Neue, sans-serif'
+const fontFamily = 'VCR, sans-serif'
 const letterSpacing = 'normal'
 const fontSize = 16
 
@@ -22,7 +22,7 @@ export const theme: VictoryThemeDefinition = {
         fill: 'rgb(31 41 55 / 0.8)',
         opacity: 1,
         stroke: gray900,
-        strokeWidth: 0.5
+        strokeWidth: 1
       },
       labels: baseLabelStyles
     }
@@ -34,7 +34,7 @@ export const theme: VictoryThemeDefinition = {
         strokeWidth: 2
       },
       grid: {
-        stroke: '#171717'
+        stroke: '#33333380'
       },
       tickLabels: { ...baseLabelStyles, fill: gray900 }
     }

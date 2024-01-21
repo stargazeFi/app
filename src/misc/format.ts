@@ -36,7 +36,8 @@ export const formatEpochToTime = (epoch: number): string =>
     second: '2-digit'
   })
 
-export const formatPercentage = (value: number) => `${(value * 100).toFixed(4).replace(/\.?0+$/, '')}%`
+export const formatPercentage = (value: number, decimals: number = 4) =>
+  `${(value * 100).toFixed(decimals).replace(/\.?0+$/, '')}%`
 
 export const shortenAddress = (address: string, length: number = 4) =>
   `${address.slice(0, length + 2)}...${address.slice(-length)}`

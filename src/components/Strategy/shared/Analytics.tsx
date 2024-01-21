@@ -3,7 +3,7 @@ import { formatCurrency } from '@/misc'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { VictoryArea, VictoryAxis, VictoryChart, VictoryTooltip, VictoryVoronoiContainer } from 'victory'
 import { ButtonGroup, Spinner } from '@nextui-org/react'
-import { Box, DarkElement, MainButton, MainText } from '@/components/Layout'
+import { Box, GrayElement, MainButton, MainText } from '@/components/Layout'
 import { useAnalytics } from '@/hooks/api'
 import { theme } from '@/styles/charts'
 import { Strategy } from '@/types'
@@ -33,14 +33,32 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
 
   const data = useMemo(() => {
     const elements = analytics?.[metrics] || []
-    return Object.entries(elements).map(([timestamp, price]) => ({ x: timestamp, y: price }))
+    return Object.entries(elements).map(([timestamp, price]) => ({ x: timestamp, y: Number(price) }))
   }, [analytics, metrics])
 
+  const domain = useMemo(() => {
+    const minY = Math.floor(Math.min(...data.map((point) => point.y)))
+    const maxY = Math.ceil(Math.max(...data.map((point) => point.y)))
+
+    const magnitude = Math.pow(10, Math.floor(Math.log10(maxY)))
+    const start = Math.floor(minY / magnitude) * magnitude
+    const end = Math.ceil(maxY / magnitude) * magnitude
+
+    return [start, end]
+  }, [data])
+
+  const yTicks = useMemo(() => {
+    const [start, end] = domain
+    const interval = (end - start) / 4
+
+    return Array.from({ length: 5 }, (_, index) => start + index * interval)
+  }, [domain])
+
   return (
-    <DarkElement col className='mt-2 h-fit'>
+    <GrayElement col className='mt-4 h-fit p-6'>
       <Box spaced className='w-full'>
         <MainText heading className='pt-1 text-2xl'>
-          Historical Rate
+          HISTORICAL RATE
         </MainText>
         <ButtonGroup>
           <MainButton onClick={() => setMetrics('tvl')} size='sm' className={`${metrics === 'tvl' && 'bg-gray-700'}`}>
@@ -57,7 +75,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
           )}
         </ButtonGroup>
       </Box>
-      <div className='gradient-border-b my-6 h-[1px] w-full' />
+      <div className={`gradient-${strategy.type.toLowerCase()}-b my-6 h-[1px] w-full`} />
       <Box center ref={ref} className='h-[250px] w-full'>
         {isLoading ? (
           <Spinner />
@@ -82,9 +100,10 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
                 labelComponent={<VictoryTooltip dy={-5} constrainToVisibleArea />}
               />
             }
+            domain={{ y: [domain[0], domain[1]] }}
             height={height}
             width={width}
-            padding={{ top: 10, bottom: 25, left: 70, right: 20 }}
+            padding={{ top: 10, bottom: 25, left: 90, right: 20 }}
             theme={theme}
           >
             <VictoryAxis
@@ -95,13 +114,13 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
             <VictoryAxis
               animate={false}
               dependentAxis
-              tickFormat={(value, index) => (!(index % 3) ? formatCurrency(value) : null)}
-              tickValues={data.map(({ y }) => y)}
+              tickFormat={(value) => formatCurrency(value)}
+              tickValues={yTicks}
             />
             <VictoryArea data={data} interpolation='monotoneX' />
           </VictoryChart>
         )}
       </Box>
-    </DarkElement>
+    </GrayElement>
   )
 }
