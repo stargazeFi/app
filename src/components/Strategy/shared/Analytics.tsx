@@ -1,5 +1,5 @@
 import { useDimensions } from '@/hooks/useDimensions'
-import { formatCurrency, formatEpochToShortDate } from '@/misc'
+import { formatCurrency, formatEpochToShortDate, formatPercentage } from '@/misc'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Area, ComposedChart, CartesianGrid, Tooltip, XAxis, YAxis, Line } from 'recharts'
 import { ButtonGroup, Spinner } from '@nextui-org/react'
@@ -41,14 +41,14 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
       : Object.entries(analytics.tvl).reduce(
           (data, it) => {
             const [timestamp, tvl] = it as unknown as [number, string]
-            data.push({ timestamp, tvl: Number(tvl) })
+            data.push({ timestamp, tvl: Number(tvl), apr: 0 })
             if (strategy.type === 'LP') {
               data[data.length - 1].price = Number(analytics.price[timestamp])
             }
 
             return data
           },
-          [] as Array<{ timestamp: number; price?: number; tvl: number }>
+          [] as Array<{ timestamp: number; price?: number; tvl: number; apr: number }>
         )
 
     if (timeframe === 'hourly') {
@@ -143,6 +143,9 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
             />
             <Area yAxisId='tvl' type='monotone' dataKey='tvl' stroke='#777' fill='#555' />
 
+            <YAxis yAxisId='apr' dataKey='apr' hide domain={domain(data.map(({ apr }) => apr))} />
+            <Line yAxisId='apr' dot={false} type='monotone' dataKey='apr' stroke='green' />
+
             {strategy.type === 'LP' && (
               <>
                 <YAxis yAxisId='price' dataKey='price' hide domain={domain(data.map(({ price }) => price!))} />
@@ -152,7 +155,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
 
             <Tooltip
               content={(props) => {
-                const [tvl, price] = props.payload as Array<any>
+                const [tvl, apr, price] = props.payload as Array<any>
 
                 return (
                   <GrayElement col className='items-start rounded-xl border-1 border-gray-500 p-3'>
@@ -162,7 +165,10 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
                         <MainText gradient heading className='text-amber-50'>
                           TVL: {formatCurrency(tvl.payload.tvl)}
                         </MainText>
-                        {price && (
+                        <MainText gradient heading className='text-green-600'>
+                          APR: {formatPercentage(apr.payload.apr)}
+                        </MainText>
+                        {!!price && (
                           <MainText heading className='text-blue-400'>
                             Price: {formatCurrency(price.payload.price)}
                           </MainText>
