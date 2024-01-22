@@ -64,7 +64,7 @@ export const StrategyCard = ({
           {formatCurrency(TVL)}
         </MainText>
       </Box>
-      <Box col className='bg-gray-800/50 px-4 py-2'>
+      <Box col className='rounded-b-md bg-gray-800/50 px-4 py-2'>
         <Box spaced className='mb-1 items-end'>
           <MainText gradient className='text-xs'>
             Your position

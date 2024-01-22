@@ -6,7 +6,7 @@ export const useColors = (protocol: Protocol) => {
     switch (protocol) {
       case 'ekubo':
         return {
-          border: 'hover:border-violet-700/80',
+          border: 'hover:border-violet-500',
           header: 'from-violet-950/20 to-violet-800/20',
           info: 'bg-ekubo',
           main: 'bg-ekubo',
@@ -14,7 +14,7 @@ export const useColors = (protocol: Protocol) => {
         }
       case 'sithswap':
         return {
-          border: 'hover:border-blue-700/80',
+          border: 'hover:border-blue-500',
           header: 'from-blue-950/20 to-blue-800/20',
           info: 'bg-blue-800',
           main: 'bg-sithswap',
@@ -22,7 +22,7 @@ export const useColors = (protocol: Protocol) => {
         }
       default:
         return {
-          border: 'hover:border-blue-700/80',
+          border: 'hover:border-blue-500',
           header: 'from-blue-950/20 to-blue-800/20',
           info: 'bg-blue-800',
           main: 'bg-jediswap',
