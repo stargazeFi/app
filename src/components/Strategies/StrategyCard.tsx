@@ -54,7 +54,7 @@ export const StrategyCard = ({
         <MainText gradient className='text-xs'>
           Daily yield
         </MainText>
-        <MainText heading className='text-md mb-2 text-white'>
+        <MainText heading className='mb-2 text-white'>
           {dailyAPY}
         </MainText>
         <MainText gradient className='text-xs'>

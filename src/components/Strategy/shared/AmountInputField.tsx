@@ -63,7 +63,7 @@ export const AmountInputField = ({
           placeholder='0'
           value={amount || '0'}
           classNames={{
-            input: 'text-amber-50 text-md mr-6 font-heading',
+            input: 'text-amber-50 mr-6 font-heading',
             inputWrapper: 'bg-transparent border border-gray-500'
           }}
           onChange={(e) => {

@@ -51,7 +51,9 @@ export default function Strategies() {
         .sort((lhs, rhs) => {
           switch (sorted) {
             case 'WALLET':
-              return Number(balances[rhs.address]?.formatted || 0) - Number(balances[lhs.address]?.formatted || 0)
+              const b = (rhs.asset && balances[rhs.asset]?.formatted) || 0
+              const a = (lhs.asset && balances[lhs.asset]?.formatted) || 0
+              return Number(b) - Number(a)
             case 'TVL':
               return Number(rhs.TVL) - Number(lhs.TVL)
             case 'DAILY':
@@ -59,7 +61,7 @@ export default function Strategies() {
             case 'APY':
               return Number(rhs.APY.slice(0, -1)) - Number(lhs.APY.slice(0, -1))
             default:
-              return Number(deposits[rhs.address]?.formatted || 0) - Number(deposits[lhs.address]?.formatted || 0)
+              return Number(deposits[rhs.address]?.value || 0) - Number(deposits[lhs.address]?.value || 0)
           }
         }),
     [assetFilter, balances, deposits, protocolFilter, sorted, strategies, strategyFilter, tokens]
