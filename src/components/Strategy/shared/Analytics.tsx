@@ -30,12 +30,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
             minute: '2-digit',
             hour12: true
           })
-        : date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            hour12: true
-          })
+        : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     },
     [timeframe]
   )
@@ -59,9 +54,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
     if (timeframe === 'hourly') {
       return dataSet.slice(Math.max(0, dataSet.length - 25), dataSet.length)
     } else {
-      return dataSet.filter((_, index) => {
-        return !((index - (dataSet.length % 12)) % 12)
-      })
+      return dataSet.filter((_, index) => !((index - (dataSet.length % 24)) % 24))
     }
   }, [analytics, strategy, timeframe])
 
