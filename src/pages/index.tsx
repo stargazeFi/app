@@ -65,7 +65,7 @@ export default function Strategies() {
     [assetFilter, balances, deposits, protocolFilter, sorted, strategies, strategyFilter, tokens]
   )
 
-  const isFetching = useMemo(() => strategiesLoading || tokensLoading, [strategiesLoading])
+  const isFetching = useMemo(() => strategiesLoading || tokensLoading, [strategiesLoading, tokensLoading])
 
   if (strategiesError) {
     return <ErrorPage />
