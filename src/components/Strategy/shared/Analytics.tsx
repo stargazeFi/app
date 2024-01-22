@@ -161,11 +161,9 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
                   <GrayElement col className='items-start rounded-xl border-1 border-gray-500 p-3'>
                     {tvl && (
                       <>
-                        <MainText>{formatEpochToShortDate(tvl.payload.timestamp)}</MainText>
-                        <MainText gradient heading className='text-amber-50'>
-                          TVL: {formatCurrency(tvl.payload.tvl)}
-                        </MainText>
-                        <MainText gradient heading className='text-green-600'>
+                        <MainText gradient>{formatEpochToShortDate(tvl.payload.timestamp)}</MainText>
+                        <MainText heading>TVL: {formatCurrency(tvl.payload.tvl)}</MainText>
+                        <MainText heading className='text-green-600'>
                           APR: {formatPercentage(apr.payload.apr)}
                         </MainText>
                         {!!price && (
