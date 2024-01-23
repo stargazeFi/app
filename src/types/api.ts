@@ -22,6 +22,7 @@ export interface Price {
 }
 
 interface EkuboPosition {
+  id: bigint
   bounds: Array<string>
   poolKey: {
     fee: string
