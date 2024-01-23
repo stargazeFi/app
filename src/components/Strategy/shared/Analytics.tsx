@@ -36,25 +36,39 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
   )
 
   const data = useMemo(() => {
-    const dataSet = !analytics
-      ? []
-      : Object.entries(analytics.tvl).reduce(
-          (data, it) => {
-            const [timestamp, tvl] = it as unknown as [number, string]
-            data.push({ timestamp, tvl: Number(tvl), apr: 0 })
-            if (strategy.type === 'LP') {
-              data[data.length - 1].price = Number(analytics.price[timestamp])
-            }
+    if (!analytics) return []
 
-            return data
-          },
-          [] as Array<{ timestamp: number; price?: number; tvl: number; apr: number }>
-        )
+    const dataSet = Object.entries(analytics.tvl).reduce(
+      (data, it) => {
+        const [timestamp, tvl] = it as unknown as [number, string]
+        data.push({ timestamp, tvl: Number(tvl) })
+        if (strategy.type === 'LP') {
+          data[data.length - 1].price = Number(analytics.price[timestamp])
+        }
+
+        return data
+      },
+      [] as Array<{ timestamp: number; price?: number; tvl: number }>
+    )
 
     if (timeframe === 'hourly') {
-      return dataSet.slice(Math.max(0, dataSet.length - 25), dataSet.length)
+      return dataSet
+        .map((data, index) => {
+          const shareUnitPrice = Number(analytics.shareUnit[data.timestamp])
+          const oldShareUnitPrice = Number(analytics.shareUnit[dataSet[Math.max(0, index - 25)].timestamp])
+          const apy = (shareUnitPrice / oldShareUnitPrice - 1) * 365
+          return { ...data, apy }
+        })
+        .slice(Math.max(0, dataSet.length - 25), dataSet.length)
     } else {
-      return dataSet.filter((_, index) => !((index - (dataSet.length % 24)) % 24))
+      return dataSet
+        .map((data, index) => {
+          const shareUnitPrice = Number(analytics.shareUnit[data.timestamp])
+          const oldShareUnitPrice = Number(analytics.shareUnit[dataSet[Math.max(0, index - 721)].timestamp])
+          const apy = (shareUnitPrice / oldShareUnitPrice - 1) * 12
+          return { ...data, apy }
+        })
+        .filter((_, index) => !((index - (dataSet.length % 24)) % 24))
     }
   }, [analytics, strategy, timeframe])
 
@@ -143,8 +157,8 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
             />
             <Area yAxisId='tvl' type='monotone' dataKey='tvl' stroke='#777' fill='#555' />
 
-            <YAxis yAxisId='apr' dataKey='apr' hide domain={domain(data.map(({ apr }) => apr))} />
-            <Line yAxisId='apr' dot={false} type='monotone' dataKey='apr' stroke='green' />
+            <YAxis yAxisId='apy' dataKey='apy' hide domain={domain(data.map(({ apy }) => apy))} />
+            <Line yAxisId='apy' dot={false} type='monotone' dataKey='apy' stroke='green' />
 
             {strategy.type === 'LP' && (
               <>
@@ -155,7 +169,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
 
             <Tooltip
               content={(props) => {
-                const [tvl, apr, price] = props.payload as Array<any>
+                const [tvl, apy, price] = props.payload as Array<any>
 
                 return (
                   <GrayElement col className='items-start rounded-xl border-1 border-gray-500 p-3'>
@@ -164,7 +178,7 @@ export const Analytics = ({ strategy }: AnalyticsProps) => {
                         <MainText gradient>{formatEpochToShortDate(tvl.payload.timestamp)}</MainText>
                         <MainText heading>TVL: {formatCurrency(tvl.payload.tvl)}</MainText>
                         <MainText heading className='text-green-600'>
-                          APR: {formatPercentage(apr.payload.apr)}
+                          APY: {formatPercentage(apy.payload.apy)}
                         </MainText>
                         {!!price && (
                           <MainText heading className='text-blue-400'>
