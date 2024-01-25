@@ -45,6 +45,9 @@ export const formatEpochToShortDate = (epoch: number | string): string =>
     minute: '2-digit'
   })
 
+export const formatFee = (value: number, decimals: number = 4) =>
+  `${(value / 100).toFixed(decimals).replace(/\.?0+$/, '')}%`
+
 export const formatPercentage = (value: number, decimals: number = 4) =>
   `${(value * 100).toFixed(decimals).replace(/\.?0+$/, '')}%`
 

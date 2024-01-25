@@ -1,5 +1,5 @@
 import { Box, DarkElement, MainText, SecondaryText, Tooltip } from '@/components/Layout'
-import { DOCS_FEES_URL, formatPercentage } from '@/misc'
+import { DOCS_FEES_URL, formatFee } from '@/misc'
 import { Strategy } from '@/types'
 import { HelpOutline } from '@mui/icons-material'
 import Link from 'next/link'
@@ -22,9 +22,11 @@ export const Footer = ({ strategy }: FooterProps) => {
             </Tooltip>
           </Box>
         </Box>
-        <MainText heading className='text-sm'>
-          {formatPercentage(strategy.depositFee)}
-        </MainText>
+        <Box center>
+          <MainText heading className='text-sm'>
+            {formatFee(strategy.depositFee)}
+          </MainText>
+        </Box>
       </Box>
       <Box spaced>
         <Box center>
@@ -37,9 +39,11 @@ export const Footer = ({ strategy }: FooterProps) => {
             </Tooltip>
           </Box>
         </Box>
-        <MainText heading className='text-sm'>
-          {formatPercentage(strategy.withdrawalFee)}
-        </MainText>
+        <Box center>
+          <MainText heading className='text-sm'>
+            {formatFee(strategy.withdrawalFee)}
+          </MainText>
+        </Box>
       </Box>
       <Box spaced className='mt-4'>
         <Box center>
@@ -47,9 +51,11 @@ export const Footer = ({ strategy }: FooterProps) => {
             PERFORMANCE FEE
           </MainText>
         </Box>
-        <MainText heading className='text-sm'>
-          {formatPercentage(strategy.performanceFee)}
-        </MainText>
+        <Box center>
+          <MainText heading className='text-sm'>
+            {formatFee(strategy.performanceFee)}
+          </MainText>
+        </Box>
       </Box>
       <SecondaryText>
         Stargaze Finance charges a performance fee on withdrawal. To learn more about the performance fee, you can refer
