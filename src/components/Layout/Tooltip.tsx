@@ -1,25 +1,23 @@
 import React from 'react'
-import { Box, MainText } from '@/components/Layout'
+import { MainText } from '@/components/Layout'
 import { Tooltip as NextTooltip } from '@nextui-org/react'
 
 export type TooltipProps = {
   children: React.ReactNode
   content: React.ReactNode
-  override?: boolean
 }
 
-export const Tooltip = ({ content, children, override }: TooltipProps) => (
+export const Tooltip = ({ content, children }: TooltipProps) => (
   <NextTooltip
-    color='foreground'
     content={
-      override ? (
-        content
-      ) : (
-        <Box className='p-2'>
-          <MainText>{content}</MainText>
-        </Box>
-      )
+      <MainText className='bg-gradient-to-br from-zinc-200 to-gray-200 bg-clip-text text-transparent'>
+        {content}
+      </MainText>
     }
+    classNames={{
+      base: ['rounded-lg border-1 border-gray-500 p-1 bg-[#191919]'],
+      content: 'bg-transparent'
+    }}
     delay={0}
     closeDelay={0}
   >
