@@ -1,12 +1,12 @@
-import { useAppSelector } from '@/hooks'
-import { selectPendingTransactions } from '@/store/appSlice'
-import { useAccount, useNetwork } from '@starknet-react/core'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { Image, Navbar, NavbarBrand, NavbarContent, NavbarItem, Spinner } from '@nextui-org/react'
+import { useAccount, useNetwork } from '@starknet-react/core'
+import { goerli } from '@starknet-react/chains'
+import { selectPendingTransactions } from '@/store/appSlice'
 import { Box, MainText } from '@/components/Layout'
 import WalletModal from '@/components/WalletModal'
-import { useRouter } from 'next/router'
-import { goerli } from '@starknet-react/chains'
+import { useAppSelector } from '@/hooks'
 
 export default function Header() {
   const { isConnected } = useAccount()

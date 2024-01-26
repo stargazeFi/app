@@ -1,26 +1,24 @@
-import { PendingTransactionsContext } from '@/contexts'
+import { useMemo } from 'react'
+import { num } from 'starknet'
+import { useAccount, useNetwork } from '@starknet-react/core'
 import { useDispatch, useAppSelector } from '@/hooks'
 import { toast } from '@/misc'
 import { Transaction } from '@/types'
-import { useContext, useMemo } from 'react'
 import { addPendingTransaction } from '@/store/appSlice'
 import { addTransactionHistory, clearTransactionHistory, selectTransactionHistory } from '@/store/persistentSlice'
-import { useAccount, useNetwork } from '@starknet-react/core'
-import { num } from 'starknet'
 
 export const useTransactionManager = (): {
-  addTransaction(refetch: () => Promise<unknown>, transaction: Transaction): void
+  addTransaction(transaction: Transaction): void
   clearTransactions(): void
   transactions: Transaction[]
 } => {
-  const { setPendingTransactionsRefetch } = useContext(PendingTransactionsContext)
   const dispatch = useDispatch()
   const { address } = useAccount()
   const { chain } = useNetwork()
   const txHistory = useAppSelector(selectTransactionHistory)
 
   return useMemo(() => {
-    function addTransaction(refetch: () => Promise<unknown>, transaction: Transaction) {
+    function addTransaction(transaction: Transaction) {
       const { action, hash } = transaction
       toast({ action, chain, transactionHash: hash, type: 'info' })
       if (address && chain) {
@@ -32,7 +30,6 @@ export const useTransactionManager = (): {
           })
         )
         dispatch(addPendingTransaction({ action, hash: num.toStorageKey(hash) }))
-        setPendingTransactionsRefetch((state) => [...state, { hash: num.toStorageKey(hash), refetch }])
       }
     }
 
@@ -47,5 +44,5 @@ export const useTransactionManager = (): {
       clearTransactions,
       transactions: address && chain ? txHistory?.[`${num.toHex(chain.id)}-${address}`] ?? [] : []
     }
-  }, [address, chain, dispatch, setPendingTransactionsRefetch, txHistory])
+  }, [address, chain, dispatch, txHistory])
 }

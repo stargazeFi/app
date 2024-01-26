@@ -8,13 +8,11 @@ export const useHandleCTA = ({
   deposit,
   mode,
   redeem,
-  refetch,
   strategy
 }: {
   deposit: (args?: ContractWriteVariables | undefined) => Promise<InvokeFunctionResponse>
   mode: 'deposit' | 'redeem'
   redeem: (args?: ContractWriteVariables | undefined) => Promise<InvokeFunctionResponse>
-  refetch: () => Promise<unknown>
   strategy: Strategy
 }) => {
   const { isConnected } = useAccount()
@@ -28,12 +26,12 @@ export const useHandleCTA = ({
 
     try {
       const { transaction_hash: hash } = await (mode === 'deposit' ? deposit() : redeem())
-      addTransaction(refetch, {
+      addTransaction({
         action: mode === 'deposit' ? TransactionType.StrategyDeposit : TransactionType.StrategyRedeem,
         hash,
         strategyName: strategy!.name,
         timestamp: Date.now()
       })
     } catch (e) {}
-  }, [addTransaction, connect, deposit, isConnected, mode, redeem, refetch, strategy])
+  }, [addTransaction, connect, deposit, isConnected, mode, redeem, strategy])
 }

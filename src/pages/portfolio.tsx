@@ -1,17 +1,14 @@
-import React, { useMemo } from 'react'
+import React, { useContext, useMemo } from 'react'
 import Link from 'next/link'
-import { useAccount } from '@starknet-react/core'
 import { AppLoader } from '@/components/AppLoader'
 import { ErrorPage } from '@/components/ErrorPage'
 import { Box, Container } from '@/components/Layout'
 import { ActiveStrategy, Analytics, Header } from '@/components/Portfolio'
-import { useDeposits } from '@/hooks'
+import { DepositsContext } from '@/contexts'
 import { useStrategies } from '@/hooks/api'
 
 export default function Portfolio() {
-  const { address } = useAccount()
-
-  const { data: deposits, isLoading: depositsLoading } = useDeposits(address)
+  const { deposits, depositsLoading } = useContext(DepositsContext)
   const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
 
   const activeStrategies = useMemo(

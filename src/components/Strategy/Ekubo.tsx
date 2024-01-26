@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { OpenInNew } from '@mui/icons-material'
-import { useAccount, useContractRead, useContractWrite, useNetwork } from '@starknet-react/core'
-import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { BlockTag, Call } from 'starknet'
 import { Box, Container, GrayElement, MainButton, MainText } from '@/components/Layout'
-import { useBalances, useDeposit } from '@/hooks'
+import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
+import { BalancesContext, DepositsContext } from '@/contexts'
 import { parseAmount, poolLiquidityURL, serializeAddress, serializeU128, serializeU256 } from '@/misc'
 import { ekubo } from '@/protocols'
 import { Amounts } from '@/types'
-import { Call } from 'starknet'
+import { OpenInNew } from '@mui/icons-material'
+import { useAccount, useContractRead, useContractWrite, useNetwork } from '@starknet-react/core'
 
 export const Ekubo = ({ strategy }: StrategyProps) => {
   const { address } = useAccount()
   const { chain } = useNetwork()
 
-  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(address)
-  const { data: deposited, isLoading: depositLoading, refetch: refetchDeposit } = useDeposit(address, strategy.address)
+  const { balances, balancesLoading } = useContext(BalancesContext)
+  const { deposits, depositsLoading } = useContext(DepositsContext)
+  const deposited = useMemo(() => deposits[strategy.address], [deposits, strategy])
 
   const poolKey = useMemo(() => {
     const [token0, token1] = strategy.tokens
@@ -25,14 +26,11 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   const { data: poolPrice } = useContractRead({
     abi: ekubo.abis.core,
     address: ekubo.addresses.core(chain.network),
+    blockIdentifier: BlockTag.pending,
     functionName: 'get_pool_price',
     args: [poolKey],
     watch: true
   })
-
-  const refetch = useCallback(async () => {
-    return await Promise.all([refetchBalances(), refetchDeposit()])
-  }, [refetchBalances, refetchDeposit])
 
   const [displayAmounts, setDisplayAmounts] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
@@ -113,7 +111,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })
 
-  const handleCTA = useHandleCTA({ deposit, mode, redeem, refetch, strategy })
+  const handleCTA = useHandleCTA({ deposit, mode, redeem, strategy })
 
   return (
     <Container>
@@ -144,7 +142,7 @@ export const Ekubo = ({ strategy }: StrategyProps) => {
               amount={amounts?.base}
               balance={base}
               deposit={deposited}
-              isLoading={mode === 'deposit' ? balancesLoading : depositLoading}
+              isLoading={mode === 'deposit' ? balancesLoading : depositsLoading}
               mode={mode}
               setDisplayAmount={setDisplayAmounts}
               strategy={strategy}

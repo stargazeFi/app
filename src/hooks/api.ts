@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { num, Uint256 } from 'starknet'
 import { useQuery } from '@tanstack/react-query'
 import { Analytics, PendingTransaction, Price, Strategy, TokenInfo } from '@/types'
-import { num, Uint256 } from 'starknet'
 
 export function useApiBaseUrl() {
   if (process.env.NEXT_PUBLIC___DEV_ENV) {
@@ -76,14 +76,14 @@ export const useAnalytics = (address: string | undefined) => {
 export const useBalances = (address: string | undefined) => {
   return useDataApi<Record<string, { balance: Uint256; decimals: number }>>({
     path: address && `/balances?address=${num.toStorageKey(address)}`,
-    staleTime: 1000
+    staleTime: 2 * 1000
   })
 }
 
 export const useDeposits = (address: string | undefined) => {
   return useDataApi<Record<string, Uint256>>({
     path: address && `/deposits?address=${num.toStorageKey(address)}`,
-    staleTime: 1000
+    staleTime: 2 * 1000
   })
 }
 

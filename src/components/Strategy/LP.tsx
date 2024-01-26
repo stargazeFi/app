@@ -1,22 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { Call } from 'starknet'
 import { OpenInNew } from '@mui/icons-material'
 import { useAccount, useContractWrite } from '@starknet-react/core'
-import { Call } from 'starknet'
 import { AmountInputField, Footer, Header, Information, StrategyProps, useHandleCTA } from '@/components/Strategy'
 import { Box, Container, GrayElement, MainButton, MainText } from '@/components/Layout'
-import { useBalances, useDeposit } from '@/hooks'
+import { BalancesContext, DepositsContext } from '@/contexts'
 import { parseAmount, poolLiquidityURL, serializeAddress, serializeU256 } from '@/misc'
 import { Amounts } from '@/types'
 
 export const LP = ({ strategy }: StrategyProps) => {
   const { address } = useAccount()
 
-  const { data: balances, isLoading: balancesLoading, refetch: refetchBalances } = useBalances(address)
-  const { data: deposited, isLoading: depositLoading, refetch: refetchDeposit } = useDeposit(address, strategy.address)
-
-  const refetch = useCallback(async () => {
-    return await Promise.all([refetchBalances(), refetchDeposit()])
-  }, [refetchBalances, refetchDeposit])
+  const { balances, balancesLoading } = useContext(BalancesContext)
+  const { deposits, depositsLoading } = useContext(DepositsContext)
+  const deposited = useMemo(() => deposits[strategy.address], [deposits, strategy])
 
   const [displayAmount, setDisplayAmount] = useState<Amounts>({})
   const [mode, setMode] = useState<'deposit' | 'redeem'>('deposit')
@@ -75,7 +72,7 @@ export const LP = ({ strategy }: StrategyProps) => {
   const { writeAsync: deposit } = useContractWrite({ calls: depositCalls })
   const { writeAsync: redeem } = useContractWrite({ calls: redeemCalls })
 
-  const handleCTA = useHandleCTA({ deposit, mode, redeem, refetch, strategy })
+  const handleCTA = useHandleCTA({ deposit, mode, redeem, strategy })
 
   return (
     <Container>
@@ -106,7 +103,7 @@ export const LP = ({ strategy }: StrategyProps) => {
               amount={displayAmount.base}
               balance={base}
               deposit={deposited}
-              isLoading={mode === 'deposit' ? balancesLoading : depositLoading}
+              isLoading={mode === 'deposit' ? balancesLoading : depositsLoading}
               mode={mode}
               setDisplayAmount={setDisplayAmount}
               strategy={strategy}

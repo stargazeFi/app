@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
 import type { AppProps } from 'next/app'
+import React, { useState } from 'react'
 import Head from 'next/head'
 import { NextUIProvider } from '@nextui-org/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider as ReduxProvider } from 'react-redux'
-import { PendingTransactionsProvider, TokensProvider } from '@/contexts'
+import { BalancesProvider, DepositsProvider, PendingTransactionsProvider, TokensProvider } from '@/contexts'
 import Header from '@/components/Header'
 import StarknetConfigWrapper from '@/components/StarknetConfigWrapper'
 import { ToastContainer } from 'react-toastify'
@@ -41,20 +41,24 @@ export default function App({ Component, pageProps }: AppProps) {
           <QueryClientProvider client={queryClient}>
             <ReduxProvider store={store}>
               <StarknetConfigWrapper>
-                <PendingTransactionsProvider>
-                  <ToastContainer
-                    position='bottom-right'
-                    autoClose={3000}
-                    newestOnTop
-                    pauseOnFocusLoss
-                    draggable={false}
-                    pauseOnHover={false}
-                  />
-                  <Header />
-                  <TokensProvider>
-                    <Component {...pageProps} />
-                  </TokensProvider>
-                </PendingTransactionsProvider>
+                <ToastContainer
+                  position='bottom-right'
+                  autoClose={3000}
+                  newestOnTop
+                  pauseOnFocusLoss
+                  draggable={false}
+                  pauseOnHover={false}
+                />
+                <Header />
+                <TokensProvider>
+                  <DepositsProvider>
+                    <BalancesProvider>
+                      <PendingTransactionsProvider>
+                        <Component {...pageProps} />
+                      </PendingTransactionsProvider>
+                    </BalancesProvider>
+                  </DepositsProvider>
+                </TokensProvider>
               </StarknetConfigWrapper>
             </ReduxProvider>
           </QueryClientProvider>

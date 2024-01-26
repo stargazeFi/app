@@ -1,11 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { AppLoader } from '@/components/AppLoader'
 import { ErrorPage } from '@/components/ErrorPage'
 import { AssetFilter, ProtocolFilter, StrategyCard, StrategyFilter } from '@/components/Strategies'
-import { useBalances, useDeposits } from '@/hooks'
+import { BalancesContext, DepositsContext } from '@/contexts'
 import { useStrategies, useTokens } from '@/hooks/api'
-import { useAccount } from '@starknet-react/core'
 import { KeyboardArrowDown } from '@mui/icons-material'
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger } from '@nextui-org/react'
 import { Box, Container, MainButton, MainText } from '@/components/Layout'
@@ -17,8 +16,6 @@ export const PROTOCOL_FILTER = new Set(['ekubo', 'jediswap', 'sithswap'])
 export const STRATEGY_FILTER = new Set(['LP', 'Range'])
 
 export default function Strategies() {
-  const { address } = useAccount()
-
   const [assetFilter, setAssetFilter] = useState<typeof ASSET_FILTER>(new Set())
   const [currentDropdown, setCurrentDropdown] = useState<'assets' | 'protocols' | 'strategies' | 'sort' | undefined>()
   const [protocolFilter, setProtocolFilter] = useState<typeof PROTOCOL_FILTER>(new Set())
@@ -28,8 +25,8 @@ export default function Strategies() {
   const { data: strategies, isError: strategiesError, isLoading: strategiesLoading } = useStrategies()
   const { data: tokens, isLoading: tokensLoading } = useTokens()
 
-  const { data: balances } = useBalances(address)
-  const { data: deposits } = useDeposits(address)
+  const { balances } = useContext(BalancesContext)
+  const { deposits } = useContext(DepositsContext)
 
   const handleSave = useCallback(
     () => (document.querySelector('[aria-haspopup="true"][aria-expanded="true"]') as HTMLElement).click(),
